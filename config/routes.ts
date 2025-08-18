@@ -12,23 +12,6 @@
  */
 export default [
   {
-    path: '/user-manage',
-    name: 'user-manage',
-    icon: 'user',
-    routes: [
-      { 
-        path: '/user-manage',
-        redirect: '/user-manage/list',
-      },
-      {
-        name: 'list',
-        icon: 'smile',
-        path: '/user-manage/list',
-        component: './user-manage/list',
-      },
-    ],
-  },
-  {
     path: '/user',
     layout: false,
     routes: [
