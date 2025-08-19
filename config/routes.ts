@@ -72,6 +72,23 @@ export default [
       },
     ],
   },
+   {
+    path: '/system',
+    name: 'system',
+    icon: 'ApartmentOutlined',
+    routes: [
+      {
+        path: '/system',
+        redirect: '/system/user',
+      },
+      {
+        name: 'user',
+        icon: 'UserOutlined',
+        path: '/system/user',
+        component: './system/user',
+      },
+    ],
+  },
   {
     path: '/form',
     icon: 'form',
