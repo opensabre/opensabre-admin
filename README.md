@@ -121,6 +121,8 @@ pnpm run dev
 
 ## 项目部署
 
+### 传统部署方式
+
 执行 `pnpm run build` 命令后，项目将被打包并生成 `dist` 目录。接下来，将 `dist` 目录下的文件上传到服务器 `/usr/share/nginx/html` 目录下，并配置 Nginx 进行反向代理。
 
 ```bash
@@ -148,6 +150,55 @@ server {
 ```
 
 更多详细信息，请参考这篇文章：[Nginx 安装和配置](https://blog.csdn.net/u013737132/article/details/145667694)。
+
+### Docker 部署方式
+
+项目提供了完整的 Docker 支持，可以快速构建和部署容器化应用。
+
+#### 1. 构建 Docker 镜像
+
+```bash
+# 构建生产环境镜像
+./docker-build.sh prod
+```
+
+#### 2. 运行 Docker 容器
+
+```bash
+# 运行生产环境容器
+./docker-run.sh prod
+```
+
+#### 3. 使用 Docker Compose
+
+```bash
+# 启动生产环境服务
+docker-compose up -d vue3-element-admin
+
+# 启动开发环境服务
+docker-compose up -d vue3-element-admin-dev
+
+# 停止服务
+docker-compose down
+```
+
+#### 4. 环境变量配置
+
+可以通过环境变量文件 `.env` 配置应用参数：
+
+```env
+# 应用端口
+VITE_APP_PORT=3000
+
+# API 基础路径
+VITE_APP_BASE_API=/dev-api
+
+# API 服务地址
+VITE_APP_API_URL=https://api.youlai.tech
+
+# 是否启用 Mock
+VITE_MOCK_DEV_SERVER=false
+```
 
 ## 本地Mock
 
