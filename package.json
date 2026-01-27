@@ -1,6 +1,6 @@
 {
   "name": "opensabre-admin",
-  "description": "Vue3 + Vite + TypeScript + Element-Plus 的后台管理模板，vue-element-admin 的 Vue3 版本",
+  "description": "Opensabre开发管理平台",
   "version": "4.0.0",
   "private": true,
   "type": "module",

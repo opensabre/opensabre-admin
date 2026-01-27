@@ -19,6 +19,7 @@ COPY . .
 # 构建应用
 RUN pnpm run build
 
+
 # 使用 Nginx 作为生产环境服务器
 FROM nginx:alpine
 
@@ -27,6 +28,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 添加hosts映射，应用网关地址
+RUN echo "${GW_HOST} opensabre" >> /etc/hosts
 
 # 暴露端口
 EXPOSE 80
