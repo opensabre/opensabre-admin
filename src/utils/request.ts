@@ -46,7 +46,8 @@ http.interceptors.response.use(
       return response;
     }
 
-    const { code, data, msg } = response.data;
+    const { code, data, msg, mesg } = response.data;
+    const message = mesg || msg; // 优先使用 mesg（OpenSabre 标准），兼容 msg
 
     if (code === ApiCodeEnum.SUCCESS) {
       // 分页接口需要同时返回 data 与 page 元信息
@@ -57,11 +58,11 @@ http.interceptors.response.use(
 
     // 需要选择租户（特殊业务码，传递给调用方处理）
     if (code === ApiCodeEnum.CHOOSE_TENANT) {
-      return Promise.reject({ code, data, msg });
+      return Promise.reject({ code, data, msg: message });
     }
 
-    ElMessage.error(msg || "系统出错");
-    return Promise.reject(new Error(msg || "Error"));
+    ElMessage.error(message || "系统出错");
+    return Promise.reject(new Error(message || "Error"));
   },
 
   async (error) => {

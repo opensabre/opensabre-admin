@@ -191,6 +191,42 @@ src/
 - Compatible with Node backend [youlai-nest](https://gitee.com/youlaiorg/youlai-nest)
 - Update `VITE_APP_API_URL` in `.env.development` for local backend
 
+#### OpenSabre API Response Specification
+
+**所有 OpenSabre 框架接口统一返回以下结构：**
+
+```json
+{
+  "code": "000000",
+  "mesg": "处理成功",
+  "time": "2026-02-04T23:31:05.569Z",
+  "data": 数据值或对象
+}
+```
+
+**字段说明：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `code` | string | 响应码，成功固定为 `"000000"`（6个0） |
+| `mesg` | string | 响应消息（注意字段名为 `mesg`，不是 `msg`） |
+| `time` | string | 响应时间，ISO 8601 格式 |
+| `data` | T | 实际业务数据 |
+| `page` | PageMeta \| null | 分页信息，仅列表接口存在（可选） |
+
+**TypeScript 类型定义**（`src/types/api/common.ts`）：
+
+```typescript
+export interface ApiResponse<T = any> {
+  code: string;
+  data: T;
+  msg?: string;  // 兼容旧接口
+  mesg?: string;  // OpenSabre 标准字段
+  time?: string;
+  page?: PageMeta | null;
+}
+```
+
 ### Node.js Compatibility
 - Requires Node.js `^20.19.0 || >=22.12.0`
 - For macOS 11 (Big Sur) users: pnpm override forces esbuild 0.24.2 (instead of 0.27.2) for compatibility
