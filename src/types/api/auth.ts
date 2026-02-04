@@ -43,3 +43,11 @@ export interface CaptchaInfo {
   /** 验证码图片Base64 */
   captchaBase64: string;
 }
+
+/**
+ * OAuth2 配置
+ */
+export interface OAuth2Config {
+  /** 授权地址 */
+  authorizeUrl: string;
+}

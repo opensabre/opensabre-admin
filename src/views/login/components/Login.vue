@@ -99,6 +99,9 @@
         <div class="divider-line"></div>
       </div>
       <div class="social-login">
+        <div class="social-login__item" @click="handleOpenSabreLogin">
+          <div class="i-svg:gitee" />
+        </div>
         <div class="social-login__item">
           <div class="i-svg:wechat" />
         </div>
@@ -108,16 +111,13 @@
         <div class="social-login__item">
           <div class="i-svg:github" />
         </div>
-        <div class="social-login__item">
-          <div class="i-svg:gitee" />
-        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import type { FormInstance } from "element-plus";
-import AuthAPI from "@/api/auth";
+import AuthAPI, { OAuth2_CONFIG } from "@/api/auth";
 import type { LoginRequest } from "@/types/api";
 import router from "@/router";
 import { useUserStore } from "@/store";
@@ -229,6 +229,15 @@ function checkCapsLock(event: KeyboardEvent) {
 const emit = defineEmits(["update:modelValue"]);
 function toOtherForm(type: "register" | "resetPwd") {
   emit("update:modelValue", type);
+}
+
+/**
+ * 处理 OpenSabre OAuth2 登录
+ */
+function handleOpenSabreLogin() {
+  const redirectPath = (route.query.redirect as string) || "/";
+  const state = encodeURIComponent(redirectPath);
+  window.location.href = `${OAuth2_CONFIG.authorizeUrl}?state=${state}`;
 }
 </script>
 

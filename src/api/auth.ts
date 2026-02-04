@@ -1,7 +1,14 @@
 import request from "@/utils/request";
-import type { LoginRequest, LoginResponse, CaptchaInfo } from "@/types/api/auth";
+import type { LoginRequest, LoginResponse, CaptchaInfo, OAuth2Config } from "@/types/api/auth";
 
 const AUTH_BASE_URL = "/api/v1/auth";
+
+/**
+ * OAuth2 配置
+ */
+export const OAuth2_CONFIG: OAuth2Config = {
+  authorizeUrl: "/oauth2/authorization/base-gateway-client",
+};
 
 const AuthAPI = {
   /** 登录接口*/

@@ -84,11 +84,16 @@
 import logo from "@/assets/images/logo.png";
 import { appConfig } from "@/settings";
 import ThemeSwitch from "@/components/ThemeSwitch/index.vue";
+import { useUserStore } from "@/store";
+import { AuthStorage } from "@/utils/auth";
 
 type LayoutMap = "login" | "register" | "resetPwd";
 
 const { t } = useI18n();
 const component = ref<LayoutMap>("login");
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
 
 const tenantEnabled = appConfig.tenantEnabled;
 
@@ -97,6 +102,36 @@ const formComponents = {
   register: defineAsyncComponent(() => import("./components/Register.vue")),
   resetPwd: defineAsyncComponent(() => import("./components/ResetPwd.vue")),
 };
+
+/**
+ * 检测 OAuth2 登录后的认证状态
+ * 支持两种方式：
+ * 1. token-based：网关直接返回 token，存储在本地
+ * 2. session-based：网关返回 sessionId cookie，需要通过 API 验证
+ */
+onMounted(async () => {
+  const hasToken = AuthStorage.getAccessToken();
+
+  try {
+    if (hasToken) {
+      // 方式1：有 token，通过 Authorization 头获取用户信息
+      await userStore.getUserInfo();
+    } else {
+      // 方式2：没有 token，尝试通过 session 验证
+      // 网关会根据 cookie 中的 sessionId 验证登录状态
+      await userStore.getUserInfo();
+    }
+
+    // 认证成功，跳转到目标页面
+    const redirectPath = (route.query.redirect as string) || "/";
+    await router.push(decodeURIComponent(redirectPath));
+  } catch {
+    // 两种方式都失败，说明未登录，正常显示登录表单
+    console.log("未登录或认证已失效");
+    // 清除可能存在的无效凭证
+    AuthStorage.clearAuth();
+  }
+});
 </script>
 
 <style lang="scss" scoped>
