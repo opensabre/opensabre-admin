@@ -35,13 +35,29 @@ export interface LoginResponse {
 }
 
 /**
+ * 业务场景枚举
+ */
+export enum CaptchaScenario {
+  /** 登录图片验证码 */
+  LOGIN_IMAGE = "LOGIN_IMAGE",
+  /** 注册图片验证码 */
+  REGISTER_IMAGE = "REGISTER_IMAGE",
+  /** 登录短信验证码 */
+  LOGIN_SMS = "LOGIN_SMS",
+  /** 登录邮件验证码 */
+  LOGIN_EMAIL = "LOGIN_EMAIL",
+}
+
+/**
  * 验证码响应
  */
 export interface CaptchaInfo {
   /** 验证码缓存key */
   captchaId: string;
   /** 验证码图片Base64 */
-  captchaBase64: string;
+  imageData: string;
+  /** 过期时间(单位:秒) */
+  expireTime: number;
 }
 
 /**

@@ -1,5 +1,6 @@
 import request from "@/utils/request";
 import type { LoginRequest, LoginResponse, CaptchaInfo, OAuth2Config } from "@/types/api/auth";
+import { CaptchaScenario } from "@/types/api/auth";
 
 const AUTH_BASE_URL = "/api/v1/auth";
 
@@ -62,10 +63,11 @@ const AuthAPI = {
   },
 
   /** 获取验证码接口*/
-  getCaptcha() {
+  getCaptcha(requestKey: string, scenario: CaptchaScenario = CaptchaScenario.LOGIN_IMAGE) {
     return request<any, CaptchaInfo>({
-      url: `${AUTH_BASE_URL}/captcha`,
-      method: "get",
+      url: "/api/sysadmin/captcha/send/image",
+      method: "post",
+      params: { scenario, requestKey },
     });
   },
 };

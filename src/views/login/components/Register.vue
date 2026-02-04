@@ -102,6 +102,7 @@ import { Lock } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
 import AuthAPI from "@/api/auth";
 import type { LoginRequest } from "@/types/api";
+import { CaptchaScenario } from "@/types/api/auth";
 
 const { t } = useI18n();
 
@@ -183,10 +184,12 @@ const rules = computed(() => {
 const codeLoading = ref(false);
 function getCaptcha() {
   codeLoading.value = true;
-  AuthAPI.getCaptcha()
+  // 生成唯一标识符 (requestKey)
+  const requestKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  AuthAPI.getCaptcha(requestKey, CaptchaScenario.REGISTER_IMAGE)
     .then((data) => {
       model.value.captchaId = data.captchaId;
-      captchaBase64.value = data.captchaBase64;
+      captchaBase64.value = data.imageData;
     })
     .finally(() => (codeLoading.value = false));
 }

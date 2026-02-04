@@ -122,6 +122,7 @@ import type { LoginRequest } from "@/types/api";
 import router from "@/router";
 import { useUserStore } from "@/store";
 import { AuthStorage } from "@/utils/auth";
+import { CaptchaScenario } from "@/types/api/auth";
 
 const { t } = useI18n();
 const userStore = useUserStore();
@@ -180,10 +181,12 @@ const loginRules = computed(() => {
 const codeLoading = ref(false);
 function getCaptcha() {
   codeLoading.value = true;
-  AuthAPI.getCaptcha()
+  // 生成唯一标识符 (requestKey)
+  const requestKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  AuthAPI.getCaptcha(requestKey, CaptchaScenario.LOGIN_IMAGE)
     .then((data) => {
       loginFormData.value.captchaId = data.captchaId;
-      captchaBase64.value = data.captchaBase64;
+      captchaBase64.value = data.imageData;
     })
     .finally(() => (codeLoading.value = false));
 }
