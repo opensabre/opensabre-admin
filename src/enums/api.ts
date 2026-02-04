@@ -12,7 +12,7 @@ export const enum ApiCodeEnum {
   /**
    * 成功
    */
-  SUCCESS = "00000",
+  SUCCESS = "000000",
 
   /**
    * 访问令牌无效或过期
