@@ -17,9 +17,9 @@ export interface UserInfo {
   /** 租户身份标识(PLATFORM/TENANT) */
   tenantScope?: string;
   /** 角色集合 */
-  roles: string[];
+  roles?: string[];
   /** 权限集合 */
-  perms: string[];
+  perms?: string[];
 }
 
 /** 用户分页查询参数 */

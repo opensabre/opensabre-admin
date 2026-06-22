@@ -73,11 +73,15 @@ http.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const { code, msg } = response.data as ApiResponse;
+    const { code, msg } = (response.data || {}) as ApiResponse;
 
-    // Token 过期处理
-    if (code === ApiCodeEnum.ACCESS_TOKEN_INVALID) {
-      return retryWithRefresh(config);
+    // Token 过期处理；Session 模式没有 refresh token，直接回到登录页
+    if (code === ApiCodeEnum.ACCESS_TOKEN_INVALID || response.status === 401) {
+      if (AuthStorage.getRefreshToken()) {
+        return retryWithRefresh(config);
+      }
+      await redirectToLogin("登录已过期，请重新登录");
+      return Promise.reject(new Error(msg || "Session Invalid"));
     }
 
     if (code === ApiCodeEnum.REFRESH_TOKEN_INVALID) {

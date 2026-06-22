@@ -17,11 +17,21 @@ export function setupPermissionGuard() {
     NProgress.start();
 
     try {
-      const isLoggedIn = useUserStore().isLoggedIn();
+      const userStore = useUserStore();
+      const isWhiteListed = whiteList.includes(to.path);
+      let isLoggedIn = userStore.isLoggedIn();
+
+      if (!isLoggedIn && !isWhiteListed) {
+        try {
+          isLoggedIn = await userStore.ensureAuthenticated();
+        } catch {
+          isLoggedIn = false;
+        }
+      }
 
       // 未登录处理
       if (!isLoggedIn) {
-        if (whiteList.includes(to.path)) {
+        if (isWhiteListed) {
           next();
         } else {
           next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
@@ -37,7 +47,6 @@ export function setupPermissionGuard() {
       }
 
       const permissionStore = usePermissionStore();
-      const userStore = useUserStore();
 
       // 动态路由生成
       if (!permissionStore.isRouteGenerated) {

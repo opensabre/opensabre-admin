@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSabre Admin 登录时序图</title>
+  <desc id="desc">浏览器、前端 Nginx、gateway-web/base-gateway、base-authorization 和后端业务应用之间的 OAuth2 登录、会话恢复、API 请求和登出时序。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#245b9f" />
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#748094" />
+    </marker>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .title { font: 700 34px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #1f2a37; }
+      .subtitle { font: 400 16px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #607086; }
+      .actor { fill: #ffffff; stroke: #bfd0e5; stroke-width: 2; rx: 10; }
+      .actor-text { font: 700 16px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #25364d; text-anchor: middle; }
+      .life { stroke: #b8c6d8; stroke-width: 2; stroke-dasharray: 7 7; }
+      .call { stroke: #245b9f; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+      .return { stroke: #748094; stroke-width: 2; fill: none; stroke-dasharray: 7 6; marker-end: url(#arrow-gray); }
+      .label { font: 400 14px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #26384f; }
+      .label-small { font: 400 12px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #5d6b7c; }
+      .phase { fill: #eaf3ff; stroke: #7ea6de; stroke-width: 1.5; rx: 8; }
+      .phase-text { font: 700 15px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #234d83; }
+      .note { fill: #fffaf0; stroke: #d7b768; stroke-width: 1.5; rx: 10; }
+      .note-text { font: 400 13px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #514323; }
+      .activation { fill: #dfeeff; stroke: #6d97cc; stroke-width: 1.5; rx: 4; }
+      .warn { fill: #fff1f1; stroke: #d77981; stroke-width: 1.5; rx: 8; }
+      .warn-text { font: 400 13px "Inter", "PingFang SC", "Microsoft YaHei", Arial, sans-serif; fill: #653137; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1120" />
+  <text class="title" x="60" y="56">OpenSabre Admin 登录时序图</text>
+  <text class="subtitle" x="60" y="84">重点：OAuth2 回调先回到 admin 域名下的前端 Nginx，再由 Nginx 转发 `/login/oauth2/...` 到 gateway。</text>
+
+  <!-- Actors -->
+  <rect class="actor" x="60" y="120" width="190" height="62" />
+  <text class="actor-text" x="155" y="148">浏览器</text>
+  <text class="label-small" x="155" y="168" text-anchor="middle">Vue Admin / Cookie</text>
+
+  <rect class="actor" x="355" y="120" width="190" height="62" />
+  <text class="actor-text" x="450" y="148">前端 Nginx</text>
+  <text class="label-small" x="450" y="168" text-anchor="middle">静态资源 / 反向代理</text>
+
+  <rect class="actor" x="650" y="120" width="230" height="62" />
+  <text class="actor-text" x="765" y="148">gateway-web / base-gateway</text>
+  <text class="label-small" x="765" y="168" text-anchor="middle">OAuth2 Client / Session</text>
+
+  <rect class="actor" x="985" y="120" width="210" height="62" />
+  <text class="actor-text" x="1090" y="148">base-authorization</text>
+  <text class="label-small" x="1090" y="168" text-anchor="middle">认证 / 授权码 / Token</text>
+
+  <rect class="actor" x="1300" y="120" width="220" height="62" />
+  <text class="actor-text" x="1410" y="148">后端业务应用</text>
+  <text class="label-small" x="1410" y="168" text-anchor="middle">组织 / 系统管理等</text>
+
+  <!-- Lifelines -->
+  <line class="life" x1="155" y1="182" x2="155" y2="1035" />
+  <line class="life" x1="450" y1="182" x2="450" y2="1035" />
+  <line class="life" x1="765" y1="182" x2="765" y2="1035" />
+  <line class="life" x1="1090" y1="182" x2="1090" y2="1035" />
+  <line class="life" x1="1410" y1="182" x2="1410" y2="1035" />
+
+  <!-- Phase 1 -->
+  <rect class="phase" x="60" y="215" width="250" height="34" />
+  <text class="phase-text" x="78" y="238">一、打开登录页</text>
+
+  <path class="call" d="M155 278 H450" />
+  <text class="label" x="180" y="268">GET /login 或受保护路由</text>
+  <rect class="activation" x="444" y="260" width="12" height="64" />
+
+  <path class="return" d="M450 324 H155" />
+  <text class="label" x="248" y="314">返回 index.html / 静态资源</text>
+
+  <!-- Phase 2 OAuth -->
+  <rect class="phase" x="60" y="370" width="250" height="34" />
+  <text class="phase-text" x="78" y="393">二、OAuth2 登录</text>
+
+  <path class="call" d="M155 435 H450" />
+  <text class="label" x="178" y="425">GET /oauth2/authorization/base-gateway-client?state=...</text>
+  <rect class="activation" x="444" y="418" width="12" height="52" />
+
+  <path class="call" d="M450 470 H765" />
+  <text class="label" x="500" y="460">Nginx 代理 /oauth2/authorization</text>
+  <rect class="activation" x="759" y="454" width="12" height="72" />
+
+  <path class="call" d="M765 526 H1090" />
+  <text class="label" x="810" y="516">重定向到授权端点 / 发起授权请求</text>
+  <rect class="activation" x="1084" y="510" width="12" height="76" />
+
+  <path class="return" d="M1090 586 H155" />
+  <text class="label" x="508" y="576">浏览器跟随重定向，在 base-authorization 完成登录和授权</text>
+
+  <path class="call" d="M155 636 H450" />
+  <text class="label" x="178" y="626">GET admin 域名 /login/oauth2/code/... ?code=...&amp;state=...</text>
+  <rect class="activation" x="444" y="620" width="12" height="60" />
+
+  <path class="call" d="M450 680 H765" />
+  <text class="label" x="506" y="670">Nginx 代理 /login/oauth2/... 到 gateway</text>
+
+  <path class="call" d="M765 730 H1090" />
+  <text class="label" x="822" y="720">使用 code 换取 token / 校验授权结果</text>
+
+  <path class="return" d="M1090 780 H765" />
+  <text class="label" x="870" y="770">返回 token / 用户认证结果</text>
+
+  <path class="return" d="M765 830 H450" />
+  <text class="label" x="510" y="820">建立服务端 session，生成 Set-Cookie，重定向 admin</text>
+
+  <path class="return" d="M450 875 H155" />
+  <text class="label" x="244" y="865">302 回到 state 指定的站内路径，浏览器保存 Cookie</text>
+
+  <!-- Phase 3 restore -->
+  <rect class="phase" x="60" y="915" width="250" height="34" />
+  <text class="phase-text" x="78" y="938">三、恢复前端登录态</text>
+
+  <path class="call" d="M155 980 H450" />
+  <text class="label" x="178" y="970">GET /api/... 当前用户接口，自动携带 session cookie</text>
+
+  <path class="call" d="M450 1015 H765" />
+  <text class="label" x="512" y="1005">Nginx 代理 /api 到 gateway</text>
+
+  <path class="call" d="M765 1050 H1410" />
+  <text class="label" x="850" y="1040">gateway 校验 session/token 后转发到业务应用</text>
+
+  <path class="return" d="M1410 1085 H155" />
+  <text class="label" x="500" y="1075">返回当前用户、角色、权限；前端写入 userInfo/authStatus/authMode</text>
+
+  <!-- Right-side notes -->
+  <rect class="note" x="1230" y="230" width="310" height="116" />
+  <text class="note-text" x="1250" y="258">同源路径：</text>
+  <text class="note-text" x="1250" y="284">/api、/oauth2、/login/oauth2</text>
+  <text class="note-text" x="1250" y="310">都先到前端 Nginx。</text>
+  <text class="note-text" x="1250" y="336">浏览器自动携带 Cookie。</text>
+
+  <rect class="warn" x="1230" y="380" width="310" height="116" />
+  <text class="warn-text" x="1250" y="408">关键修正：</text>
+  <text class="warn-text" x="1250" y="434">OAuth2 redirect_uri 应是 admin</text>
+  <text class="warn-text" x="1250" y="460">站点地址下的 /login/oauth2/...</text>
+  <text class="warn-text" x="1250" y="486">再由 Nginx 转发到 gateway。</text>
+
+  <rect class="note" x="1230" y="530" width="310" height="132" />
+  <text class="note-text" x="1250" y="558">前端登录态：</text>
+  <text class="note-text" x="1250" y="584">不保存 session id。</text>
+  <text class="note-text" x="1250" y="610">刷新页面后通过当前用户接口</text>
+  <text class="note-text" x="1250" y="636">重新恢复 userInfo 和动态路由。</text>
+
+  <rect class="note" x="1230" y="705" width="310" height="150" />
+  <text class="note-text" x="1250" y="733">后续 API：</text>
+  <text class="note-text" x="1250" y="759">session 模式依赖 Cookie。</text>
+  <text class="note-text" x="1250" y="785">token 模式追加 Authorization。</text>
+  <text class="note-text" x="1250" y="811">session 失效直接回登录页；</text>
+  <text class="note-text" x="1250" y="837">token 失效可用 refresh token 重试。</text>
+</svg>

@@ -23,7 +23,7 @@ const UserAPI = {
    */
   getInfo() {
     return request<any, UserInfo>({
-      url: `${USER_BASE_URL}/me`,
+      url: `/api/org/user/101`,
       method: "get",
     });
   },
