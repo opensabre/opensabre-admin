@@ -79,7 +79,7 @@ export interface UserForm {
   /** 用户昵称 */
   nickname?: string;
   /** 角色ID集合 */
-  roleIds?: number[];
+  roleIds?: Array<number | string>;
   /** 用户状态(1:正常;0:禁用) */
   status?: number;
   /** 用户名 */

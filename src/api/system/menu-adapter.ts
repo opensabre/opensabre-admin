@@ -50,6 +50,11 @@ function toComponentPath(href: string) {
   const legacyOrgMap: Record<string, string> = {
     "admin/users": "system/user/index",
     "admin/menus": "system/menu/index",
+    "admin/roles": "system/role/index",
+    "admin/role": "system/role/index",
+    "admin/groups": "system/dept/index",
+    "admin/group": "system/dept/index",
+    "admin/org": "system/dept/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;

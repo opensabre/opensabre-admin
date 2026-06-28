@@ -233,7 +233,7 @@ const roleFormRef = ref();
 const permTreeRef = ref();
 
 const loading = ref(false);
-const ids = ref<number[]>([]);
+const ids = ref<string[]>([]);
 const total = ref(0);
 
 const queryParams = reactive<RoleQueryParams>({
@@ -364,7 +364,7 @@ function handleCloseDialog() {
 }
 
 // 删除角色
-function handleDelete(roleId?: number) {
+function handleDelete(roleId?: string) {
   const roleIds = [roleId || ids.value].join(",");
   if (!roleIds) {
     ElMessage.warning("请勾选删除项");
@@ -420,9 +420,9 @@ async function openRolePermissionAssignment(row: RoleItem) {
 function handleAssignPermSubmit() {
   const roleId = checkedRole.value.id;
   if (roleId) {
-    const checkedMenuIds: number[] = permTreeRef
+    const checkedMenuIds: string[] = permTreeRef
       .value!.getCheckedNodes(false, true)
-      .map((node: any) => node.value);
+      .map((node: any) => String(node.value));
 
     loading.value = true;
     RoleAPI.updateRoleMenus(roleId, checkedMenuIds)

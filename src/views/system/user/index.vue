@@ -201,6 +201,9 @@
             v-model="formData.deptId"
             placeholder="请选择所属部门"
             :data="deptOptions"
+            lazy
+            :load="loadDeptOptionChildren"
+            :props="deptTreeProps"
             filterable
             check-strictly
             :render-after-expand="false"
@@ -333,6 +336,11 @@ const formData = reactive<UserForm>({ ...initialFormData });
 // 下拉选项数据
 const deptOptions = ref<OptionItem[]>();
 const roleOptions = ref<OptionItem[]>();
+const deptTreeProps = {
+  children: "children",
+  label: "label",
+  isLeaf: "isLeaf",
+};
 
 // 导入弹窗
 const importDialogVisible = ref(false);
@@ -362,7 +370,6 @@ const tenantScopeOptions = [
 const rules = reactive({
   username: [VALIDATORS.required("用户名不能为空")],
   nickname: [VALIDATORS.required("用户昵称不能为空")],
-  deptId: [VALIDATORS.required("所属部门不能为空")],
   roleIds: [VALIDATORS.required("用户角色不能为空")],
   email: [VALIDATORS.email],
   mobile: [VALIDATORS.mobile],
@@ -409,6 +416,14 @@ function handleResetQuery(): void {
   queryParams.createTime = undefined;
   handleQuery();
 }
+
+function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void) {
+  const parentId = node.level === 0 ? "0" : node.data?.value;
+  DeptAPI.getOptions(parentId)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
+
 // ==================== 用户操作 ====================
 
 /**
@@ -446,10 +461,8 @@ async function handleOpenDialog(id?: string): Promise<void> {
 
   // 并行加载下拉选项数据
   try {
-    [roleOptions.value, deptOptions.value] = await Promise.all([
-      RoleAPI.getOptions(),
-      DeptAPI.getOptions(),
-    ]);
+    roleOptions.value = await RoleAPI.getOptions();
+    deptOptions.value = [{ value: "0", label: "顶级部门", children: [] }];
   } catch (error) {
     ElMessage.error("加载选项数据失败");
     console.error("加载选项数据失败:", error);

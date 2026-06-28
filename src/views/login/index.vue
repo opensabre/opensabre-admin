@@ -1,83 +1,121 @@
 <template>
-  <div class="auth-view">
-    <div class="auth-view__toolbar">
-      <el-tooltip :content="t('login.themeToggle')" placement="bottom">
-        <div class="toolbar-item">
-          <ThemeSwitch />
-        </div>
-      </el-tooltip>
-      <el-tooltip :content="t('login.languageToggle')" placement="bottom">
-        <div class="toolbar-item">
-          <LangSelect size="text-20px" />
-        </div>
-      </el-tooltip>
-    </div>
+  <main class="oauth-home">
+    <div class="oauth-home__mesh" aria-hidden="true" />
 
-    <div class="auth-view__wrapper">
-      <!-- 可选：左侧产品介绍区域，如不需要可整段删除，右侧登录表单会自动居中展示 -->
-      <section class="auth-feature">
-        <div class="auth-feature__badge">
-          <span class="auth-feature__dot" />
-          Enterprise Ready
-        </div>
-        <h1 class="auth-feature__title">企业级管理系统</h1>
-        <p class="auth-feature__subtitle">
-          提供安全、高效、可扩展的管理解决方案，助力企业数字化转型与业务增长。
+    <header class="oauth-home__header">
+      <div class="brand">
+        <span class="brand__mark">
+          <img :src="logo" alt="" />
+        </span>
+        <span class="brand__name">{{ appConfig.title }}</span>
+      </div>
+
+      <div class="oauth-home__toolbar">
+        <el-tooltip :content="t('login.themeToggle')" placement="bottom">
+          <button class="icon-button" type="button" aria-label="切换主题">
+            <ThemeSwitch />
+          </button>
+        </el-tooltip>
+        <el-tooltip :content="t('login.languageToggle')" placement="bottom">
+          <button class="icon-button" type="button" aria-label="切换语言">
+            <LangSelect size="text-20px" />
+          </button>
+        </el-tooltip>
+      </div>
+    </header>
+
+    <section class="oauth-home__content">
+      <div class="hero">
+        <h1>OpenSabre 管理平台</h1>
+        <p class="hero__lead">统一身份认证 · 权限治理 · 组织协同</p>
+        <p class="hero__copy">
+          通过 OAuth2 安全认证进入系统，集中管理用户、角色、菜单权限与组织资源。
         </p>
-        <ul class="auth-feature__highlights">
-          <li>
-            <span>✓</span>
-            统一身份认证与权限管理
-          </li>
-          <li>
-            <span>✓</span>
-            支持多租户模式与租户隔离
-          </li>
-          <li>
-            <span>✓</span>
-            数据安全与操作审计
-          </li>
-          <li>
-            <span>✓</span>
-            灵活扩展与高可用架构
-          </li>
-        </ul>
-      </section>
 
-      <section class="auth-panel">
-        <div class="auth-panel__brand">
-          <div class="auth-panel__logo-wrap">
-            <el-image :src="logo" class="auth-panel__logo" />
+        <div class="hero__actions">
+          <el-button
+            class="oauth-button"
+            type="primary"
+            size="large"
+            :loading="checkingSession"
+            @click="handleOAuthLogin"
+          >
+            <el-icon><Key /></el-icon>
+            使用统一身份登录
+          </el-button>
+          <span class="hero__hint">
+            <el-icon><Lock /></el-icon>
+            通过 OAuth2 安全认证进入系统
+          </span>
+        </div>
+
+        <div class="trust-strip" aria-label="平台能力">
+          <div v-for="item in capabilityItems" :key="item.label" class="trust-strip__item">
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
           </div>
-          <div class="auth-panel__meta">
-            <div class="auth-panel__title-row">
-              <span class="auth-panel__title">{{ appConfig.title }}</span>
+        </div>
+      </div>
+
+      <aside class="console-preview" aria-label="管理台预览">
+        <div class="console-preview__topbar">
+          <span />
+          <span />
+          <span />
+          <strong>Console</strong>
+        </div>
+
+        <div class="console-preview__body">
+          <div class="console-preview__summary">
+            <div>
+              <span class="summary-label">今日认证</span>
+              <strong>1,284</strong>
             </div>
-            <div v-if="appConfig.version || tenantEnabled" class="auth-panel__version-row">
-              <el-text size="small" type="info">VERSION</el-text>
-              <el-tag v-if="appConfig.version" size="small" effect="light" round>
-                {{ `v${appConfig.version}` }}
-              </el-tag>
-              <el-tag v-if="tenantEnabled" type="success" size="small" effect="light" round>
-                多租户
-              </el-tag>
+            <div class="summary-chart" aria-hidden="true">
+              <span style="height: 36%" />
+              <span style="height: 58%" />
+              <span style="height: 44%" />
+              <span style="height: 72%" />
+              <span style="height: 63%" />
+            </div>
+          </div>
+
+          <div class="module-list">
+            <div v-for="module in modules" :key="module.title" class="module-row">
+              <span class="module-row__icon">
+                <el-icon><component :is="module.icon" /></el-icon>
+              </span>
+              <span class="module-row__content">
+                <strong>{{ module.title }}</strong>
+                <small>{{ module.description }}</small>
+              </span>
+              <span class="module-row__status">{{ module.status }}</span>
+            </div>
+          </div>
+
+          <div class="audit-panel">
+            <div class="audit-panel__header">
+              <strong>审计追踪</strong>
+              <span>实时</span>
+            </div>
+            <div class="audit-line">
+              <span />
+              <em />
+            </div>
+            <div class="audit-line audit-line--short">
+              <span />
+              <em />
             </div>
           </div>
         </div>
+      </aside>
+    </section>
 
-        <transition name="fade-slide" mode="out-in">
-          <component :is="formComponents[component]" v-model="component" class="auth-panel__form" />
-        </transition>
-
-        <footer class="auth-panel__footer">
-          <el-text size="small">
-            Copyright © 2021 - 2025 youlai.tech
-            <a href="http://beian.miit.gov.cn/" target="_blank">皖ICP备00064962号</a>
-          </el-text>
-        </footer>
-      </section>
-    </div>
-  </div>
+    <footer class="oauth-home__footer">
+      <span>OpenSabre · Enterprise Administration</span>
+      <span v-if="appConfig.version">v{{ appConfig.version }}</span>
+    </footer>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -86,475 +124,580 @@ import { appConfig } from "@/settings";
 import ThemeSwitch from "@/components/ThemeSwitch/index.vue";
 import { useUserStore } from "@/store";
 import { AuthStorage } from "@/utils/auth";
-
-type LayoutMap = "login" | "register" | "resetPwd";
+import { OAuth2_CONFIG } from "@/api/auth";
+import {
+  Key,
+  Lock,
+  User,
+  Menu,
+  Connection,
+  Operation,
+  SetUp,
+  Tickets,
+} from "@element-plus/icons-vue";
 
 const { t } = useI18n();
-const component = ref<LayoutMap>("login");
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const checkingSession = ref(true);
 
-const tenantEnabled = appConfig.tenantEnabled;
+const capabilityItems = [
+  { label: "统一认证", icon: Lock },
+  { label: "角色权限", icon: Operation },
+  { label: "组织协同", icon: Connection },
+];
 
-const formComponents = {
-  login: defineAsyncComponent(() => import("./components/Login.vue")),
-  register: defineAsyncComponent(() => import("./components/Register.vue")),
-  resetPwd: defineAsyncComponent(() => import("./components/ResetPwd.vue")),
-};
+const modules = [
+  { title: "用户管理", description: "账户、状态与组织归属", status: "Ready", icon: User },
+  { title: "菜单权限", description: "动态路由与可见范围", status: "Synced", icon: Menu },
+  { title: "组织角色", description: "角色授权与资源绑定", status: "Active", icon: SetUp },
+  { title: "审计追踪", description: "登录记录与关键操作", status: "Live", icon: Tickets },
+];
 
-/**
- * 检测 OAuth2 登录后的认证状态
- * 支持两种方式：
- * 1. token-based：网关直接返回 token，存储在本地
- * 2. session-based：网关返回 sessionId cookie，需要通过 API 验证
- */
+function handleOAuthLogin() {
+  window.location.href = OAuth2_CONFIG.authorizeUrl;
+}
+
 onMounted(async () => {
   const hasToken = AuthStorage.getAccessToken();
+  if (!hasToken) {
+    checkingSession.value = false;
+    return;
+  }
 
   try {
-    if (hasToken) {
-      // 方式1：有 token，通过 Authorization 头获取用户信息
-      await userStore.getUserInfo();
-    } else {
-      // 方式2：没有 token，尝试通过 session 验证
-      // 网关会根据 cookie 中的 sessionId 验证登录状态
-      await userStore.getUserInfo();
-    }
+    await userStore.getUserInfo();
 
-    // 认证成功，跳转到目标页面
     const redirectPath = (route.query.redirect as string) || "/";
     await router.push(decodeURIComponent(redirectPath));
   } catch {
-    // 两种方式都失败，说明未登录，正常显示登录表单
-    console.log("未登录或认证已失效");
-    // 清除可能存在的无效凭证
     AuthStorage.clearAuth();
+  } finally {
+    checkingSession.value = false;
   }
 });
 </script>
 
 <style lang="scss" scoped>
-.auth-view {
+.oauth-home {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
-  padding: clamp(1rem, 3vw, 2rem);
+  min-height: 100%;
+  padding: 28px clamp(22px, 4vw, 64px);
   overflow: hidden;
-  background-color: #f5f7ff;
+  color: #0f172a;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 250, 255, 0.92)),
+    radial-gradient(circle at 88% 14%, rgba(34, 211, 238, 0.14), transparent 30%), #f8fbff;
 
   &::before {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: -2;
-    content: "";
-    background: url("@/assets/images/login-bg.svg") center/cover no-repeat;
-  }
-
-  &::after {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
     pointer-events: none;
     content: "";
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+    background-image:
+      linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.75), transparent 72%);
   }
 }
 
-.auth-view__toolbar {
-  display: inline-flex;
-  gap: 0.75rem;
-  align-self: flex-end;
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(22, 93, 255, 0.15);
-  border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(22, 93, 255, 0.12);
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-
-  &:hover {
-    box-shadow: 0 16px 40px rgba(22, 93, 255, 0.18);
-    transform: translateY(-2px);
-  }
-
-  .toolbar-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-
-    &:hover {
-      background-color: var(--el-fill-color);
-    }
-  }
-
-  @media (max-width: 640px) {
-    position: fixed;
-    top: 12px;
-    right: 16px;
-    z-index: 20;
-    align-self: flex-end;
-    justify-content: center;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(24, 28, 43, 0.8);
-    border-color: rgba(64, 128, 255, 0.3);
-  }
+.oauth-home__mesh {
+  position: absolute;
+  inset: auto -12% -26% 36%;
+  height: 54%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 32% 40%, rgba(14, 165, 233, 0.15), transparent 32%),
+    radial-gradient(circle at 72% 48%, rgba(16, 185, 129, 0.16), transparent 28%);
+  filter: blur(16px);
 }
 
-/* 应用内暗黑主题下顶部设置面板的深色样式 */
-.dark .auth-view__toolbar {
-  background-color: rgba(24, 28, 43, 0.9);
-  border-color: rgba(64, 128, 255, 0.35);
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(90, 140, 255, 0.25) inset;
+.oauth-home__header,
+.oauth-home__content,
+.oauth-home__footer {
+  position: relative;
+  z-index: 1;
 }
 
-.auth-view__wrapper {
-  display: grid;
-  flex: 1;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: clamp(1.5rem, 3vw, 3rem);
-  align-items: stretch;
-  padding: clamp(1.5rem, 2vw, 2.5rem);
-}
-
-.auth-feature {
+.oauth-home__header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: clamp(1.5rem, 3vw, 3rem);
-  color: var(--el-text-color-primary);
-  animation: featureFade 0.8s ease-out;
-}
-
-@media (max-width: 768px) {
-  .auth-view__wrapper {
-    display: block;
-    padding: 1.25rem 0.75rem 1.75rem;
-  }
-
-  .auth-feature {
-    display: none;
-  }
-
-  .auth-panel {
-    width: 100%;
-    margin-inline: 0;
-    box-shadow:
-      0 12px 32px rgba(22, 93, 255, 0.18),
-      0 2px 8px rgba(22, 93, 255, 0.12);
-  }
-}
-
-.auth-feature__badge {
-  display: inline-flex;
-  gap: 0.5rem;
-  align-items: center;
-  width: fit-content;
-  padding: 0.3rem 0.9rem;
-  font-size: 0.875rem;
-  color: rgba(22, 93, 255, 0.95);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: rgba(22, 93, 255, 0.1);
-  border-radius: 999px;
-
-  @media (prefers-color-scheme: dark) {
-    color: rgba(160, 190, 255, 0.95);
-    background: rgba(64, 128, 255, 0.12);
-  }
-}
-
-.auth-feature__dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  background: #165dff;
-  border-radius: 50%;
-  box-shadow: 0 0 12px rgba(22, 93, 255, 0.7);
-
-  @media (prefers-color-scheme: dark) {
-    background: #7aa2ff;
-  }
-}
-
-.auth-feature__title {
-  margin: 1.5rem 0 0.5rem;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.auth-feature__subtitle {
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--el-text-color-regular);
-
-  @media (prefers-color-scheme: dark) {
-    color: rgba(220, 230, 255, 0.75);
-  }
-}
-
-.auth-feature__highlights {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-
-  li {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    padding: 0.75rem 1rem;
-    font-weight: 500;
-    color: var(--el-text-color-primary);
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(64, 128, 255, 0.08);
-    border-radius: 12px;
-    backdrop-filter: blur(6px);
-
-    span {
-      font-size: 0.75rem;
-      line-height: 1.6;
-      color: rgba(22, 93, 255, 0.8);
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    li {
-      color: rgba(230, 236, 255, 0.85);
-      background: rgba(18, 22, 36, 0.7);
-      border-color: rgba(98, 149, 255, 0.18);
-
-      span {
-        color: rgba(122, 162, 255, 0.9);
-      }
-    }
-  }
-}
-
-.auth-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-self: center;
-  justify-content: flex-start;
-  justify-self: end;
-  width: min(420px, 100%);
-  padding: clamp(1.5rem, 3vw, 2rem);
-  margin-inline: auto;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(22, 93, 255, 0.1);
-  border-radius: 24px;
-  box-shadow:
-    0 16px 48px rgba(22, 93, 255, 0.12),
-    0 4px 16px rgba(22, 93, 255, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-  backdrop-filter: blur(20px);
-  animation: panelLift 0.7s ease;
-
-  @media (prefers-color-scheme: dark) {
-    background: rgba(18, 20, 32, 0.88);
-    border-color: rgba(64, 128, 255, 0.25);
-    box-shadow:
-      0 20px 60px rgba(0, 0, 0, 0.6),
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(90, 140, 255, 0.12) inset;
-  }
-}
-
-/* 应用内暗黑主题（例如 html/body 上挂 .dark 类）下的登录表单样式 */
-.dark .auth-panel {
-  background: rgba(26, 32, 48, 0.9);
-  border-color: rgba(86, 140, 255, 0.28);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.58),
-    0 4px 16px rgba(0, 0, 0, 0.36),
-    0 0 0 1px rgba(110, 150, 255, 0.16) inset;
-}
-
-.auth-panel__brand {
-  display: flex;
-  gap: 0.75rem;
+  gap: 20px;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 0.875rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(22, 93, 255, 0.06);
-
-  @media (prefers-color-scheme: dark) {
-    border-color: rgba(64, 128, 255, 0.12);
-  }
 }
 
-.auth-panel__logo-wrap {
+.brand {
   display: inline-flex;
+  gap: 12px;
   align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  background: radial-gradient(circle at 30% 20%, #ffffff, #e6efff);
-  border-radius: 18px;
-  box-shadow:
-    0 8px 20px rgba(22, 93, 255, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-
-  @media (prefers-color-scheme: dark) {
-    background: radial-gradient(circle at 30% 20%, #1f2438, #141827);
-    box-shadow:
-      0 8px 20px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(90, 140, 255, 0.3) inset;
-  }
-}
-
-.auth-panel__logo {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-}
-
-.auth-panel__meta {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.35rem;
   min-width: 0;
 }
 
-.auth-panel__title-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: baseline;
+.brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+
+  img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+  }
 }
 
-.auth-panel__title {
+.brand__name {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 1.2rem;
-  font-weight: 650;
-  line-height: 1.4;
-  color: var(--el-text-color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
   white-space: nowrap;
 }
 
-.auth-panel__version-row {
+.oauth-home__toolbar {
   display: inline-flex;
-  gap: 0.5rem;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.icon-button {
+  display: inline-flex;
   align-items: center;
-  font-size: 0.78rem;
-}
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: #334155;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
 
-.auth-panel__form {
-  width: 100%;
-  max-width: 100%;
-  margin-inline: auto;
-
-  :deep(.el-form-item) {
-    margin-bottom: 1rem;
-  }
-
-  :deep(.el-input__wrapper) {
-    box-shadow: 0 0 0 1px var(--el-border-color) inset;
-    transition: all 0.2s ease;
-
-    &:hover {
-      box-shadow: 0 0 0 1px var(--el-border-color-hover) inset;
-    }
-
-    &.is-focus {
-      box-shadow: 0 0 0 1px var(--el-color-primary) inset;
-    }
-  }
-
-  :deep(.el-card) {
-    background: transparent;
-    box-shadow: none;
+  &:hover {
+    color: #0369a1;
+    background: rgba(14, 165, 233, 0.1);
   }
 }
 
-.auth-panel__footer {
-  padding-top: 0.875rem;
-  margin-top: 0.125rem;
-  font-size: 0.875rem;
-  text-align: center;
-  border-top: 1px solid rgba(22, 93, 255, 0.06);
+.oauth-home__content {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 0.78fr);
+  gap: clamp(36px, 6vw, 92px);
+  align-items: center;
+  width: min(1180px, 100%);
+  padding: clamp(44px, 8vh, 92px) 0 36px;
+  margin: 0 auto;
+}
 
-  a {
-    margin-left: 0.25rem;
-    color: rgba(22, 93, 255, 0.85);
-    text-decoration: none;
-    transition: color 0.2s ease;
+.hero {
+  max-width: 620px;
+}
 
-    &:hover {
-      color: rgba(22, 93, 255, 1);
-    }
-  }
+.hero h1 {
+  margin: 0;
+  font-size: clamp(42px, 5.8vw, 76px);
+  font-weight: 800;
+  line-height: 1.03;
+  color: #07111f;
+  letter-spacing: 0;
+}
 
-  @media (prefers-color-scheme: dark) {
-    border-color: rgba(64, 128, 255, 0.12);
+.hero__lead {
+  margin: 22px 0 0;
+  font-size: clamp(21px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.35;
+  color: #0f766e;
+}
 
-    a {
-      color: rgba(140, 170, 255, 0.88);
+.hero__copy {
+  max-width: 560px;
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.9;
+  color: #475569;
+}
 
-      &:hover {
-        color: rgba(160, 190, 255, 1);
-      }
-    }
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 34px;
+}
+
+.oauth-button {
+  height: 48px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0284c7, #0f766e);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 18px 36px rgba(14, 116, 144, 0.24);
+
+  :deep(.el-icon) {
+    margin-right: 8px;
+    font-size: 18px;
   }
 }
 
-@keyframes featureFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+.hero__hint {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 42px;
+}
+
+.trust-strip__item {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  height: 38px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 650;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+
+  .el-icon {
+    color: #0891b2;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+}
+
+.console-preview {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  box-shadow:
+    0 28px 80px rgba(15, 23, 42, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  backdrop-filter: blur(16px);
+}
+
+.console-preview__topbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 50px;
+  padding: 0 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+
+  span {
+    width: 9px;
+    height: 9px;
+    background: #cbd5e1;
+    border-radius: 50%;
+  }
+
+  strong {
+    margin-left: 8px;
+    font-size: 13px;
+    color: #475569;
   }
 }
 
-@keyframes panelLift {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.98);
+.console-preview__body {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.console-preview__summary,
+.audit-panel {
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+}
+
+.console-preview__summary {
+  display: flex;
+  gap: 18px;
+  align-items: end;
+  justify-content: space-between;
+
+  strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 34px;
+    line-height: 1;
+    color: #0f172a;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+}
+
+.summary-label {
+  font-size: 13px;
+  font-weight: 650;
+  color: #64748b;
+}
+
+.summary-chart {
+  display: flex;
+  gap: 7px;
+  align-items: end;
+  width: 128px;
+  height: 68px;
+
+  span {
+    flex: 1;
+    background: linear-gradient(180deg, #22d3ee, #0f766e);
+    border-radius: 6px 6px 2px 2px;
   }
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+.module-list {
+  display: grid;
+  gap: 10px;
 }
 
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(-40px) scale(0.95);
+.module-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 8px;
 }
 
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(40px) scale(0.95);
+.module-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  color: #0369a1;
+  background: #e0f2fe;
+  border-radius: 8px;
 }
 
-.fade-slide-enter-to,
-.fade-slide-leave-from {
-  opacity: 1;
-  transform: translateX(0) scale(1);
+.module-row__content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    font-size: 14px;
+    color: #0f172a;
+  }
+
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+  }
+}
+
+.module-row__status {
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 6px;
+}
+
+.audit-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+
+  strong {
+    font-size: 14px;
+    color: #0f172a;
+  }
+
+  span {
+    font-size: 12px;
+    color: #0891b2;
+  }
+}
+
+.audit-line {
+  display: grid;
+  grid-template-columns: 9px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+
+  span {
+    width: 9px;
+    height: 9px;
+    background: #10b981;
+    border-radius: 50%;
+  }
+
+  em {
+    height: 8px;
+    background: linear-gradient(90deg, #cbd5e1, rgba(203, 213, 225, 0));
+    border-radius: 999px;
+  }
+}
+
+.audit-line--short em {
+  width: 72%;
+}
+
+.oauth-home__footer {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-top: 18px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+:global(.dark) .oauth-home {
+  color: #e5edf8;
+  background:
+    linear-gradient(180deg, rgba(5, 13, 24, 0.94), rgba(10, 20, 36, 0.96)),
+    radial-gradient(circle at 84% 14%, rgba(34, 211, 238, 0.16), transparent 30%), #07111f;
+
+  &::before {
+    background-image:
+      linear-gradient(rgba(226, 232, 240, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(226, 232, 240, 0.06) 1px, transparent 1px);
+  }
+}
+
+:global(.dark) {
+  .brand__mark,
+  .oauth-home__toolbar,
+  .console-preview,
+  .console-preview__summary,
+  .audit-panel {
+    background: rgba(15, 23, 42, 0.82);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .brand__name,
+  .hero h1,
+  .console-preview__summary strong,
+  .module-row__content strong,
+  .audit-panel__header strong {
+    color: #f8fafc;
+  }
+
+  .hero__copy,
+  .hero__hint,
+  .oauth-home__footer,
+  .module-row__content small,
+  .summary-label {
+    color: #94a3b8;
+  }
+
+  .console-preview__topbar,
+  .module-row {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.14);
+  }
+
+  .trust-strip__item {
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.16);
+  }
+}
+
+@media (max-width: 980px) {
+  .oauth-home {
+    min-height: auto;
+    overflow-y: auto;
+  }
+
+  .oauth-home__content {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding-top: 48px;
+  }
+
+  .hero {
+    max-width: none;
+  }
+
+  .console-preview {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 640px) {
+  .oauth-home {
+    padding: 18px;
+  }
+
+  .brand__name {
+    max-width: 180px;
+  }
+
+  .oauth-home__content {
+    padding-top: 42px;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+  }
+
+  .hero__actions,
+  .oauth-button {
+    width: 100%;
+  }
+
+  .hero__hint {
+    width: 100%;
+  }
+
+  .console-preview__summary,
+  .module-row {
+    grid-template-columns: 1fr;
+  }
+
+  .console-preview__summary {
+    align-items: stretch;
+  }
+
+  .summary-chart {
+    width: 100%;
+  }
+
+  .module-row__status {
+    width: fit-content;
+  }
+
+  .oauth-home__footer {
+    flex-direction: column;
+  }
 }
 </style>

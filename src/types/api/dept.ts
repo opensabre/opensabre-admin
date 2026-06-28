@@ -14,10 +14,14 @@ export interface DeptQueryParams {
 export interface DeptItem {
   /** 子部门 */
   children?: DeptItem[];
+  /** 部门编号 */
+  code?: string;
   /** 创建时间 */
   createTime?: Date;
   /** 部门ID */
   id?: string;
+  /** 是否存在子节点 */
+  hasChildren?: boolean;
   /** 部门名称 */
   name?: string;
   /** 父部门ID */

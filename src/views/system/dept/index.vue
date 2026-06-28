@@ -54,7 +54,8 @@
         v-loading="loading"
         :data="deptList"
         row-key="id"
-        default-expand-all
+        lazy
+        :load="loadDeptChildren"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         class="table-section__content"
         @selection-change="handleSelectionChange"
@@ -120,6 +121,9 @@
             v-model="formData.parentId"
             placeholder="选择上级部门"
             :data="deptOptions"
+            lazy
+            :load="loadDeptOptionChildren"
+            :props="deptTreeProps"
             filterable
             check-strictly
             :render-after-expand="false"
@@ -170,7 +174,7 @@ const queryFormRef = ref();
 const deptFormRef = ref();
 
 const loading = ref(false);
-const selectIds = ref<number[]>([]);
+const selectIds = ref<string[]>([]);
 const queryParams = reactive<DeptQueryParams>({});
 
 const dialog = reactive({
@@ -180,6 +184,11 @@ const dialog = reactive({
 
 const deptList = ref<DeptItem[]>();
 const deptOptions = ref<OptionItem[]>();
+const deptTreeProps = {
+  children: "children",
+  label: "label",
+  isLeaf: "isLeaf",
+};
 const formData = reactive<DeptForm>({
   status: 1,
   parentId: "0",
@@ -213,6 +222,19 @@ function handleSelectionChange(selection: any) {
   selectIds.value = selection.map((item: any) => item.id);
 }
 
+function loadDeptChildren(row: DeptItem, _: unknown, resolve: (data: DeptItem[]) => void) {
+  DeptAPI.getChildren(row.id)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
+
+function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void) {
+  const parentId = node.level === 0 ? "0" : node.data?.value;
+  DeptAPI.getOptions(parentId)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
+
 /**
  * 打开部门弹窗
  *
@@ -220,13 +242,11 @@ function handleSelectionChange(selection: any) {
  * @param deptId 部门ID
  */
 async function handleOpenDialog(parentId?: string, deptId?: string) {
-  // 加载部门下拉数据
-  const data = await DeptAPI.getOptions();
   deptOptions.value = [
     {
       value: "0",
       label: "顶级部门",
-      children: data,
+      children: [],
     },
   ];
 
@@ -270,7 +290,7 @@ function handleSubmit() {
 }
 
 // 删除部门
-function handleDelete(deptId?: number) {
+function handleDelete(deptId?: string) {
   const deptIds = [deptId || selectIds.value].join(",");
 
   if (!deptIds) {

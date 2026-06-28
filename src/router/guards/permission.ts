@@ -57,7 +57,12 @@ export function setupPermissionGuard() {
         // 加载用户租户列表（VITE_APP_TENANT_ENABLED=true 时生效）
         await initTenantContext();
 
-        const dynamicRoutes = await permissionStore.generateRoutes();
+        const userId = userStore.userInfo.userId;
+        if (!userId) {
+          throw new Error("Current user id is missing");
+        }
+
+        const dynamicRoutes = await permissionStore.generateRoutes(userId);
         dynamicRoutes.forEach((route: RouteRecordRaw) => {
           router.addRoute(route);
         });

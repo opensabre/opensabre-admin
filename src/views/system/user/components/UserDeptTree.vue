@@ -9,11 +9,11 @@
     <el-tree
       ref="deptTreeRef"
       class="mt-2"
-      :data="deptList"
       :props="{ children: 'children', label: 'label', disabled: '' }"
       :expand-on-click-node="false"
       :filter-node-method="handleFilter"
-      default-expand-all
+      lazy
+      :load="loadDeptChildren"
       @node-click="handleNodeClick"
     />
   </el-card>
@@ -28,7 +28,6 @@ const props = defineProps({
   },
 });
 
-const deptList = ref<OptionItem[]>(); // 部门列表
 const deptTreeRef = ref(); // 部门树
 const deptName = ref(); // 部门名称
 
@@ -61,9 +60,10 @@ function handleNodeClick(data: { [key: string]: any }) {
   emits("node-click");
 }
 
-onBeforeMount(() => {
-  DeptAPI.getOptions().then((data) => {
-    deptList.value = data;
-  });
-});
+function loadDeptChildren(node: any, resolve: (data: OptionItem[]) => void) {
+  const parentId = node.level === 0 ? "0" : node.data?.value;
+  DeptAPI.getOptions(parentId)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
 </script>

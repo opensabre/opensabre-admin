@@ -14,6 +14,71 @@ import type {
 } from "@/types/api";
 
 const USER_BASE_URL = "/api/v1/users";
+const ORG_USER_BASE_URL = "/api/org/user";
+
+interface OrgUser {
+  id?: string;
+  username?: string;
+  name?: string;
+  mobile?: string;
+  description?: string;
+  roleIds?: Array<number | string> | Set<number | string>;
+  enabled?: boolean;
+  createdTime?: Date;
+  updatedTime?: Date;
+}
+
+interface OrgPage<T> {
+  records?: T[];
+  current?: number;
+  size?: number;
+  total?: number;
+}
+
+function toUserItem(user: OrgUser): UserItem {
+  return {
+    id: String(user.id ?? ""),
+    username: user.username,
+    nickname: user.name,
+    mobile: user.mobile,
+    roleNames: Array.isArray(user.roleIds) ? user.roleIds.join(",") : undefined,
+    status: user.enabled === false ? 0 : 1,
+    createTime: user.createdTime,
+  };
+}
+
+function toUserForm(user: OrgUser): UserForm {
+  return {
+    id: user.id,
+    username: user.username,
+    nickname: user.name,
+    mobile: user.mobile,
+    roleIds: Array.from(user.roleIds ?? []).map(String),
+    status: user.enabled === false ? 0 : 1,
+  };
+}
+
+function toOrgUserForm(data: UserForm) {
+  return {
+    username: data.username,
+    name: data.nickname || data.username,
+    mobile: data.mobile,
+    roleIds: data.roleIds?.map(String),
+    enabled: data.status !== 0,
+  };
+}
+
+function toOrgUserQuery(queryParams: UserQueryParams) {
+  const [createdTimeStart, createdTimeEnd] = queryParams.createTime ?? [];
+  return {
+    current: queryParams.pageNum,
+    size: queryParams.pageSize,
+    username: queryParams.keywords || undefined,
+    groupId: queryParams.deptId || undefined,
+    createdTimeStart,
+    createdTimeEnd,
+  };
+}
 
 const UserAPI = {
   /**
@@ -23,7 +88,7 @@ const UserAPI = {
    */
   getInfo() {
     return request<any, UserInfo>({
-      url: `/api/org/user/101`,
+      url: `${ORG_USER_BASE_URL}/101`,
       method: "get",
     });
   },
@@ -34,11 +99,18 @@ const UserAPI = {
    * @param queryParams 查询参数
    */
   getPage(queryParams: UserQueryParams) {
-    return request<any, PageResult<UserItem>>({
-      url: `${USER_BASE_URL}`,
-      method: "get",
-      params: queryParams,
-    });
+    return request<any, OrgPage<OrgUser>>({
+      url: `${ORG_USER_BASE_URL}/conditions`,
+      method: "post",
+      data: toOrgUserQuery(queryParams),
+    }).then((page) => ({
+      data: (page.records ?? []).map(toUserItem),
+      page: {
+        pageNum: page.current ?? queryParams.pageNum,
+        pageSize: page.size ?? queryParams.pageSize,
+        total: page.total ?? 0,
+      },
+    }));
   },
 
   /**
@@ -48,10 +120,10 @@ const UserAPI = {
    * @returns 用户表单详情
    */
   getFormData(userId: string) {
-    return request<any, UserForm>({
-      url: `${USER_BASE_URL}/${userId}/form`,
+    return request<any, OrgUser>({
+      url: `${ORG_USER_BASE_URL}/${userId}`,
       method: "get",
-    });
+    }).then(toUserForm);
   },
 
   /**
@@ -61,9 +133,9 @@ const UserAPI = {
    */
   create(data: UserForm) {
     return request({
-      url: `${USER_BASE_URL}`,
+      url: `${ORG_USER_BASE_URL}`,
       method: "post",
-      data,
+      data: toOrgUserForm(data),
     });
   },
 
@@ -75,9 +147,9 @@ const UserAPI = {
    */
   update(id: string, data: UserForm) {
     return request({
-      url: `${USER_BASE_URL}/${id}`,
+      url: `${ORG_USER_BASE_URL}/${id}`,
       method: "put",
-      data,
+      data: toOrgUserForm(data),
     });
   },
 
@@ -87,11 +159,18 @@ const UserAPI = {
    * @param id 用户ID
    * @param password 新密码
    */
-  resetPassword(id: string, password: string) {
+  async resetPassword(id: string, password: string) {
+    const user = await request<any, OrgUser>({
+      url: `${ORG_USER_BASE_URL}/${id}`,
+      method: "get",
+    });
     return request({
-      url: `${USER_BASE_URL}/${id}/password/reset`,
+      url: `${ORG_USER_BASE_URL}/${id}`,
       method: "put",
-      params: { password },
+      data: {
+        ...user,
+        password,
+      },
     });
   },
 
@@ -101,10 +180,18 @@ const UserAPI = {
    * @param ids 用户ID字符串，多个以英文逗号(,)分割
    */
   deleteByIds(ids: string) {
-    return request({
-      url: `${USER_BASE_URL}/${ids}`,
-      method: "delete",
-    });
+    return Promise.all(
+      ids
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .map((id) =>
+          request({
+            url: `${ORG_USER_BASE_URL}/${id}`,
+            method: "delete",
+          })
+        )
+    );
   },
 
   /** 下载用户导入模板 */
