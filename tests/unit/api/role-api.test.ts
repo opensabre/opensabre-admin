@@ -51,4 +51,18 @@ describe("RoleAPI", () => {
       data: ["1", "2"],
     });
   });
+
+  it("updates role resources through organization role API", async () => {
+    requestMock.mockResolvedValueOnce(true);
+
+    const { default: RoleAPI } = await import("@/api/system/role");
+
+    await RoleAPI.updateRoleResources("201", ["313", 314]);
+
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/api/org/role/201/resources",
+      method: "put",
+      data: ["313", "314"],
+    });
+  });
 });

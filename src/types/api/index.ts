@@ -10,6 +10,8 @@ export * from "./user";
 export * from "./role";
 export * from "./menu";
 export * from "./dept";
+export * from "./resource";
+export * from "./position";
 export * from "./dict";
 export * from "./config";
 export * from "./log";

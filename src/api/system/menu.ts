@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import type { MenuQueryParams, MenuItem, MenuForm, RouteItem, OptionItem } from "@/types/api";
+import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/api";
 import { toRouteItems, type OrgMenuItem } from "./menu-adapter";
 
 const ORG_MENU_BASE_URL = "/api/org/menu";

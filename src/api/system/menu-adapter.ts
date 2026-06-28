@@ -55,6 +55,10 @@ function toComponentPath(href: string) {
     "admin/groups": "system/dept/index",
     "admin/group": "system/dept/index",
     "admin/org": "system/dept/index",
+    "admin/resources": "system/resource/index",
+    "admin/resource": "system/resource/index",
+    "admin/positions": "system/position/index",
+    "admin/position": "system/position/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;

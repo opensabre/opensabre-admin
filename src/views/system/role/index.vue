@@ -69,6 +69,16 @@
               分配权限
             </el-button>
             <el-button
+              v-hasPerm="'sys:role:assign'"
+              type="primary"
+              size="small"
+              link
+              icon="connection"
+              @click="openRoleResourceAssignment(scope.row)"
+            >
+              分配功能
+            </el-button>
+            <el-button
               type="primary"
               size="small"
               link
@@ -210,6 +220,52 @@
         </div>
       </template>
     </el-drawer>
+
+    <el-drawer
+      v-model="assignResourceDialogVisible"
+      :title="'【' + checkedRole.name + '】功能分配'"
+      :size="drawerSize"
+    >
+      <div class="flex-x-between">
+        <el-input
+          v-model="resourceKeywords"
+          clearable
+          class="w-[220px]"
+          placeholder="功能名称/编码/路径"
+        >
+          <template #prefix>
+            <Search />
+          </template>
+        </el-input>
+      </div>
+
+      <el-table
+        ref="resourceTableRef"
+        v-loading="loading"
+        :data="filteredResourceOptions"
+        row-key="value"
+        border
+        class="mt-5"
+        max-height="560"
+        @selection-change="handleResourceSelectionChange"
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="功能资源" prop="label" min-width="220" show-overflow-tooltip />
+      </el-table>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button
+            v-hasPerm="'sys:role:assign'"
+            type="primary"
+            @click="handleAssignResourceSubmit"
+          >
+            确定
+          </el-button>
+          <el-button @click="assignResourceDialogVisible = false">取消</el-button>
+        </div>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
@@ -220,6 +276,7 @@ import { DeviceEnum } from "@/enums/settings";
 import RoleAPI from "@/api/system/role";
 import type { RoleItem, RoleForm, RoleQueryParams } from "@/types/api";
 import MenuAPI from "@/api/system/menu";
+import ResourceAPI from "@/api/system/resource";
 
 defineOptions({
   name: "Role",
@@ -231,6 +288,7 @@ const appStore = useAppStore();
 const queryFormRef = ref();
 const roleFormRef = ref();
 const permTreeRef = ref();
+const resourceTableRef = ref();
 
 const loading = ref(false);
 const ids = ref<string[]>([]);
@@ -274,11 +332,21 @@ interface CheckedRole {
 }
 const checkedRole = ref<CheckedRole>({});
 const assignPermDialogVisible = ref(false);
+const assignResourceDialogVisible = ref(false);
 
 const permKeywords = ref("");
+const resourceKeywords = ref("");
+const checkedResourceIds = ref<string[]>([]);
 const isExpanded = ref(true);
 
 const parentChildLinked = ref(true);
+
+const resourceOptions = ref<OptionItem[]>([]);
+const filteredResourceOptions = computed(() => {
+  const keyword = resourceKeywords.value.trim();
+  if (!keyword) return resourceOptions.value;
+  return resourceOptions.value.filter((resource) => String(resource.label).includes(keyword));
+});
 
 // 获取数据
 function fetchData() {
@@ -435,6 +503,51 @@ function handleAssignPermSubmit() {
         loading.value = false;
       });
   }
+}
+
+// 打开分配功能资源弹窗
+async function openRoleResourceAssignment(row: RoleItem) {
+  const roleId = row.id;
+  if (!roleId) return;
+
+  assignResourceDialogVisible.value = true;
+  loading.value = true;
+  checkedRole.value.id = roleId;
+  checkedRole.value.name = row.name;
+
+  try {
+    resourceOptions.value = await ResourceAPI.getOptions();
+    checkedResourceIds.value = (await RoleAPI.getRoleResourceIds(roleId)).map(String);
+    await nextTick();
+    resourceTableRef.value?.clearSelection();
+    resourceOptions.value.forEach((resource) => {
+      if (checkedResourceIds.value.includes(String(resource.value))) {
+        resourceTableRef.value?.toggleRowSelection(resource, true);
+      }
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
+function handleResourceSelectionChange(selection: OptionItem[]) {
+  checkedResourceIds.value = selection.map((resource) => String(resource.value));
+}
+
+function handleAssignResourceSubmit() {
+  const roleId = checkedRole.value.id;
+  if (!roleId) return;
+
+  loading.value = true;
+  RoleAPI.updateRoleResources(roleId, checkedResourceIds.value)
+    .then(() => {
+      ElMessage.success("分配功能成功");
+      assignResourceDialogVisible.value = false;
+      handleResetQuery();
+    })
+    .finally(() => {
+      loading.value = false;
+    });
 }
 
 // 展开/收缩 菜单权限树

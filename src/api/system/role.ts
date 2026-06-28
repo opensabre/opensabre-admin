@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import type { RoleQueryParams, RoleItem, RoleForm, OptionItem } from "@/types/api";
+import type { RoleQueryParams, RoleItem, RoleForm } from "@/types/api";
 
 const ORG_ROLE_BASE_URL = "/api/org/role";
 
@@ -90,6 +90,21 @@ const RoleAPI = {
   updateRoleMenus(roleId: string, data: Array<number | string>) {
     return request({
       url: `${ORG_ROLE_BASE_URL}/${roleId}/menus`,
+      method: "put",
+      data: data.map(String),
+    });
+  },
+  /** 获取角色的资源ID集合 */
+  getRoleResourceIds(roleId: string) {
+    return request<any, string[]>({
+      url: `${ORG_ROLE_BASE_URL}/${roleId}/resourceIds`,
+      method: "get",
+    });
+  },
+  /** 分配功能资源 */
+  updateRoleResources(roleId: string, data: Array<number | string>) {
+    return request({
+      url: `${ORG_ROLE_BASE_URL}/${roleId}/resources`,
       method: "put",
       data: data.map(String),
     });
