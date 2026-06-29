@@ -61,6 +61,7 @@ function toComponentPath(href: string) {
     "admin/position": "system/position/index",
     "auth/client": "auth/client/index",
     "security/audit-log": "security/audit-log/index",
+    "sysadmin/audit-log": "security/audit-log/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;
