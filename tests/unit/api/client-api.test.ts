@@ -28,7 +28,7 @@ describe("OAuthClientAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/v1/auth/client/conditions",
+      url: "/api/auth/client/conditions",
       method: "post",
       data: {
         current: 1,
