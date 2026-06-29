@@ -70,7 +70,10 @@
           </template>
         </el-table-column>
         <el-table-column label="过期时间" prop="clientSecretExpiresAt" width="180" />
-        <el-table-column label="创建时间" prop="createTime" width="180" />
+        <el-table-column label="创建人" prop="createdBy" width="120" />
+        <el-table-column label="创建时间" prop="createdTime" width="180" />
+        <el-table-column label="更新人" prop="updatedBy" width="120" />
+        <el-table-column label="更新时间" prop="updatedTime" width="180" />
         <el-table-column fixed="right" label="操作" width="150">
           <template #default="scope">
             <el-button
@@ -195,6 +198,31 @@
             controls-position="right"
           />
         </el-form-item>
+        <template v-if="formData.id">
+          <el-divider />
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="创建人">
+                <el-input :model-value="formData.createdBy || '-'" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="创建时间">
+                <el-input :model-value="formData.createdTime || '-'" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="更新人">
+                <el-input :model-value="formData.updatedBy || '-'" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="更新时间">
+                <el-input :model-value="formData.updatedTime || '-'" disabled />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -302,6 +330,10 @@ function resetFormData() {
     redirectUri: "",
     accessTokenTimeToLive: 300,
     refreshTokenTimeToLive: 3600,
+    createdBy: undefined,
+    createdTime: undefined,
+    updatedBy: undefined,
+    updatedTime: undefined,
   });
 }
 

@@ -19,6 +19,15 @@ function toQuery(queryParams?: OAuthClientQueryParams) {
   };
 }
 
+function toArray(value?: string[] | string) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function toForm(client: OAuthClientItem): OAuthClientForm {
   return {
     id: client.id,
@@ -31,12 +40,32 @@ function toForm(client: OAuthClientItem): OAuthClientForm {
           Math.floor((new Date(client.clientSecretExpiresAt).getTime() - Date.now()) / 1000)
         )
       : null,
-    grantTypes: client.authorizationGrantTypes ?? [],
-    clientAuthenticationMethods: client.clientAuthenticationMethods ?? [],
-    scopes: client.scopes ?? [],
-    redirectUri: (client.redirectUris ?? []).join(","),
+    grantTypes: toArray(client.authorizationGrantTypes),
+    clientAuthenticationMethods: toArray(client.clientAuthenticationMethods),
+    scopes: toArray(client.scopes),
+    redirectUri: toArray(client.redirectUris).join(","),
     accessTokenTimeToLive: client.accessTokenTimeToLive ?? 300,
     refreshTokenTimeToLive: client.refreshTokenTimeToLive ?? 3600,
+    createdBy: client.createdBy,
+    createdTime: client.createdTime,
+    updatedBy: client.updatedBy,
+    updatedTime: client.updatedTime,
+  };
+}
+
+function toPayload(data: OAuthClientForm) {
+  return {
+    id: data.id,
+    clientId: data.clientId,
+    clientName: data.clientName,
+    clientSecret: data.clientSecret,
+    clientSecretExpires: data.clientSecretExpires,
+    grantTypes: data.grantTypes ?? [],
+    clientAuthenticationMethods: data.clientAuthenticationMethods ?? [],
+    scopes: data.scopes ?? [],
+    redirectUri: data.redirectUri,
+    accessTokenTimeToLive: data.accessTokenTimeToLive,
+    refreshTokenTimeToLive: data.refreshTokenTimeToLive,
   };
 }
 
@@ -50,10 +79,10 @@ const OAuthClientAPI = {
     }).then((page) => ({
       data: (page.records ?? []).map((item) => ({
         ...item,
-        redirectUris: item.redirectUris ?? [],
-        authorizationGrantTypes: item.authorizationGrantTypes ?? [],
-        clientAuthenticationMethods: item.clientAuthenticationMethods ?? [],
-        scopes: item.scopes ?? [],
+        redirectUris: toArray(item.redirectUris),
+        authorizationGrantTypes: toArray(item.authorizationGrantTypes),
+        clientAuthenticationMethods: toArray(item.clientAuthenticationMethods),
+        scopes: toArray(item.scopes),
       })),
       page: {
         pageNum: page.current ?? fallbackQuery.pageNum,
@@ -72,14 +101,14 @@ const OAuthClientAPI = {
     return request({
       url: OAUTH_CLIENT_BASE_URL,
       method: "post",
-      data,
+      data: toPayload(data),
     });
   },
   update(id: string, data: OAuthClientForm) {
     return request({
       url: `${OAUTH_CLIENT_BASE_URL}/${id}`,
       method: "put",
-      data,
+      data: toPayload(data),
     });
   },
   deleteByIds(ids: string) {

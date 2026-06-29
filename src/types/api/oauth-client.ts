@@ -16,12 +16,16 @@ export interface OAuthClientItem {
   clientId?: string;
   clientName?: string;
   clientSecret?: string;
+  createdBy?: string;
+  createdTime?: string;
+  updatedBy?: string;
+  updatedTime?: string;
   clientIdIssuedAt?: string;
   clientSecretExpiresAt?: string;
-  clientAuthenticationMethods?: string[];
-  authorizationGrantTypes?: string[];
-  redirectUris?: string[];
-  scopes?: string[];
+  clientAuthenticationMethods?: string[] | string;
+  authorizationGrantTypes?: string[] | string;
+  redirectUris?: string[] | string;
+  scopes?: string[] | string;
   accessTokenTimeToLive?: number;
   refreshTokenTimeToLive?: number;
 }
@@ -39,4 +43,8 @@ export interface OAuthClientForm {
   redirectUri?: string;
   accessTokenTimeToLive?: number | null;
   refreshTokenTimeToLive?: number | null;
+  createdBy?: string;
+  createdTime?: string;
+  updatedBy?: string;
+  updatedTime?: string;
 }
