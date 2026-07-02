@@ -25,6 +25,7 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
         title: menu.name || href,
         icon: menu.icon,
         hidden: menu.type === "BUTTON",
+        ...(children.length ? { alwaysShow: true } : {}),
       },
       children,
     };

@@ -67,6 +67,7 @@ describe("MenuAPI route adapter", () => {
           title: "系统管理",
           icon: "setting",
           hidden: false,
+          alwaysShow: true,
         },
         children: [
           {
