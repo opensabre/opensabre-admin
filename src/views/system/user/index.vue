@@ -365,6 +365,13 @@ const tenantScopeOptions = [
   { label: "租户", value: "TENANT" },
 ];
 
+function resetFormData(): void {
+  Object.keys(formData).forEach((key) => {
+    delete formData[key as keyof UserForm];
+  });
+  Object.assign(formData, initialFormData);
+}
+
 // ==================== 表单验证规则 ====================
 
 const rules = reactive({
@@ -457,6 +464,7 @@ function handleResetPassword(row: UserItem): void {
  * @param id 用户ID（编辑时传入）
  */
 async function handleOpenDialog(id?: string): Promise<void> {
+  resetFormData();
   dialogState.visible = true;
 
   // 并行加载下拉选项数据
@@ -504,7 +512,7 @@ function handleCloseDialog(): void {
   userFormRef.value?.clearValidate();
 
   // 完全重置表单数据
-  Object.assign(formData, initialFormData);
+  resetFormData();
 }
 
 /**
