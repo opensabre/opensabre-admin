@@ -22,6 +22,9 @@ interface OrgUser {
   name?: string;
   mobile?: string;
   description?: string;
+  gender?: string;
+  groupId?: string;
+  groupName?: string;
   roleIds?: Array<number | string> | Set<number | string>;
   enabled?: boolean;
   createdTime?: Date;
@@ -41,6 +44,8 @@ function toUserItem(user: OrgUser): UserItem {
     username: user.username,
     nickname: user.name,
     mobile: user.mobile,
+    gender: user.gender,
+    deptName: user.groupName,
     roleNames: Array.isArray(user.roleIds) ? user.roleIds.join(",") : undefined,
     status: user.enabled === false ? 0 : 1,
     createTime: user.createdTime,
@@ -53,6 +58,8 @@ function toUserForm(user: OrgUser): UserForm {
     username: user.username,
     nickname: user.name,
     mobile: user.mobile,
+    gender: user.gender,
+    deptId: user.groupId,
     roleIds: Array.from(user.roleIds ?? []).map(String),
     status: user.enabled === false ? 0 : 1,
   };
@@ -64,6 +71,8 @@ function toOrgUserForm(data: UserForm) {
     password: data.password || undefined,
     name: data.nickname || data.username,
     mobile: data.mobile,
+    gender: data.gender,
+    groupId: data.deptId,
     roleIds: data.roleIds?.map(String),
     enabled: data.status !== 0,
   };

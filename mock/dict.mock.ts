@@ -108,7 +108,7 @@ export default defineMock([
           id: 1,
           dictCode: "gender",
           label: "男",
-          value: "1",
+          value: "M",
           sort: 1,
           status: 1,
           tagType: "P",
@@ -117,7 +117,7 @@ export default defineMock([
           id: 2,
           dictCode: "gender",
           label: "女",
-          value: "2",
+          value: "F",
           sort: 2,
           status: 1,
           tagType: "D",
@@ -126,7 +126,7 @@ export default defineMock([
           id: 3,
           dictCode: "gender",
           label: "保密",
-          value: "0",
+          value: "UNKNOWN",
           sort: 3,
           status: 1,
           tagType: "I",
@@ -152,15 +152,15 @@ export default defineMock([
       if (dictCode == "gender") {
         list = [
           {
-            value: "1",
+            value: "M",
             label: "男",
           },
           {
-            value: "2",
+            value: "F",
             label: "女",
           },
           {
-            value: "0",
+            value: "UNKNOWN",
             label: "保密",
           },
         ];
@@ -185,32 +185,32 @@ export default defineMock([
       } else if (dictCode == "notice_type") {
         list = [
           {
-            value: "1",
+            value: "SYSTEM_UPGRADE",
             label: "系统升级",
             tagType: "S",
           },
           {
-            value: "2",
+            value: "SYSTEM_MAINTENANCE",
             label: "系统维护",
             tagType: "P",
           },
           {
-            value: "3",
+            value: "SECURITY_WARNING",
             label: "安全警告",
             tagType: "D",
           },
           {
-            value: "4",
+            value: "HOLIDAY_NOTICE",
             label: "假期通知",
             tagType: "S",
           },
           {
-            value: "5",
+            value: "COMPANY_NEWS",
             label: "公司新闻",
             tagType: "P",
           },
           {
-            value: "99",
+            value: "OTHER",
             label: "其他",
             tagType: "I",
           },
@@ -291,7 +291,7 @@ const dictMap: Record<string, any> = {
 const dictItemMap: Record<string, any> = {
   1: {
     id: 1,
-    value: "1",
+    value: "M",
     label: "男",
     sort: 1,
     status: 1,
@@ -299,7 +299,7 @@ const dictItemMap: Record<string, any> = {
   },
   2: {
     id: 2,
-    value: "2",
+    value: "F",
     label: "女",
     sort: 2,
     status: 1,
@@ -307,7 +307,7 @@ const dictItemMap: Record<string, any> = {
   },
   3: {
     id: 3,
-    value: "0",
+    value: "UNKNOWN",
     label: "保密",
     sort: 3,
     status: 1,

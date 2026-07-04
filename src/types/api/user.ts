@@ -47,7 +47,7 @@ export interface UserItem {
   /** 用户邮箱 */
   email?: string;
   /** 性别 */
-  gender?: number;
+  gender?: string;
   /** 手机号 */
   mobile?: string;
   /** 用户昵称 */
@@ -73,7 +73,7 @@ export interface UserForm {
   /** 用户邮箱 */
   email?: string;
   /** 性别 */
-  gender?: number;
+  gender?: string;
   /** 手机号 */
   mobile?: string;
   /** 用户昵称 */
@@ -99,7 +99,7 @@ export interface UserProfileDetail {
   /** 头像URL */
   avatar?: string;
   /** 性别 */
-  gender?: number;
+  gender?: string;
   /** 手机号 */
   mobile?: string;
   /** 邮箱 */
@@ -119,7 +119,7 @@ export interface UserProfileForm {
   /** 头像URL */
   avatar?: string;
   /** 性别 */
-  gender?: number;
+  gender?: string;
 }
 
 /** 修改密码表单 */

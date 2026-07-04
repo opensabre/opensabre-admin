@@ -23,7 +23,7 @@ export interface NoticeForm {
   /** 通知内容 */
   content?: string;
   /** 通知类型 */
-  type?: number;
+  type?: string;
   /** 通知等级 */
   level?: string;
   /** 发布状态(0:草稿;1:已发布;2:已撤回) */
@@ -43,7 +43,7 @@ export interface NoticeItem {
   /** 通知内容 */
   content: string;
   /** 通知类型 */
-  type: number;
+  type: string;
   /** 通知等级 */
   level: string;
   /** 发布状态 */
@@ -65,7 +65,7 @@ export interface NoticeDetail {
   /** 通知内容 */
   content?: string;
   /** 通知类型 */
-  type?: number;
+  type?: string;
   /** 通知等级 */
   level?: string;
   /** 发布状态 */

@@ -14,7 +14,7 @@ interface DemoItem {
   price: number;
   url: string;
   icon: string;
-  gender: number;
+  gender: string;
   status: number;
   status2: number;
   sort: number;
@@ -40,7 +40,7 @@ const contentConfig: IContentConfig<DemoQueryParams, DemoItem> = {
         price: 10,
         url: "https://www.baidu.com",
         icon: "el-icon-setting",
-        gender: 1,
+        gender: "M",
         status: 1,
         status2: 1,
         sort: 99,
@@ -54,7 +54,7 @@ const contentConfig: IContentConfig<DemoQueryParams, DemoItem> = {
         price: 999,
         url: "https://www.google.com",
         icon: "el-icon-user",
-        gender: 0,
+        gender: "UNKNOWN",
         status: 0,
         status2: 0,
         sort: 0,

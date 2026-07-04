@@ -60,7 +60,7 @@
           <el-descriptions :column="1" border>
             <el-descriptions-item label="用户名">
               {{ userProfile.username }}
-              <el-icon v-if="userProfile.gender === 1" class="gender-icon male">
+              <el-icon v-if="userProfile.gender === 'M'" class="gender-icon male">
                 <Male />
               </el-icon>
               <el-icon v-else class="gender-icon female">
