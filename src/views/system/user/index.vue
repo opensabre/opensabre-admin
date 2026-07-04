@@ -181,6 +181,20 @@
           />
         </el-form-item>
 
+        <el-form-item
+          v-if="dialogState.mode === DialogMode.CREATE"
+          label="初始密码"
+          prop="password"
+        >
+          <el-input
+            v-model="formData.password"
+            type="password"
+            show-password
+            placeholder="请输入初始密码"
+            maxlength="20"
+          />
+        </el-form-item>
+
         <el-form-item label="用户昵称" prop="nickname">
           <el-input v-model="formData.nickname" placeholder="请输入用户昵称" />
         </el-form-item>
@@ -376,6 +390,19 @@ function resetFormData(): void {
 
 const rules = reactive({
   username: [VALIDATORS.required("用户名不能为空")],
+  password: [
+    {
+      required: true,
+      message: "初始密码不能为空",
+      trigger: "blur",
+    },
+    {
+      min: 5,
+      max: 20,
+      message: "密码长度在5到20个字符",
+      trigger: "blur",
+    },
+  ],
   nickname: [VALIDATORS.required("用户昵称不能为空")],
   roleIds: [VALIDATORS.required("用户角色不能为空")],
   email: [VALIDATORS.email],

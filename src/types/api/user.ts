@@ -78,6 +78,8 @@ export interface UserForm {
   mobile?: string;
   /** 用户昵称 */
   nickname?: string;
+  /** 初始密码（仅新增用户时提交） */
+  password?: string;
   /** 角色ID集合 */
   roleIds?: Array<number | string>;
   /** 用户状态(1:正常;0:禁用) */

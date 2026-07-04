@@ -97,4 +97,32 @@ describe("UserAPI", () => {
       status: 0,
     });
   });
+
+  it("creates organization user with initial password", async () => {
+    requestMock.mockResolvedValueOnce(true);
+
+    const { default: UserAPI } = await import("@/api/system/user");
+
+    await UserAPI.create({
+      username: "newuser",
+      password: "123456",
+      nickname: "新用户",
+      mobile: "13900000000",
+      roleIds: ["101"],
+      status: 1,
+    });
+
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/org/user",
+      method: "post",
+      data: {
+        username: "newuser",
+        password: "123456",
+        name: "新用户",
+        mobile: "13900000000",
+        roleIds: ["101"],
+        enabled: true,
+      },
+    });
+  });
 });

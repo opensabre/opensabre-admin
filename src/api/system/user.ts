@@ -61,6 +61,7 @@ function toUserForm(user: OrgUser): UserForm {
 function toOrgUserForm(data: UserForm) {
   return {
     username: data.username,
+    password: data.password || undefined,
     name: data.nickname || data.username,
     mobile: data.mobile,
     roleIds: data.roleIds?.map(String),
