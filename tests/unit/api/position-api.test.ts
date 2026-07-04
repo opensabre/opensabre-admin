@@ -19,7 +19,7 @@ describe("PositionAPI", () => {
     const data = await PositionAPI.getList({ name: "首席" });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/position",
+      url: "/org/position",
       method: "get",
       params: { name: "首席" },
     });

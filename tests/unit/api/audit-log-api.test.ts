@@ -29,7 +29,7 @@ describe("AuditLogAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/sysadmin/audit/log/conditions",
+      url: "/sysadmin/audit/log/conditions",
       method: "post",
       data: {
         current: 1,

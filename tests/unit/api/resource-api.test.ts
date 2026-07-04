@@ -29,7 +29,7 @@ describe("ResourceAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/resource/conditions",
+      url: "/org/resource/conditions",
       method: "post",
       data: {
         current: 1,

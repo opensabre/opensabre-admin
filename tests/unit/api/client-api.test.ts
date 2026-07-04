@@ -28,7 +28,7 @@ describe("OAuthClientAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/auth/client/conditions",
+      url: "/auth/client/conditions",
       method: "post",
       data: {
         current: 1,
@@ -93,7 +93,7 @@ describe("OAuthClientAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/auth/client/1",
+      url: "/auth/client/1",
       method: "put",
       data: {
         id: "1",

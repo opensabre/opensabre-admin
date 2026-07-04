@@ -27,7 +27,7 @@ describe("DeptAPI", () => {
 
     expect(requestMock).toHaveBeenCalledTimes(1);
     expect(requestMock).toHaveBeenNthCalledWith(1, {
-      url: "/api/org/group/parent/-1",
+      url: "/org/group/parent/-1",
       method: "get",
     });
     expect(groups).toEqual([
@@ -56,7 +56,7 @@ describe("DeptAPI", () => {
     const groups = await DeptAPI.getChildren("301");
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/group/parent/301",
+      url: "/org/group/parent/301",
       method: "get",
     });
     expect(groups).toEqual([expect.objectContaining({ id: "302", parentId: "301" })]);
@@ -76,7 +76,7 @@ describe("DeptAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/group",
+      url: "/org/group",
       method: "post",
       data: {
         parentId: "-1",

@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { DeptQueryParams, DeptItem, DeptForm, OptionItem } from "@/types/api";
 
-const ORG_GROUP_BASE_URL = "/api/org/group";
+const ORG_GROUP_BASE_URL = "/org/group";
 const ROOT_PARENT_ID = "-1";
 const FRONT_ROOT_PARENT_ID = "0";
 

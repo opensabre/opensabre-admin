@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { OptionItem, ResourceForm, ResourceItem, ResourceQueryParams } from "@/types/api";
 
-const ORG_RESOURCE_BASE_URL = "/api/org/resource";
+const ORG_RESOURCE_BASE_URL = "/org/resource";
 
 interface OrgPage<T> {
   records?: T[];

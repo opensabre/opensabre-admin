@@ -8,7 +8,7 @@ import type {
   TenantItem,
 } from "@/types/api";
 
-const TENANT_BASE_URL = "/api/v1/tenants";
+const TENANT_BASE_URL = "/v1/tenants";
 
 /**
  * 租户信息

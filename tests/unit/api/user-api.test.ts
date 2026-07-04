@@ -40,7 +40,7 @@ describe("UserAPI", () => {
     });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/user/conditions",
+      url: "/org/user/conditions",
       method: "post",
       data: {
         current: 2,
@@ -85,7 +85,7 @@ describe("UserAPI", () => {
     const form = await UserAPI.getFormData("101");
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/user/101",
+      url: "/org/user/101",
       method: "get",
     });
     expect(form).toMatchObject({

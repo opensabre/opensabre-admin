@@ -24,7 +24,7 @@ describe("RoleAPI", () => {
     const page = await RoleAPI.getPage({ pageNum: 1, pageSize: 10, keywords: "管理员" });
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/role/conditions",
+      url: "/org/role/conditions",
       method: "post",
       data: {
         current: 1,
@@ -46,7 +46,7 @@ describe("RoleAPI", () => {
     await RoleAPI.updateRoleMenus("201", ["1", 2]);
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/role/201/menus",
+      url: "/org/role/201/menus",
       method: "put",
       data: ["1", "2"],
     });
@@ -60,7 +60,7 @@ describe("RoleAPI", () => {
     await RoleAPI.updateRoleResources("201", ["313", 314]);
 
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/role/201/resources",
+      url: "/org/role/201/resources",
       method: "put",
       data: ["313", "314"],
     });

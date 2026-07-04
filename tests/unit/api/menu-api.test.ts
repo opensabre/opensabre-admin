@@ -31,7 +31,7 @@ describe("MenuAPI", () => {
 
     expect(requestMock).toHaveBeenCalledTimes(1);
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/api/org/menu/user/101",
+      url: "/org/menu/user/101",
       method: "get",
     });
     expect(routes[0]).toMatchObject({
@@ -72,15 +72,15 @@ describe("MenuAPI", () => {
     const menus = await MenuAPI.getList({});
 
     expect(requestMock).toHaveBeenNthCalledWith(1, {
-      url: "/api/org/menu/parent/-1",
+      url: "/org/menu/parent/-1",
       method: "get",
     });
     expect(requestMock).toHaveBeenNthCalledWith(2, {
-      url: "/api/org/menu/parent/1",
+      url: "/org/menu/parent/1",
       method: "get",
     });
     expect(requestMock).toHaveBeenNthCalledWith(3, {
-      url: "/api/org/menu/parent/2",
+      url: "/org/menu/parent/2",
       method: "get",
     });
     expect(menus).toEqual([

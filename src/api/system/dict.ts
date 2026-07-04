@@ -10,9 +10,17 @@ import type {
   OptionItem,
 } from "@/types/api";
 
-const DICT_BASE_URL = "/api/v1/dicts";
+const DICT_BASE_URL = "/sysadmin/v1/dicts";
 
 type DictTagTypeCode = "N" | "P" | "S" | "W" | "I" | "D";
+type NestedPageResult<T> = PageResult<T> | { data?: PageResult<T>; page?: PageResult<T>["page"] };
+
+const normalizePage = <T>(res: NestedPageResult<T>): PageResult<T> => {
+  if (Array.isArray((res as PageResult<T>).data)) {
+    return res as PageResult<T>;
+  }
+  return ((res as { data?: PageResult<T> }).data ?? { data: [], page: null }) as PageResult<T>;
+};
 
 const decodeDictTagType = (code?: unknown): DictItemForm["tagType"] => {
   const val = String(code ?? "")
@@ -65,7 +73,7 @@ const DictAPI = {
       url: `${DICT_BASE_URL}`,
       method: "get",
       params: queryParams,
-    });
+    }).then(normalizePage);
   },
   /** 字典列表 */
   getList() {
@@ -94,13 +102,15 @@ const DictAPI = {
       url: `${DICT_BASE_URL}/${dictCode}/items`,
       method: "get",
       params: queryParams,
-    }).then((res) => ({
-      ...res,
-      data: (res.data ?? []).map((item) => ({
-        ...item,
-        tagType: decodeDictTagType((item as any).tagType),
-      })),
-    }));
+    })
+      .then(normalizePage)
+      .then((res) => ({
+        ...res,
+        data: (res.data ?? []).map((item) => ({
+          ...item,
+          tagType: decodeDictTagType((item as any).tagType),
+        })),
+      }));
   },
   /** 获取字典项列表 */
   getDictItems(dictCode: string) {

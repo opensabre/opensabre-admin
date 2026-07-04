@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { RoleQueryParams, RoleItem, RoleForm } from "@/types/api";
 
-const ORG_ROLE_BASE_URL = "/api/org/role";
+const ORG_ROLE_BASE_URL = "/org/role";
 
 interface OrgRole {
   code?: string;

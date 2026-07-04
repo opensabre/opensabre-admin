@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { OAuthClientForm, OAuthClientItem, OAuthClientQueryParams } from "@/types/api";
 
-const OAUTH_CLIENT_BASE_URL = "/api/auth/client";
+const OAUTH_CLIENT_BASE_URL = "/auth/client";
 
 interface OrgPage<T> {
   records?: T[];

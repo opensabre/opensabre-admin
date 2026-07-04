@@ -13,8 +13,8 @@ import type {
   OptionItem,
 } from "@/types/api";
 
-const USER_BASE_URL = "/api/v1/users";
-const ORG_USER_BASE_URL = "/api/org/user";
+const USER_BASE_URL = "/v1/users";
+const ORG_USER_BASE_URL = "/org/user";
 
 interface OrgUser {
   id?: string;

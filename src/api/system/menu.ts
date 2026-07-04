@@ -2,7 +2,7 @@ import request from "@/utils/request";
 import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/api";
 import { toRouteItems, type OrgMenuItem } from "./menu-adapter";
 
-const ORG_MENU_BASE_URL = "/api/org/menu";
+const ORG_MENU_BASE_URL = "/org/menu";
 const ROOT_PARENT_ID = "-1";
 const FRONT_ROOT_PARENT_ID = "0";
 

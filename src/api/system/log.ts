@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { LogQueryParams, LogItem } from "@/types/api";
 
-const LOG_BASE_URL = "/api/v1/logs";
+const LOG_BASE_URL = "/v1/logs";
 
 const LogAPI = {
   /** 获取日志分页列表 */

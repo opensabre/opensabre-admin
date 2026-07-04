@@ -8,7 +8,7 @@ import type {
   AiAssistantRecordItem,
 } from "@/types/api";
 
-const AI_BASE_URL = "/api/v1/ai/assistant";
+const AI_BASE_URL = "/v1/ai/assistant";
 
 /**
  * AI 命令 API

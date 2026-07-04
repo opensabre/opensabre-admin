@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { AuditLogItem, AuditLogQueryParams } from "@/types/api";
 
-const AUDIT_LOG_BASE_URL = "/api/sysadmin/audit/log";
+const AUDIT_LOG_BASE_URL = "/sysadmin/audit/log";
 
 interface OrgPage<T> {
   records?: T[];

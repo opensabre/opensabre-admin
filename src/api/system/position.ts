@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 import type { PositionForm, PositionItem, PositionQueryParams } from "@/types/api";
 
-const ORG_POSITION_BASE_URL = "/api/org/position";
+const ORG_POSITION_BASE_URL = "/org/position";
 
 const PositionAPI = {
   /** 获取岗位列表 */
