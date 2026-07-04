@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="canvas-dom">
     <h3>基于canvas实现的签名组件</h3>
     <header>
@@ -21,11 +21,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import FileAPI from "@/api/file-api";
+import FileAPI from "@/api/file";
 
 const imgUrl = ref("");
 const canvas = ref();
 let ctx: CanvasRenderingContext2D;
+let strokeColor = "#000";
 
 // 正在绘制中，用来控制 move 和 end 事件
 let painting = false;
@@ -34,7 +35,7 @@ let painting = false;
 const getOffset = (event: MouseEvent | TouchEvent) => {
   let offset: [number, number];
   if ((event as MouseEvent).offsetX) {
-    // pc端
+    // PC端
     const { offsetX, offsetY } = event as MouseEvent;
     offset = [offsetX, offsetY];
   } else {
@@ -60,11 +61,11 @@ const onEventStart = (event: MouseEvent | TouchEvent) => {
 
 const onEventMove = (event: MouseEvent | TouchEvent) => {
   if (painting) {
-    // 鼠标/触摸 移动时，保存 移动点相对 被触发dom的左、上 距离
+    // 鼠标/触摸 移动时，保存移动点相对被触发 DOM 的左、上距离
     const [endX, endY] = getOffset(event);
     paint(startX, startY, endX, endY, ctx);
 
-    // 每次绘制 或 清除结束后，起点要重置为上次的终点
+    // 每次绘制或清除结束后，起点要重置为上次的终点
     startX = endX;
     startY = endY;
   }
@@ -78,6 +79,8 @@ const onEventEnd = () => {
 
 onMounted(() => {
   ctx = canvas.value.getContext("2d") as CanvasRenderingContext2D;
+  const rootStyle = getComputedStyle(document.documentElement);
+  strokeColor = rootStyle.getPropertyValue("--el-text-color-primary").trim() || "#000";
 });
 const handleToFile = async () => {
   if (isCanvasBlank(canvas.value)) {
@@ -148,7 +151,7 @@ function paint(
   ctx.beginPath();
   ctx.globalAlpha = 1;
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#000";
+  ctx.strokeStyle = strokeColor;
   ctx.moveTo(startX, startY);
   ctx.lineTo(endX, endY);
   ctx.closePath();
@@ -160,10 +163,10 @@ function paint(
   width: 100%;
   height: 100%;
   padding: 0 20px;
-  background-color: #fff;
+  background-color: var(--el-bg-color);
 
   canvas {
-    border: 1px solid #e6e6e6;
+    border: 1px solid var(--el-border-color);
   }
 
   header {

@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h3 text-center m-0 mb-20px>{{ t("login.login") }}</h3>
+  <div class="auth-panel-form">
+    <h3 class="auth-panel-form__title" text-center>{{ t("login.login") }}</h3>
     <el-form
       ref="loginFormRef"
       :model="loginFormData"
@@ -37,28 +37,34 @@
 
       <!-- 验证码 -->
       <el-form-item prop="captchaCode">
-        <div flex>
+        <div flex items-center gap-10px>
           <el-input
             v-model.trim="loginFormData.captchaCode"
             :placeholder="t('login.captchaCode')"
+            clearable
+            class="flex-1"
             @keyup.enter="handleLoginSubmit"
           >
             <template #prefix>
               <div class="i-svg:captcha" />
             </template>
           </el-input>
-          <div cursor-pointer h="[40px]" w="[120px]" flex-center ml-10px @click="getCaptcha">
-            <el-icon v-if="codeLoading" class="is-loading"><Loading /></el-icon>
-
+          <div cursor-pointer h-44px w-140px flex-center @click="getCaptcha">
+            <el-icon v-if="codeLoading" class="is-loading" size="20"><Loading /></el-icon>
             <img
-              v-else
-              object-cover
+              v-else-if="captchaBase64"
               border-rd-4px
-              p-1px
+              w-full
+              h-full
+              block
+              object-cover
               shadow="[0_0_0_1px_var(--el-border-color)_inset]"
               :src="captchaBase64"
-              alt="code"
+              alt="captchaCode"
+              title="点击刷新验证码"
+              @error="getCaptcha"
             />
+            <el-text v-else type="info" size="small">点击获取验证码</el-text>
           </div>
         </div>
       </el-form-item>
@@ -92,30 +98,31 @@
         <span class="divider-text">{{ t("login.otherLoginMethods") }}</span>
         <div class="divider-line"></div>
       </div>
-      <div class="flex-center gap-x-5 w-full text-[var(--el-text-color-secondary)]">
-        <CommonWrapper>
-          <div text-20px class="i-svg:wechat" />
-        </CommonWrapper>
-        <CommonWrapper>
-          <div text-20px cursor-pointer class="i-svg:qq" />
-        </CommonWrapper>
-        <CommonWrapper>
-          <div text-20px cursor-pointer class="i-svg:github" />
-        </CommonWrapper>
-        <CommonWrapper>
-          <div text-20px cursor-pointer class="i-svg:gitee" />
-        </CommonWrapper>
+      <div class="social-login">
+        <div class="social-login__item" @click="handleOpenSabreLogin">
+          <div class="i-svg:gitee" />
+        </div>
+        <div class="social-login__item">
+          <div class="i-svg:wechat" />
+        </div>
+        <div class="social-login__item">
+          <div class="i-svg:qq" />
+        </div>
+        <div class="social-login__item">
+          <div class="i-svg:github" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import type { FormInstance } from "element-plus";
-import AuthAPI, { type LoginFormData } from "@/api/auth-api";
+import AuthAPI, { OAuth2_CONFIG } from "@/api/auth";
+import type { LoginRequest } from "@/types/api";
 import router from "@/router";
 import { useUserStore } from "@/store";
-import CommonWrapper from "@/components/CommonWrapper/index.vue";
 import { AuthStorage } from "@/utils/auth";
+import { CaptchaScenario } from "@/types/api/auth";
 
 const { t } = useI18n();
 const userStore = useUserStore();
@@ -127,15 +134,14 @@ const loginFormRef = ref<FormInstance>();
 const loading = ref(false);
 // 是否大写锁定
 const isCapsLock = ref(false);
-// 验证码图片Base64字符串
+// 验证码图片 Base64
 const captchaBase64 = ref();
 // 记住我
 const rememberMe = AuthStorage.getRememberMe();
-
-const loginFormData = ref<LoginFormData>({
+const loginFormData = ref<LoginRequest>({
   username: "admin",
   password: "123456",
-  captchaKey: "",
+  captchaId: "",
   captchaCode: "",
   rememberMe,
 });
@@ -175,10 +181,12 @@ const loginRules = computed(() => {
 const codeLoading = ref(false);
 function getCaptcha() {
   codeLoading.value = true;
-  AuthAPI.getCaptcha()
+  // 生成唯一标识符 (requestKey)
+  const requestKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  AuthAPI.getCaptcha(requestKey, CaptchaScenario.LOGIN_IMAGE)
     .then((data) => {
-      loginFormData.value.captchaKey = data.captchaKey;
-      captchaBase64.value = data.captchaBase64;
+      loginFormData.value.captchaId = data.captchaId;
+      captchaBase64.value = data.imageData;
     })
     .finally(() => (codeLoading.value = false));
 }
@@ -195,14 +203,18 @@ async function handleLoginSubmit() {
     loading.value = true;
 
     // 2. 执行登录
-    await userStore.login(loginFormData.value);
-
-    const redirectPath = (route.query.redirect as string) || "/";
-
-    await router.push(decodeURIComponent(redirectPath));
+    try {
+      await userStore.login(loginFormData.value);
+      // 登录成功，跳转到目标页面
+      const redirectPath = (route.query.redirect as string) || "/";
+      await router.push(decodeURIComponent(redirectPath));
+    } catch (error) {
+      // 登录失败，刷新验证码
+      getCaptcha();
+      throw error;
+    }
   } catch (error) {
-    // 4. 统一错误处理
-    getCaptcha(); // 刷新验证码
+    // 统一错误处理
     console.error("登录失败:", error);
   } finally {
     loading.value = false;
@@ -221,14 +233,35 @@ const emit = defineEmits(["update:modelValue"]);
 function toOtherForm(type: "register" | "resetPwd") {
   emit("update:modelValue", type);
 }
+
+/**
+ * 处理 OpenSabre OAuth2 登录
+ */
+function handleOpenSabreLogin() {
+  const redirectPath = (route.query.redirect as string) || "/";
+  const state = encodeURIComponent(redirectPath);
+  window.location.href = `${OAuth2_CONFIG.authorizeUrl}?state=${state}`;
+}
 </script>
 
 <style lang="scss" scoped>
+.auth-panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-panel-form__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
 .third-party-login {
   .divider-container {
     display: flex;
     align-items: center;
-    margin: 20px 0;
+    margin: 16px 0;
 
     .divider-line {
       flex: 1;
@@ -241,6 +274,30 @@ function toOtherForm(type: "register" | "resetPwd") {
       font-size: 12px;
       color: var(--el-text-color-regular);
       white-space: nowrap;
+    }
+  }
+
+  .social-login {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: var(--el-text-color-secondary);
+
+    &__item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: var(--el-fill-color);
+      }
     }
   }
 }

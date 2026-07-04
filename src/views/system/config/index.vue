@@ -1,8 +1,8 @@
-<!-- 系统配置 -->
+﻿<!-- 系统配置 -->
 <template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <div class="search-container">
+    <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="关键字" prop="keywords">
           <el-input
@@ -20,11 +20,11 @@
       </el-form>
     </div>
 
-    <el-card shadow="hover" class="data-table">
-      <div class="data-table__toolbar">
-        <div class="data-table__toolbar--actions">
+    <el-card shadow="hover" class="table-section">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--actions">
           <el-button
-            v-hasPerm="['sys:config:add']"
+            v-hasPerm="['sys:config:create']"
             type="success"
             icon="plus"
             @click="handleOpenDialog()"
@@ -47,14 +47,14 @@
         v-loading="loading"
         :data="pageData"
         highlight-current-row
-        class="data-table__content"
+        class="table-section__content"
         border
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column key="configName" label="配置名称" prop="configName" min-width="100" />
-        <el-table-column key="configKey" label="配置键" prop="configKey" min-width="100" />
-        <el-table-column key="configValue" label="配置值" prop="configValue" min-width="100" />
+        <el-table-column key="configKey" label="配置项" prop="configKey" min-width="100" />
+        <el-table-column key="configValue" label="配置项" prop="configValue" min-width="100" />
         <el-table-column key="remark" label="描述" prop="remark" min-width="100" />
         <el-table-column fixed="right" label="操作" width="220">
           <template #default="scope">
@@ -108,11 +108,11 @@
         <el-form-item label="配置名称" prop="configName">
           <el-input v-model="formData.configName" placeholder="请输入配置名称" :maxlength="50" />
         </el-form-item>
-        <el-form-item label="配置键" prop="configKey">
+        <el-form-item label="配置项" prop="configKey">
           <el-input v-model="formData.configKey" placeholder="请输入配置键" :maxlength="50" />
         </el-form-item>
-        <el-form-item label="配置值" prop="configValue">
-          <el-input v-model="formData.configValue" placeholder="请输入配置值" :maxlength="100" />
+        <el-form-item label="配置项" prop="configValue">
+          <el-input v-model="formData.configValue" placeholder="请输入配置项" :maxlength="100" />
         </el-form-item>
         <el-form-item label="描述" prop="remark">
           <el-input
@@ -141,7 +141,8 @@ defineOptions({
   inheritAttrs: false,
 });
 
-import ConfigAPI, { ConfigPageVO, ConfigForm, ConfigPageQuery } from "@/api/system/config-api";
+import ConfigAPI from "@/api/system/config";
+import type { ConfigItem, ConfigForm, ConfigQueryParams } from "@/types/api";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useDebounceFn } from "@vueuse/core";
 
@@ -152,14 +153,14 @@ const loading = ref(false);
 const selectIds = ref<number[]>([]);
 const total = ref(0);
 
-const queryParams = reactive<ConfigPageQuery>({
+const queryParams = reactive<ConfigQueryParams>({
   pageNum: 1,
   pageSize: 10,
   keywords: "",
 });
 
 // 系统配置表格数据
-const pageData = ref<ConfigPageVO[]>([]);
+const pageData = ref<ConfigItem[]>([]);
 
 const dialog = reactive({
   title: "",
@@ -184,9 +185,9 @@ const rules = reactive({
 function fetchData() {
   loading.value = true;
   ConfigAPI.getPage(queryParams)
-    .then((data) => {
-      pageData.value = data.list;
-      total.value = data.total;
+    .then((res) => {
+      pageData.value = res.data;
+      total.value = res.page?.total ?? 0;
     })
     .finally(() => {
       loading.value = false;

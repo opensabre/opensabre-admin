@@ -1,7 +1,7 @@
-<!-- 字典项 -->
+﻿<!-- 字典值 -->
 <template>
   <div class="app-container">
-    <div class="search-container">
+    <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="关键字" prop="keywords">
           <el-input
@@ -19,9 +19,9 @@
       </el-form>
     </div>
 
-    <el-card shadow="never" class="data-table">
-      <div class="data-table__toolbar">
-        <div class="data-table__toolbar--actions">
+    <el-card shadow="never" class="table-section">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--actions">
           <el-button type="success" icon="plus" @click="handleOpenDialog()">新增</el-button>
           <el-button
             type="danger"
@@ -86,7 +86,7 @@
       />
     </el-card>
 
-    <!--字典项弹窗-->
+    <!-- 字典项弹窗 -->
     <el-dialog
       v-model="dialog.visible"
       :title="dialog.title"
@@ -155,7 +155,8 @@
 
 <script setup lang="ts">
 import type { TagProps } from "element-plus";
-import DictAPI, { DictItemPageQuery, DictItemPageVO, DictItemForm } from "@/api/system/dict-api";
+import DictAPI from "@/api/system/dict";
+import type { DictItemQueryParams, DictItem, DictItemForm } from "@/types/api";
 
 const route = useRoute();
 
@@ -168,12 +169,12 @@ const loading = ref(false);
 const ids = ref<number[]>([]);
 const total = ref(0);
 
-const queryParams = reactive<DictItemPageQuery>({
+const queryParams = reactive<DictItemQueryParams>({
   pageNum: 1,
   pageSize: 10,
 });
 
-const tableData = ref<DictItemPageVO[]>();
+const tableData = ref<DictItem[]>();
 
 const dialog = reactive({
   title: "",
@@ -198,9 +199,9 @@ const computedRules = computed(() => {
 function fetchData() {
   loading.value = true;
   DictAPI.getDictItemPage(dictCode.value, queryParams)
-    .then((data) => {
-      tableData.value = data.list;
-      total.value = data.total;
+    .then((res) => {
+      tableData.value = res.data;
+      total.value = res.page?.total ?? 0;
     })
     .finally(() => {
       loading.value = false;
@@ -226,9 +227,9 @@ function handleSelectionChange(selection: any) {
 }
 
 // 打开弹窗
-function handleOpenDialog(row?: DictItemPageVO) {
+function handleOpenDialog(row?: DictItem) {
   dialog.visible = true;
-  dialog.title = row ? "编辑字典项" : "新增字典项";
+  dialog.title = row ? "编辑字典值" : "新增字典值";
 
   if (row?.id) {
     DictAPI.getDictItemFormData(dictCode.value, row.id).then((data) => {

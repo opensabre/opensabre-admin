@@ -2,7 +2,7 @@
 <template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <div class="search-container">
+    <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="关键字" prop="keywords">
           <el-input
@@ -20,9 +20,9 @@
       </el-form>
     </div>
 
-    <el-card shadow="hover" class="data-table">
-      <div class="data-table__toolbar">
-        <div class="data-table__toolbar--actions">
+    <el-card shadow="hover" class="table-section">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--actions">
           <el-button type="success" icon="plus" @click="handleAddClick()">新增</el-button>
           <el-button
             type="danger"
@@ -40,7 +40,7 @@
         highlight-current-row
         :data="tableData"
         border
-        class="data-table__content"
+        class="table-section__content"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
@@ -134,10 +134,12 @@
 <script setup lang="ts">
 defineOptions({
   name: "Dict",
-  inherititems: false,
+  inheritAttrs: false,
 });
 
-import DictAPI, { DictPageQuery, DictPageVO, DictForm } from "@/api/system/dict-api";
+import { ref, reactive } from "vue";
+import DictAPI from "@/api/system/dict";
+import type { DictTypeQueryParams, DictTypeItem, DictTypeForm } from "@/types/api";
 
 import router from "@/router";
 
@@ -148,19 +150,19 @@ const loading = ref(false);
 const ids = ref<number[]>([]);
 const total = ref(0);
 
-const queryParams = reactive<DictPageQuery>({
+const queryParams = reactive<DictTypeQueryParams>({
   pageNum: 1,
   pageSize: 10,
 });
 
-const tableData = ref<DictPageVO[]>();
+const tableData = ref<DictTypeItem[]>();
 
 const dialog = reactive({
   title: "",
   visible: false,
 });
 
-const formData = reactive<DictForm>({});
+const formData = reactive<DictTypeForm>({});
 
 const computedRules = computed(() => {
   const rules: Partial<Record<string, any>> = {
@@ -174,9 +176,9 @@ const computedRules = computed(() => {
 function fetchData() {
   loading.value = true;
   DictAPI.getPage(queryParams)
-    .then((data) => {
-      tableData.value = data.list;
-      total.value = data.total;
+    .then((res) => {
+      tableData.value = res.data;
+      total.value = res.page?.total ?? 0;
     })
     .finally(() => {
       loading.value = false;
@@ -284,11 +286,11 @@ function handleDelete(id?: number) {
   );
 }
 
-// 打开字典项
-function handleOpenDictData(row: DictPageVO) {
+// 打开字典数据
+function handleOpenDictData(row: DictTypeItem) {
   router.push({
-    path: "/system/dict-item",
-    query: { dictCode: row.dictCode, title: "【" + row.name + "】字典数据" },
+    name: "DictItem",
+    query: { dictCode: row.dictCode, title: `【${row.name}】字典数据` },
   });
 }
 

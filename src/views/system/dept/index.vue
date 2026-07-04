@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <div class="search-container">
+    <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="关键字" prop="keywords">
           <el-input
@@ -27,11 +27,11 @@
       </el-form>
     </div>
 
-    <el-card shadow="hover" class="data-table">
-      <div class="data-table__toolbar">
-        <div class="data-table__toolbar--actions">
+    <el-card shadow="hover" class="table-section">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--actions">
           <el-button
-            v-hasPerm="['sys:dept:add']"
+            v-hasPerm="['sys:dept:create']"
             type="success"
             icon="plus"
             @click="handleOpenDialog()"
@@ -54,9 +54,10 @@
         v-loading="loading"
         :data="deptList"
         row-key="id"
-        default-expand-all
+        lazy
+        :load="loadDeptChildren"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        class="data-table__content"
+        class="table-section__content"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
@@ -74,7 +75,7 @@
         <el-table-column label="操作" fixed="right" align="left" width="200">
           <template #default="scope">
             <el-button
-              v-hasPerm="['sys:dept:add']"
+              v-hasPerm="['sys:dept:create']"
               type="primary"
               link
               size="small"
@@ -84,7 +85,7 @@
               新增
             </el-button>
             <el-button
-              v-hasPerm="['sys:dept:edit']"
+              v-hasPerm="['sys:dept:update']"
               type="primary"
               link
               size="small"
@@ -120,6 +121,9 @@
             v-model="formData.parentId"
             placeholder="选择上级部门"
             :data="deptOptions"
+            lazy
+            :load="loadDeptOptionChildren"
+            :props="deptTreeProps"
             filterable
             check-strictly
             :render-after-expand="false"
@@ -129,7 +133,7 @@
           <el-input v-model="formData.name" placeholder="请输入部门名称" />
         </el-form-item>
         <el-form-item label="部门编号" prop="code">
-          <el-input v-model="formData.code" placeholder="请输入部门编号" />
+          <el-input v-model="formData.code" placeholder="请输入部门编码" />
         </el-form-item>
         <el-form-item label="显示排序" prop="sort">
           <el-input-number
@@ -149,8 +153,8 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="handleSubmit">确 定</el-button>
-          <el-button @click="handleCloseDialog">取 消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+          <el-button @click="handleCloseDialog">取消</el-button>
         </div>
       </template>
     </el-dialog>
@@ -163,22 +167,28 @@ defineOptions({
   inheritAttrs: false,
 });
 
-import DeptAPI, { DeptVO, DeptForm, DeptQuery } from "@/api/system/dept-api";
+import DeptAPI from "@/api/system/dept";
+import type { DeptItem, DeptForm, DeptQueryParams } from "@/types/api";
 
 const queryFormRef = ref();
 const deptFormRef = ref();
 
 const loading = ref(false);
-const selectIds = ref<number[]>([]);
-const queryParams = reactive<DeptQuery>({});
+const selectIds = ref<string[]>([]);
+const queryParams = reactive<DeptQueryParams>({});
 
 const dialog = reactive({
   title: "",
   visible: false,
 });
 
-const deptList = ref<DeptVO[]>();
-const deptOptions = ref<OptionType[]>();
+const deptList = ref<DeptItem[]>();
+const deptOptions = ref<OptionItem[]>();
+const deptTreeProps = {
+  children: "children",
+  label: "label",
+  isLeaf: "isLeaf",
+};
 const formData = reactive<DeptForm>({
   status: 1,
   parentId: "0",
@@ -212,6 +222,19 @@ function handleSelectionChange(selection: any) {
   selectIds.value = selection.map((item: any) => item.id);
 }
 
+function loadDeptChildren(row: DeptItem, _: unknown, resolve: (data: DeptItem[]) => void) {
+  DeptAPI.getChildren(row.id)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
+
+function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void) {
+  const parentId = node.level === 0 ? "0" : node.data?.value;
+  DeptAPI.getOptions(parentId)
+    .then(resolve)
+    .catch(() => resolve([]));
+}
+
 /**
  * 打开部门弹窗
  *
@@ -219,13 +242,11 @@ function handleSelectionChange(selection: any) {
  * @param deptId 部门ID
  */
 async function handleOpenDialog(parentId?: string, deptId?: string) {
-  // 加载部门下拉数据
-  const data = await DeptAPI.getOptions();
   deptOptions.value = [
     {
       value: "0",
       label: "顶级部门",
-      children: data,
+      children: [],
     },
   ];
 
@@ -269,7 +290,7 @@ function handleSubmit() {
 }
 
 // 删除部门
-function handleDelete(deptId?: number) {
+function handleDelete(deptId?: string) {
   const deptIds = [deptId || selectIds.value].join(",");
 
   if (!deptIds) {

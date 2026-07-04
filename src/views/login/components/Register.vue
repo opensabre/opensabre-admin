@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <h3 text-center m-0 mb-20px>{{ t("login.reg") }}</h3>
     <el-form ref="formRef" :model="model" :rules="rules" size="large">
@@ -58,14 +58,16 @@
               <div class="i-svg:captcha" />
             </template>
           </el-input>
-          <div cursor-pointer h="[40px]" w="[120px]" flex-center ml-10px @click="getCaptcha">
+          <div cursor-pointer h="[44px]" w="[140px]" flex-center ml-10px @click="getCaptcha">
             <el-icon v-if="codeLoading" class="is-loading"><Loading /></el-icon>
 
             <img
               v-else
-              object-cover
               border-rd-4px
-              p-1px
+              w-full
+              h-full
+              block
+              object-contain
               shadow="[0_0_0_1px_var(--el-border-color)_inset]"
               :src="captchaBase64"
               alt="code"
@@ -98,7 +100,9 @@
 import type { FormInstance } from "element-plus";
 import { Lock } from "@element-plus/icons-vue";
 import { useI18n } from "vue-i18n";
-import AuthAPI, { type LoginFormData } from "@/api/auth-api";
+import AuthAPI from "@/api/auth";
+import type { LoginRequest } from "@/types/api";
+import { CaptchaScenario } from "@/types/api/auth";
 
 const { t } = useI18n();
 
@@ -113,7 +117,7 @@ const isCapsLock = ref(false); // 是否大写锁定
 const captchaBase64 = ref(); // 验证码图片Base64字符串
 const isRead = ref(false);
 
-interface Model extends LoginFormData {
+interface Model extends LoginRequest {
   confirmPassword: string;
 }
 
@@ -121,7 +125,7 @@ const model = ref<Model>({
   username: "admin",
   password: "123456",
   confirmPassword: "",
-  captchaKey: "",
+  captchaId: "",
   captchaCode: "",
   rememberMe: false,
 });
@@ -180,10 +184,12 @@ const rules = computed(() => {
 const codeLoading = ref(false);
 function getCaptcha() {
   codeLoading.value = true;
-  AuthAPI.getCaptcha()
+  // 生成唯一标识符 (requestKey)
+  const requestKey = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  AuthAPI.getCaptcha(requestKey, CaptchaScenario.REGISTER_IMAGE)
     .then((data) => {
-      model.value.captchaKey = data.captchaKey;
-      captchaBase64.value = data.captchaBase64;
+      model.value.captchaId = data.captchaId;
+      captchaBase64.value = data.imageData;
     })
     .finally(() => (codeLoading.value = false));
 }
