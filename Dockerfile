@@ -30,8 +30,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 添加 hosts 映射，应用网关地址
-RUN echo "${GW_HOST} opensabre" >> /etc/hosts
+# 写入应用网关地址
+RUN sed -i "s/__GW_HOST__/${GW_HOST}/g" /etc/nginx/conf.d/default.conf
 
 # 暴露端口
 EXPOSE 80
