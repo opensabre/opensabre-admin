@@ -452,7 +452,7 @@ function handleResetQuery(): void {
 }
 
 function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void) {
-  const parentId = node.level === 0 ? "0" : node.data?.value;
+  const parentId = node.level === 0 ? "-1" : node.data?.value;
   DeptAPI.getOptions(parentId)
     .then(resolve)
     .catch(() => resolve([]));
@@ -497,7 +497,7 @@ async function handleOpenDialog(id?: string): Promise<void> {
   // 并行加载下拉选项数据
   try {
     roleOptions.value = await RoleAPI.getOptions();
-    deptOptions.value = [{ value: "0", label: "顶级部门", children: [] }];
+    deptOptions.value = await DeptAPI.getOptions("-1");
   } catch (error) {
     ElMessage.error("加载选项数据失败");
     console.error("加载选项数据失败:", error);

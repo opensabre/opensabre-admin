@@ -191,7 +191,7 @@ const deptTreeProps = {
 };
 const formData = reactive<DeptForm>({
   status: 1,
-  parentId: "0",
+  parentId: "-1",
   sort: 1,
 });
 
@@ -229,7 +229,7 @@ function loadDeptChildren(row: DeptItem, _: unknown, resolve: (data: DeptItem[])
 }
 
 function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void) {
-  const parentId = node.level === 0 ? "0" : node.data?.value;
+  const parentId = node.level === 0 ? "-1" : node.data?.value;
   DeptAPI.getOptions(parentId)
     .then(resolve)
     .catch(() => resolve([]));
@@ -242,13 +242,8 @@ function loadDeptOptionChildren(node: any, resolve: (data: OptionItem[]) => void
  * @param deptId 部门ID
  */
 async function handleOpenDialog(parentId?: string, deptId?: string) {
-  deptOptions.value = [
-    {
-      value: "0",
-      label: "顶级部门",
-      children: [],
-    },
-  ];
+  const rootChildren = await DeptAPI.getOptions("-1");
+  deptOptions.value = [{ value: "-1", label: "根目录", children: rootChildren }];
 
   dialog.visible = true;
   if (deptId) {
@@ -258,7 +253,7 @@ async function handleOpenDialog(parentId?: string, deptId?: string) {
     });
   } else {
     dialog.title = "新增部门";
-    formData.parentId = parentId || "0";
+    formData.parentId = parentId || "-1";
   }
 }
 
@@ -324,7 +319,7 @@ function resetForm() {
   deptFormRef.value.clearValidate();
 
   formData.id = undefined;
-  formData.parentId = "0";
+  formData.parentId = "-1";
   formData.status = 1;
   formData.sort = 1;
 }
