@@ -6,7 +6,7 @@ This repository is a Vue 3 + Vite + TypeScript admin frontend. Application code 
 
 ## Build, Test, and Development Commands
 
-Use `pnpm`; the `preinstall` hook rejects other package managers.
+Use Node.js 22.18.0 and `pnpm`; the `preinstall` hook rejects other package managers. In non-interactive shells, ensure `/Users/zhoutaoo/.nvm/versions/node/v22.18.0/bin` is first in `PATH` before running Node or pnpm commands.
 
 - `pnpm install`: install dependencies from `pnpm-lock.yaml`.
 - `pnpm dev`: start the Vite development server.
