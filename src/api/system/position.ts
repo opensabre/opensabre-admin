@@ -6,10 +6,11 @@ const ORG_POSITION_BASE_URL = "/org/position";
 const PositionAPI = {
   /** 获取岗位列表 */
   getList(queryParams?: PositionQueryParams) {
+    const name = queryParams?.name?.trim();
     return request<any, PositionItem[]>({
       url: ORG_POSITION_BASE_URL,
       method: "get",
-      params: { name: queryParams?.name ?? "" },
+      params: name ? { name } : undefined,
     });
   },
   /** 获取岗位表单数据 */
