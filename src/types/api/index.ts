@@ -20,6 +20,8 @@ export * from "./log";
 export * from "./statistics";
 export * from "./notice";
 export * from "./tenant";
+export * from "./captcha-scene";
+export * from "./notification";
 
 // 其他模块
 export * from "./ai";
