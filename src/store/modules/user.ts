@@ -122,6 +122,8 @@ export const useUserStore = defineStore("user", () => {
               "sys:role:delete",
               "sys:tenant-plan:assign",
               "sys:dict:update",
+              "security:online-user:list",
+              "security:online-user:kickout",
             ],
           };
           Object.assign(userInfo.value, mappedData);
