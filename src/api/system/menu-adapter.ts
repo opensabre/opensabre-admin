@@ -80,10 +80,17 @@ function toComponentPath(href: string) {
     "admin/positions": "system/position/index",
     "admin/position": "system/position/index",
     "auth/client": "auth/client/index",
+    "auth/online-user": "security/online-user/index",
     "security/audit-log": "security/audit-log/index",
+    "security/online-user": "security/online-user/index",
     "sysadmin/audit-log": "security/audit-log/index",
+    "sysadmin/online-user": "security/online-user/index",
     "sysadmin/dicts": "system/dict/index",
     "sysadmin/dict-items": "system/dict/dict-item",
+    "sysadmin/captcha-scenes": "sysadmin/captcha-scenes/index",
+    "sysadmin/captcha-scene": "sysadmin/captcha-scenes/index",
+    "sysadmin/notification": "sysadmin/notification/index",
+    "sysadmin/notifications": "sysadmin/notification/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;

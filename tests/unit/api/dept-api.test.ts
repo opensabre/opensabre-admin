@@ -33,7 +33,7 @@ describe("DeptAPI", () => {
     expect(groups).toEqual([
       expect.objectContaining({
         id: "301",
-        parentId: "0",
+        parentId: "-1",
         name: "总部",
         code: "HQ",
         sort: 1,
@@ -68,7 +68,7 @@ describe("DeptAPI", () => {
     const { default: DeptAPI } = await import("@/api/system/dept");
 
     await DeptAPI.create({
-      parentId: "0",
+      parentId: "-1",
       name: "研发部",
       code: "RD",
       sort: 2,

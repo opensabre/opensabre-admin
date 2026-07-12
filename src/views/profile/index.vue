@@ -1,12 +1,12 @@
 ﻿<template>
-  <div class="profile-container">
+  <div class="profile-container" v-loading="profileLoading">
     <el-row :gutter="20">
       <!-- 左侧个人信息卡片 -->
       <el-col :span="8">
         <el-card class="user-card">
           <div class="user-info">
             <div class="avatar-wrapper">
-              <el-avatar :src="userStore.userInfo.avatar" :size="100" />
+              <el-avatar :src="displayAvatar" :size="100" />
               <el-button
                 type="info"
                 class="avatar-edit-btn"
@@ -24,12 +24,12 @@
               />
             </div>
             <div class="user-name">
-              <span class="nickname">{{ userProfile.nickname }}</span>
+              <span class="nickname">{{ displayNickname }}</span>
               <el-icon class="edit-icon" @click="handleOpenDialog(DialogType.ACCOUNT)">
                 <Edit />
               </el-icon>
             </div>
-            <div class="user-role">{{ userProfile.roleNames }}</div>
+            <div class="user-role">{{ userProfile.roleNames || "未分配角色" }}</div>
           </div>
           <el-divider />
           <div class="user-stats">
@@ -59,11 +59,11 @@
           </template>
           <el-descriptions :column="1" border>
             <el-descriptions-item label="用户名">
-              {{ userProfile.username }}
+              {{ userProfile.username || "-" }}
               <el-icon v-if="userProfile.gender === 'M'" class="gender-icon male">
                 <Male />
               </el-icon>
-              <el-icon v-else class="gender-icon female">
+              <el-icon v-else-if="userProfile.gender === 'F'" class="gender-icon female">
                 <Female />
               </el-icon>
             </el-descriptions-item>
@@ -74,10 +74,10 @@
               {{ userProfile.email || "未绑定" }}
             </el-descriptions-item>
             <el-descriptions-item label="部门">
-              {{ userProfile.deptName }}
+              {{ userProfile.deptName || "未设置" }}
             </el-descriptions-item>
             <el-descriptions-item label="创建时间">
-              {{ userProfile.createTime }}
+              {{ displayCreateTime }}
             </el-descriptions-item>
           </el-descriptions>
         </el-card>
@@ -287,6 +287,7 @@ import { Camera } from "@element-plus/icons-vue";
 const userStore = useUserStoreHook();
 
 const userProfile = ref<UserProfileDetail>({});
+const profileLoading = ref(false);
 
 const enum DialogType {
   ACCOUNT = "account",
@@ -315,6 +316,12 @@ const mobileTimer = ref();
 
 const emailCountdown = ref(0);
 const emailTimer = ref();
+
+const displayAvatar = computed(() => userProfile.value.avatar || userStore.userInfo.avatar || "");
+const displayNickname = computed(() => {
+  return userProfile.value.nickname || userProfile.value.username || userStore.userInfo.nickname || "-";
+});
+const displayCreateTime = computed(() => formatDateTime(userProfile.value.createTime));
 
 // 修改密码校验规则
 const passwordChangeRules = {
@@ -376,6 +383,39 @@ function maskEmail(email?: string) {
   return `${name.slice(0, 2)}***@${domain}`;
 }
 
+function formatDateTime(value?: Date | string) {
+  if (!value) return "-";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const pad = (num: number) => String(num).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + ` ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function buildFallbackProfile(): UserProfileDetail {
+  return {
+    id: userStore.userInfo.userId,
+    username: userStore.userInfo.username,
+    nickname: userStore.userInfo.nickname || userStore.userInfo.username,
+    avatar: userStore.userInfo.avatar,
+    roleNames: userStore.userInfo.roles?.join(","),
+  };
+}
+
+function setUserProfile(data: UserProfileDetail) {
+  const fallback = buildFallbackProfile();
+  userProfile.value = {
+    ...fallback,
+    ...data,
+    nickname: data.nickname || data.username || fallback.nickname,
+    avatar: data.avatar || fallback.avatar,
+    roleNames: data.roleNames || fallback.roleNames,
+  };
+}
+
 const mobileSecurityDesc = computed(() => {
   return userProfile.value.mobile
     ? `已绑定：${maskMobile(userProfile.value.mobile)}`
@@ -397,7 +437,7 @@ const handleOpenDialog = (type: DialogType) => {
     case DialogType.ACCOUNT:
       dialog.title = "账号资料";
       // 初始化表单数据
-      userProfileForm.nickname = userProfile.value.nickname;
+      userProfileForm.nickname = displayNickname.value === "-" ? "" : displayNickname.value;
       userProfileForm.avatar = userProfile.value.avatar;
       userProfileForm.gender = userProfile.value.gender;
       break;
@@ -594,6 +634,7 @@ const handleFileChange = async (event: Event) => {
       });
       // 更新用户头像
       userStore.userInfo.avatar = data.url;
+      userProfile.value.avatar = data.url;
     } catch (error) {
       console.error("头像上传失败：" + error);
       ElMessage.error("头像上传失败");
@@ -603,8 +644,15 @@ const handleFileChange = async (event: Event) => {
 
 /** 加载用户信息 */
 const loadUserProfile = async () => {
-  const data = await UserAPI.getProfile();
-  userProfile.value = data;
+  profileLoading.value = true;
+  try {
+    const data = await UserAPI.getProfile();
+    setUserProfile(data);
+  } catch {
+    setUserProfile({});
+  } finally {
+    profileLoading.value = false;
+  }
 };
 
 onMounted(async () => {

@@ -46,8 +46,26 @@ function toUserItem(user: OrgUser): UserItem {
     mobile: user.mobile,
     gender: user.gender,
     deptName: user.groupName,
-    roleNames: Array.isArray(user.roleIds) ? user.roleIds.join(",") : undefined,
+    roleNames: toRoleNames(user.roleIds),
     status: user.enabled === false ? 0 : 1,
+    createTime: user.createdTime,
+  };
+}
+
+function toRoleNames(roleIds?: Array<number | string> | Set<number | string>) {
+  const roles = Array.from(roleIds ?? []);
+  return roles.length > 0 ? roles.join(",") : undefined;
+}
+
+function toUserProfileDetail(user: OrgUser): UserProfileDetail {
+  return {
+    id: String(user.id ?? ""),
+    username: user.username,
+    nickname: user.name || user.username,
+    mobile: user.mobile,
+    gender: user.gender,
+    deptName: user.groupName,
+    roleNames: toRoleNames(user.roleIds),
     createTime: user.createdTime,
   };
 }
@@ -90,6 +108,13 @@ function toOrgUserQuery(queryParams: UserQueryParams) {
   };
 }
 
+function getCurrentOrgUser() {
+  return request<any, OrgUser>({
+    url: `${ORG_USER_BASE_URL}/101`,
+    method: "get",
+  });
+}
+
 const UserAPI = {
   /**
    * 获取当前登录用户信息
@@ -97,10 +122,7 @@ const UserAPI = {
    * @returns 登录用户昵称、头像信息，包括角色和权限
    */
   getInfo() {
-    return request<any, UserInfo>({
-      url: `${ORG_USER_BASE_URL}/101`,
-      method: "get",
-    });
+    return getCurrentOrgUser() as Promise<UserInfo>;
   },
 
   /**
@@ -249,18 +271,26 @@ const UserAPI = {
 
   /** 获取个人中心用户信息 */
   getProfile() {
-    return request<any, UserProfileDetail>({
-      url: `${USER_BASE_URL}/profile`,
-      method: "get",
-    });
+    return getCurrentOrgUser().then(toUserProfileDetail);
   },
 
   /** 修改个人中心用户信息 */
-  updateProfile(data: UserProfileForm) {
+  async updateProfile(data: UserProfileForm) {
+    const user = await getCurrentOrgUser();
+    const userId = String(user.id ?? "");
     return request({
-      url: `${USER_BASE_URL}/profile`,
+      url: `${ORG_USER_BASE_URL}/${userId}`,
       method: "put",
-      data,
+      data: toOrgUserForm({
+        id: userId,
+        username: user.username,
+        nickname: data.nickname ?? user.name ?? user.username,
+        mobile: user.mobile,
+        gender: data.gender ?? user.gender,
+        deptId: user.groupId,
+        roleIds: Array.from(user.roleIds ?? []),
+        status: user.enabled === false ? 0 : 1,
+      }),
     });
   },
 

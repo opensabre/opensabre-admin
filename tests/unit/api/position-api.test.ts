@@ -25,4 +25,19 @@ describe("PositionAPI", () => {
     });
     expect(data).toEqual([expect.objectContaining({ id: "101", name: "首席执行官" })]);
   });
+
+  it("loads all positions without blank name parameter", async () => {
+    requestMock.mockResolvedValueOnce([{ id: "102", name: "首席技术官" }]);
+
+    const { default: PositionAPI } = await import("@/api/system/position");
+
+    const data = await PositionAPI.getList({ name: " " });
+
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/org/position",
+      method: "get",
+      params: undefined,
+    });
+    expect(data).toEqual([expect.objectContaining({ id: "102", name: "首席技术官" })]);
+  });
 });

@@ -3,7 +3,6 @@ import type { DeptQueryParams, DeptItem, DeptForm, OptionItem } from "@/types/ap
 
 const ORG_GROUP_BASE_URL = "/org/group";
 const ROOT_PARENT_ID = "-1";
-const FRONT_ROOT_PARENT_ID = "0";
 
 interface GroupExtra {
   code?: string;
@@ -19,12 +18,8 @@ interface OrgGroup {
   parentId?: string;
 }
 
-function normalizeParentId(parentId?: string) {
-  return parentId === ROOT_PARENT_ID ? FRONT_ROOT_PARENT_ID : parentId;
-}
-
 function toOrgParentId(parentId?: string) {
-  return !parentId || parentId === FRONT_ROOT_PARENT_ID ? ROOT_PARENT_ID : parentId;
+  return parentId || ROOT_PARENT_ID;
 }
 
 function parseExtra(description?: string): GroupExtra {
@@ -44,7 +39,7 @@ function toDeptItem(group: OrgGroup): DeptItem {
     code: extra.code,
     hasChildren: true,
     name: group.name,
-    parentId: normalizeParentId(group.parentId),
+    parentId: group.parentId,
     sort: extra.sort ?? 1,
     status: extra.status ?? 1,
     children: group.children?.map(toDeptItem),
@@ -57,7 +52,7 @@ function toDeptForm(group: OrgGroup): DeptForm {
     id: group.id,
     code: extra.code,
     name: group.name,
-    parentId: normalizeParentId(group.parentId),
+    parentId: group.parentId,
     sort: extra.sort ?? 1,
     status: extra.status ?? 1,
   };
@@ -123,11 +118,11 @@ const DeptAPI = {
         data: { name: queryParams.keywords.trim() },
       }).then((groups) => filterDeptTree(groups.map(toDeptItem), queryParams.keywords));
     }
-    return this.getChildren(FRONT_ROOT_PARENT_ID);
+    return this.getChildren(ROOT_PARENT_ID);
   },
   /** 获取部门下拉数据源 */
   async getOptions(parentId?: string | number) {
-    return this.getOptionChildren(parentId ?? FRONT_ROOT_PARENT_ID);
+    return this.getOptionChildren(parentId ?? ROOT_PARENT_ID);
   },
   /** 获取部门表单数据 */
   getFormData(id: string) {

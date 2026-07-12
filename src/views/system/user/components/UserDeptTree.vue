@@ -61,7 +61,7 @@ function handleNodeClick(data: { [key: string]: any }) {
 }
 
 function loadDeptChildren(node: any, resolve: (data: OptionItem[]) => void) {
-  const parentId = node.level === 0 ? "0" : node.data?.value;
+  const parentId = node.level === 0 ? "-1" : node.data?.value;
   DeptAPI.getOptions(parentId)
     .then(resolve)
     .catch(() => resolve([]));
