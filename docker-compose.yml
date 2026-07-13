@@ -1,19 +1,19 @@
-version: '3'
-services:
-  nginx:
-    image: nginx:latest
-    container_name: sc-nginx
-    restart: always
-    volumes:
-      - ./nginx/logs:/var/log/nginx
-      - ./nginx/conf:/etc/nginx/conf.d
-      - ./dist:/usr/share/nginx/html/springcloud-admin
-    networks:
-      - sc-net
-    ports:
-      - 8080:9090
+version: '3.8'
 
-networks:
-  sc-net:
-    external:
-      name: docker-compose_sc-net
+services:
+  vue3-element-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vue3-element-admin
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
