@@ -38,6 +38,8 @@
         v-loading="loading"
         row-key="id"
         :data="menuTableData"
+        lazy
+        :load="loadMenuChildren"
         :tree-props="{
           children: 'children',
           hasChildren: 'hasChildren',
@@ -150,7 +152,7 @@
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink" prop="routeName">
+        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage" prop="routeName">
           <template #label>
             <div class="flex-y-center">
               路由名称
@@ -165,6 +167,13 @@
             </div>
           </template>
           <el-input v-model="formData.routeName" placeholder="User" />
+        </el-form-item>
+
+        <el-form-item v-if="formData.type === MenuTypeEnum.MENU && !isExternalLink" label="页面类型">
+          <el-radio-group :model-value="isIframePage ? 'iframe' : 'component'" @change="handlePageTypeChange">
+            <el-radio value="component">组件页面</el-radio>
+            <el-radio value="iframe">内嵌网页</el-radio>
+          </el-radio-group>
         </el-form-item>
 
         <el-form-item
@@ -193,7 +202,7 @@
           <el-input v-else v-model="formData.routePath" placeholder="user 或 https://example.com" />
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink" prop="component">
+        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage" prop="component">
           <template #label>
             <div class="flex-y-center">
               组件路径
@@ -214,7 +223,11 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink">
+        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && isIframePage" prop="iframeUrl" label="内嵌地址">
+          <el-input v-model="formData.iframeUrl" placeholder="https://example.com 或 /doc.html" />
+        </el-form-item>
+
+        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage">
           <template #label>
             <div class="flex-y-center">
               路由参数
@@ -297,7 +310,7 @@
         </el-form-item>
 
         <el-form-item
-          v-if="formData.type === MenuTypeEnum.MENU && !isExternalLink"
+          v-if="formData.type === MenuTypeEnum.MENU && !isExternalLink && !isIframePage"
           label="缓存页面"
         >
           <el-radio-group v-model="formData.keepAlive">
@@ -384,22 +397,37 @@ const initialMenuFormData = ref<MenuForm>({
 });
 // 菜单表单数据
 const formData = ref({ ...initialMenuFormData.value });
+const iframePageEnabled = ref(false);
 const isExternalLink = computed(
   () =>
     formData.value.type === MenuTypeEnum.MENU &&
     !!formData.value.routePath &&
     /^https?:\/\//.test(formData.value.routePath)
 );
+const isIframePage = computed(
+  () => formData.value.type === MenuTypeEnum.MENU && iframePageEnabled.value
+);
 const validateRouteName = (_: unknown, value: string, callback: (error?: Error) => void) => {
-  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !value) {
+  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !isIframePage.value && !value) {
     callback(new Error("请输入路由名称"));
     return;
   }
   callback();
 };
 const validateComponent = (_: unknown, value: string, callback: (error?: Error) => void) => {
-  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !value) {
+  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !isIframePage.value && !value) {
     callback(new Error("请输入组件路径"));
+    return;
+  }
+  callback();
+};
+const validateIframeUrl = (_: unknown, value: string, callback: (error?: Error) => void) => {
+  if (!isIframePage.value) {
+    callback();
+    return;
+  }
+  if (!value || (!value.startsWith("/") && !/^https?:\/\//.test(value))) {
+    callback(new Error("请输入以 http://、https:// 或 / 开头的内嵌地址"));
     return;
   }
   callback();
@@ -412,6 +440,7 @@ const rules = reactive({
   routeName: [{ validator: validateRouteName, trigger: "blur" }],
   routePath: [{ required: true, message: "请输入路由路径", trigger: "blur" }],
   component: [{ validator: validateComponent, trigger: "blur" }],
+  iframeUrl: [{ validator: validateIframeUrl, trigger: "blur" }],
   visible: [{ required: true, message: "请选择显示状态", trigger: "change" }],
 });
 
@@ -434,6 +463,16 @@ function handleQuery() {
 function handleResetQuery() {
   queryFormRef.value.resetFields();
   handleQuery();
+}
+
+function loadMenuChildren(row: MenuItem, _: unknown, resolve: (data: MenuItem[]) => void) {
+  if (!row.id) {
+    resolve([]);
+    return;
+  }
+  MenuAPI.getChildren(row.id)
+    .then(resolve)
+    .catch(() => resolve([]));
 }
 
 // 行点击事件
@@ -459,10 +498,12 @@ function handleOpenDialog(parentId?: string, menuId?: string) {
         MenuAPI.getFormData(menuId).then((data) => {
           initialMenuFormData.value = { ...data };
           formData.value = data;
+          iframePageEnabled.value = !!data.iframeUrl;
         });
       } else {
         dialog.title = "新增菜单";
         formData.value.parentId = parentId?.toString();
+        iframePageEnabled.value = false;
       }
     });
 }
@@ -482,6 +523,20 @@ function handleMenuTypeChange() {
       }
     }
   }
+}
+
+function handlePageTypeChange(pageType: string | number | boolean | undefined) {
+  if (pageType === "iframe") {
+    iframePageEnabled.value = true;
+    formData.value.component = undefined;
+    formData.value.routeName = undefined;
+    formData.value.keepAlive = 0;
+    formData.value.params = [];
+    formData.value.iframeUrl = "";
+    return;
+  }
+  iframePageEnabled.value = false;
+  formData.value.iframeUrl = undefined;
 }
 
 /**
@@ -555,6 +610,7 @@ function resetForm() {
     keepAlive: 1,
     params: [],
   };
+  iframePageEnabled.value = false;
 }
 
 // 关闭弹窗

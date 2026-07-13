@@ -41,46 +41,26 @@ describe("MenuAPI", () => {
     });
   });
 
-  it("loads menu management tree from organization parent API", async () => {
-    requestMock
-      .mockResolvedValueOnce([
-        {
-          id: "1",
-          parentId: "-1",
-          name: "系统管理",
-          type: "CATALOG",
-          href: "/admin",
-          icon: "setting",
-          orderNum: 1,
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          id: "2",
-          parentId: "1",
-          name: "用户管理",
-          type: "MENU",
-          href: "/admin/users",
-          icon: "user",
-          orderNum: 1,
-        },
-      ])
-      .mockResolvedValueOnce([]);
+  it("loads only root menus when opening menu management", async () => {
+    requestMock.mockResolvedValueOnce([
+      {
+        id: "1",
+        parentId: "-1",
+        name: "系统管理",
+        type: "CATALOG",
+        href: "/admin",
+        icon: "setting",
+        orderNum: 1,
+      },
+    ]);
 
     const { default: MenuAPI } = await import("@/api/system/menu");
 
     const menus = await MenuAPI.getList({});
 
-    expect(requestMock).toHaveBeenNthCalledWith(1, {
+    expect(requestMock).toHaveBeenCalledTimes(1);
+    expect(requestMock).toHaveBeenCalledWith({
       url: "/org/menu/parent/-1",
-      method: "get",
-    });
-    expect(requestMock).toHaveBeenNthCalledWith(2, {
-      url: "/org/menu/parent/1",
-      method: "get",
-    });
-    expect(requestMock).toHaveBeenNthCalledWith(3, {
-      url: "/org/menu/parent/2",
       method: "get",
     });
     expect(menus).toEqual([
@@ -91,15 +71,41 @@ describe("MenuAPI", () => {
         routePath: "admin",
         sort: 1,
         type: "C",
-        children: [
-          expect.objectContaining({
-            id: "2",
-            parentId: "1",
-            name: "用户管理",
-            routePath: "admin/users",
-            type: "M",
-          }),
-        ],
+        hasChildren: true,
+      }),
+    ]);
+  });
+
+  it("loads child menus only when a menu row is expanded", async () => {
+    requestMock.mockResolvedValueOnce([
+      {
+        id: "2",
+        parentId: "1",
+        name: "用户管理",
+        type: "MENU",
+        href: "/admin/users",
+        icon: "user",
+        orderNum: 1,
+      },
+    ]);
+
+    const { default: MenuAPI } = await import("@/api/system/menu");
+
+    const menus = await MenuAPI.getChildren("1");
+
+    expect(requestMock).toHaveBeenCalledTimes(1);
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/org/menu/parent/1",
+      method: "get",
+    });
+    expect(menus).toEqual([
+      expect.objectContaining({
+        id: "2",
+        parentId: "1",
+        name: "用户管理",
+        routePath: "admin/users",
+        type: "M",
+        hasChildren: true,
       }),
     ]);
   });

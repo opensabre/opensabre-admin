@@ -14,6 +14,10 @@ export interface MenuItem {
   children?: MenuItem[];
   /** 组件路径 */
   component?: string;
+  /** 内嵌页面地址 */
+  iframeUrl?: string;
+  /** 是否可能存在子菜单，用于表格懒加载 */
+  hasChildren?: boolean;
   /** ICON */
   icon?: string;
   /** 菜单ID */
@@ -56,6 +60,8 @@ export interface MenuForm {
   redirect?: string;
   /** 组件路径 */
   component?: string;
+  /** 内嵌页面地址 */
+  iframeUrl?: string;
   /** ICON */
   icon?: string;
   /** 排序 */

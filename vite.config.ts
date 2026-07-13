@@ -48,8 +48,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           changeOrigin: true,
           target: env.VITE_APP_API_URL,
         },
-        // 代理 OAuth2 授权请求
-        ["/oauth2/authorization"]: {
+        // 代理 OAuth2 与 Knife4j 网关接口请求
+        ["/oauth2"]: {
           changeOrigin: true,
           target: env.VITE_APP_API_URL,
           secure: false,
@@ -59,6 +59,24 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           changeOrigin: true,
           target: env.VITE_APP_API_URL,
           secure: false,
+        },
+        // 代理 Knife4j API 文档及其静态资源
+        ["/doc.html"]: {
+          changeOrigin: true,
+          target: env.VITE_APP_API_URL,
+          configure: (proxy) => {
+            proxy.on("proxyRes", (proxyRes) => {
+              proxyRes.headers["x-frame-options"] = "SAMEORIGIN";
+            });
+          },
+        },
+        ["/webjars"]: {
+          changeOrigin: true,
+          target: env.VITE_APP_API_URL,
+        },
+        ["/v3"]: {
+          changeOrigin: true,
+          target: env.VITE_APP_API_URL,
         },
       },
     },

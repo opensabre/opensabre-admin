@@ -8,6 +8,7 @@ const FRONT_ROOT_PARENT_ID = "0";
 
 interface MenuExtra {
   component?: string;
+  iframeUrl?: string;
   keepAlive?: number | boolean;
   perm?: string;
   redirect?: string;
@@ -32,6 +33,7 @@ function toOrgParentId(parentId?: string) {
 
 function normalizeHref(href?: string) {
   if (!href) return "";
+  if (/^(https?:)?\/\//.test(href)) return href;
   return href.startsWith("/") ? href : `/${href}`;
 }
 
@@ -62,13 +64,17 @@ function toMenuItem(menu: OrgMenuItem): MenuItem {
     path: normalizeHref(menu.href),
     routeName: extra.routeName || `OrgMenu${menu.id}`,
     routePath,
-    component: extra.component || (type === "M" ? `${routePath}/index` : undefined),
+    component: extra.iframeUrl
+      ? "system/iframe/index"
+      : extra.component || (type === "M" ? `${routePath}/index` : undefined),
+    iframeUrl: extra.iframeUrl,
     redirect: extra.redirect,
     icon: menu.icon,
     sort: Number(menu.orderNum ?? 0),
     visible: extra.visible ?? 1,
     perm: extra.perm,
     keepAlive: extra.keepAlive ?? 1,
+    hasChildren: type !== "B",
     children: menu.children?.map(toMenuItem),
   } as MenuItem & MenuForm;
 }
@@ -84,6 +90,7 @@ function toOrgMenuForm(data: MenuForm) {
     orderNum: String(data.sort ?? 0),
     description: JSON.stringify({
       component: data.component,
+      iframeUrl: data.iframeUrl,
       keepAlive: data.keepAlive,
       perm: data.perm,
       redirect: data.redirect,
@@ -139,14 +146,25 @@ const MenuAPI = {
     });
     return toRouteItems(menus);
   },
+  /** 获取指定父菜单下的菜单列表 */
+  getChildren(parentId?: string | number) {
+    const id = parentId == null ? ROOT_PARENT_ID : String(parentId);
+    return request<any, OrgMenuItem[]>({
+      url: `${ORG_MENU_BASE_URL}/parent/${id}`,
+      method: "get",
+    }).then((menus) => menus.map(toMenuItem));
+  },
   /** 获取菜单树形列表 */
   async getList(queryParams: MenuQueryParams = {}) {
-    const menus = (await getMenuTree()).map(toMenuItem);
-    return filterMenuTree(menus, queryParams.keywords);
+    if (queryParams.keywords?.trim()) {
+      const menus = (await getMenuTree()).map(toMenuItem);
+      return filterMenuTree(menus, queryParams.keywords);
+    }
+    return this.getChildren(ROOT_PARENT_ID);
   },
   /** 获取菜单下拉数据源 */
   async getOptions(onlyParent?: boolean) {
-    return toOptions(await this.getList({}), onlyParent);
+    return toOptions((await getMenuTree()).map(toMenuItem), onlyParent);
   },
   /** 获取菜单表单数据 */
   getFormData(id: string) {

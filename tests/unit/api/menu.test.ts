@@ -122,4 +122,23 @@ describe("MenuAPI route adapter", () => {
       },
     ]);
   });
+
+  it("uses the generic iframe page for menus with an embedded URL", () => {
+    const routes = toRouteItems([
+      {
+        id: "118",
+        parentId: "117",
+        name: "API文档",
+        type: "MENU",
+        href: "/development/api-docs",
+        description: '{"iframeUrl":"/doc.html","visible":1}',
+      },
+    ]);
+
+    expect(routes[0]).toMatchObject({
+      path: "/development/api-docs",
+      component: "system/iframe/index",
+      meta: { params: { iframeUrl: "/doc.html" } },
+    });
+  });
 });

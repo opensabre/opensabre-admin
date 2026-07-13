@@ -14,6 +14,7 @@ export interface OrgMenuItem {
 
 interface MenuExtra {
   component?: string;
+  iframeUrl?: string;
   redirect?: string;
   routeName?: string;
   visible?: number | boolean;
@@ -28,12 +29,13 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
     return {
       path: toRoutePath(href, parentHref),
       name: extra.routeName || `OrgMenu${menu.id}`,
-      component: children.length ? "Layout" : extra.component || toComponentPath(href),
+      component: children.length ? "Layout" : extra.iframeUrl ? "system/iframe/index" : extra.component || toComponentPath(href),
       redirect: extra.redirect || children[0]?.path,
       meta: {
         title: menu.name || href,
         icon: menu.icon,
         hidden: menu.type === "BUTTON" || extra.visible === 0 || extra.visible === false,
+        ...(extra.iframeUrl ? { params: { iframeUrl: extra.iframeUrl } } : {}),
         ...(children.length ? { alwaysShow: true } : {}),
       },
       children,
@@ -43,6 +45,7 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
 
 function normalizeHref(href?: string) {
   if (!href) return "/";
+  if (/^(https?:)?\/\//.test(href)) return href;
   return href.startsWith("/") ? href : `/${href}`;
 }
 
