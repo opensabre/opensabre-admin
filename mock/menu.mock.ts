@@ -125,6 +125,19 @@ export default defineMock([
               },
             },
             {
+              path: "gateway-route",
+              component: "system/gateway-route/index",
+              name: "GatewayRoute",
+              meta: {
+                title: "网关路由",
+                icon: "api",
+                hidden: false,
+                keepAlive: true,
+                alwaysShow: false,
+                params: null,
+              },
+            },
+            {
               path: "notice",
               component: "system/notice/index",
               name: "Notice",
