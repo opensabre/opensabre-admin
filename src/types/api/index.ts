@@ -24,6 +24,7 @@ export * from "./tenant";
 export * from "./captcha-scene";
 export * from "./notification";
 export * from "./gateway-route";
+export * from "./rate-limit-scene";
 
 // 其他模块
 export * from "./ai";

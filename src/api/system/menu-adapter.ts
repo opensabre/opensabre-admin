@@ -94,6 +94,8 @@ function toComponentPath(href: string) {
     "sysadmin/captcha-scene": "sysadmin/captcha-scenes/index",
     "sysadmin/notification": "sysadmin/notification/index",
     "sysadmin/notifications": "sysadmin/notification/index",
+    "sysadmin/ratelimit-scenes": "sysadmin/ratelimit-scenes/index",
+    "sysadmin/ratelimit-scene": "sysadmin/ratelimit-scenes/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;
