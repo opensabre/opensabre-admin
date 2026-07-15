@@ -153,7 +153,7 @@ function handleResetQuery() {
 
 async function handleReadNotice(id: string) {
   try {
-    const data = await NoticeAPI.getDetail(id);
+    const data = await NoticeAPI.getInboxDetail(id);
     noticeDetail.value = data;
     noticeDialogVisible.value = true;
   } catch (error) {

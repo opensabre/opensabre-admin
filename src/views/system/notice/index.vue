@@ -36,7 +36,7 @@
       <div class="table-section__toolbar">
         <div class="table-section__toolbar--actions">
           <el-button
-            v-hasPerm="['sys:notice:create']"
+            v-hasPerm="['sys:internal-message:create']"
             type="success"
             icon="plus"
             @click="handleOpenDialog()"
@@ -44,7 +44,7 @@
             新增通知
           </el-button>
           <el-button
-            v-hasPerm="['sys:notice:delete']"
+            v-hasPerm="['sys:internal-message:delete']"
             type="danger"
             :disabled="selectIds.length === 0"
             icon="delete"
@@ -114,7 +114,7 @@
             </el-button>
             <el-button
               v-if="scope.row.publishStatus != 1"
-              v-hasPerm="['sys:notice:publish']"
+              v-hasPerm="['sys:internal-message:publish']"
               type="primary"
               size="small"
               link
@@ -124,7 +124,7 @@
             </el-button>
             <el-button
               v-if="scope.row.publishStatus == 1"
-              v-hasPerm="['sys:notice:revoke']"
+              v-hasPerm="['sys:internal-message:revoke']"
               type="primary"
               size="small"
               link
@@ -134,7 +134,7 @@
             </el-button>
             <el-button
               v-if="scope.row.publishStatus != 1"
-              v-hasPerm="['sys:notice:update']"
+              v-hasPerm="['sys:internal-message:update']"
               type="primary"
               size="small"
               link
@@ -144,7 +144,7 @@
             </el-button>
             <el-button
               v-if="scope.row.publishStatus != 1"
-              v-hasPerm="['sys:notice:delete']"
+              v-hasPerm="['sys:internal-message:delete']"
               type="danger"
               size="small"
               link
@@ -351,8 +351,13 @@ function handleSelectionChange(selection: any) {
 
 // 打开通知公告弹窗
 function handleOpenDialog(id?: string) {
-  UserAPI.getOptions().then((data) => {
-    userOptions.value = data;
+  UserAPI.getPage({ pageNum: 1, pageSize: 1000 }).then((data) => {
+    userOptions.value = data.data
+      .filter((user) => user.status !== 0 && user.username)
+      .map((user) => ({
+        value: user.username!,
+        label: `${user.nickname || user.username} (${user.username})`,
+      }));
   });
 
   dialog.visible = true;
@@ -362,7 +367,7 @@ function handleOpenDialog(id?: string) {
       Object.assign(formData, data);
     });
   } else {
-    Object.assign(formData, { level: 0, targetType: 0 });
+    Object.assign(formData, { level: "L", targetType: 1, targetUserIds: [] });
     dialog.title = "新增公告";
   }
 }
@@ -387,6 +392,13 @@ function handleRevoke(id: string) {
 function handleSubmit() {
   dataFormRef.value.validate((valid: any) => {
     if (valid) {
+      if (formData.targetType === 1) {
+        formData.targetUserIds = userOptions.value.map((user) => String(user.value));
+      }
+      if (!formData.targetUserIds || formData.targetUserIds.length === 0) {
+        ElMessage.warning("请选择至少一名有效收件人");
+        return;
+      }
       loading.value = true;
       const id = formData.id;
       if (id) {
