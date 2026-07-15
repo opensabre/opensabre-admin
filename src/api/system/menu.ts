@@ -80,7 +80,9 @@ function toMenuItem(menu: OrgMenuItem): MenuItem {
 }
 
 function toOrgMenuForm(data: MenuForm) {
-  const href = normalizeHref(data.routePath || data.path || data.perm || data.name);
+  const href = data.type === "B" || data.type === "BUTTON"
+    ? ""
+    : normalizeHref(data.routePath || data.path || data.name);
   return {
     parentId: toOrgParentId(data.parentId),
     name: data.name,
