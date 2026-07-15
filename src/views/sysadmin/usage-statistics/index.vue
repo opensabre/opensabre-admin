@@ -100,7 +100,7 @@ import type {
   UsageSummary,
   UsageTrendItem,
 } from "@/types/api";
-import dayjs from "dayjs";
+import { dayjs } from "element-plus";
 import { useRoute } from "vue-router";
 
 defineOptions({ name: "UsageStatistics", inheritAttrs: false });
