@@ -74,6 +74,11 @@
         <el-table-column label="有效期(分钟)" prop="captchaExpireTime" width="120" />
         <el-table-column label="最小间隔(秒)" prop="minInterval" width="120" />
         <el-table-column label="最大次数" prop="maxLimitCount" width="100" />
+        <el-table-column label="今日生成" width="100">
+          <template #default="{ row }">
+            {{ usageSummary[row.sceneCode]?.attemptCount ?? 0 }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="row.enabled ? 'success' : 'info'">
@@ -82,8 +87,11 @@
           </template>
         </el-table-column>
         <el-table-column label="描述" prop="description" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" label="操作" width="140">
+        <el-table-column fixed="right" label="操作" width="190">
           <template #default="{ row }">
+            <el-button type="primary" size="small" link @click="openUsage(row.sceneCode)">
+              趋势
+            </el-button>
             <el-button
               type="primary"
               size="small"
@@ -251,13 +259,17 @@
 <script setup lang="ts">
 import CaptchaSceneAPI from "@/api/sysadmin/captcha-scene";
 import NotificationAdminAPI from "@/api/sysadmin/notification";
+import UsageCounterAPI from "@/api/sysadmin/usage-counter";
 import type {
   CaptchaSceneForm,
   CaptchaSceneItem,
   CaptchaSceneQueryParams,
   CaptchaType,
   NotificationTemplateItem,
+  UsageObjectSummary,
 } from "@/types/api";
+import dayjs from "dayjs";
+import { useRouter } from "vue-router";
 
 defineOptions({
   name: "CaptchaScenes",
@@ -269,6 +281,8 @@ const dataFormRef = ref();
 const loading = ref(false);
 const sceneList = ref<CaptchaSceneItem[]>([]);
 const notificationTemplateOptions = ref<NotificationTemplateItem[]>([]);
+const usageSummary = ref<Record<string, UsageObjectSummary>>({});
+const router = useRouter();
 
 const queryParams = reactive<CaptchaSceneQueryParams>({
   pageNum: 1,
@@ -374,10 +388,32 @@ function fetchData() {
   CaptchaSceneAPI.getList()
     .then((data) => {
       sceneList.value = data ?? [];
+      fetchUsageSummary();
     })
     .finally(() => {
       loading.value = false;
     });
+}
+
+function fetchUsageSummary() {
+  const objectIds = sceneList.value.map((item) => item.sceneCode);
+  if (!objectIds.length) return;
+  UsageCounterAPI.getSummaries({
+    from: dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+    to: dayjs().format("YYYY-MM-DDTHH:mm:ss"),
+    objectType: "CAPTCHA_SCENE",
+    objectIds,
+    usageEvent: "CAPTCHA_GENERATE",
+  }).then((data) => {
+    usageSummary.value = Object.fromEntries((data || []).map((item) => [item.objectId, item]));
+  });
+}
+
+function openUsage(sceneCode: string) {
+  router.push({
+    path: "/sysadmin/usage-statistics",
+    query: { objectType: "CAPTCHA_SCENE", objectId: sceneCode, usageEvent: "CAPTCHA_GENERATE" },
+  });
 }
 
 function fetchTemplateOptions() {
