@@ -69,8 +69,9 @@ export const useUserStore = defineStore("user", () => {
             nickname: currentUser.nickname || currentUser.name,
             // 将 roleIds 转换为 roles
             roles: ["ADMIN"],
-            // perms 暂时为空数组，后续可以从其他接口获取
-            perms: [
+            // 页面按钮权限在动态菜单树加载后写入，禁止在此处硬编码业务权限。
+            perms: [],
+            /*
               "sys:tenant-plan:update",
               "sys:dept:update",
               "sys:tenant-plan:list",
@@ -135,7 +136,7 @@ export const useUserStore = defineStore("user", () => {
               "sys:dict:update",
               "security:online-user:list",
               "security:online-user:kickout",
-            ],
+            ], */
           };
           Object.assign(userInfo.value, mappedData);
           authStatus.value = "authenticated";
@@ -199,6 +200,11 @@ export const useUserStore = defineStore("user", () => {
     userInfo.value = {} as UserInfo;
     authStatus.value = "anonymous";
     authMode.value = "none";
+  }
+
+  /** 动态路由加载完成后，写入角色已授权的 BUTTON 菜单权限。 */
+  function setPermissions(permissions: string[]) {
+    userInfo.value.perms = [...new Set(permissions)];
   }
 
   /**
@@ -269,6 +275,7 @@ export const useUserStore = defineStore("user", () => {
     logout,
     resetAllState,
     resetUserState,
+    setPermissions,
     refreshToken,
   };
 });

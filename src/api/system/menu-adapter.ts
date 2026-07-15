@@ -12,16 +12,22 @@ export interface OrgMenuItem {
   type?: string;
 }
 
+export interface AuthorizedRoutes {
+  routes: RouteItem[];
+  permissions: string[];
+}
+
 interface MenuExtra {
   component?: string;
   iframeUrl?: string;
   redirect?: string;
   routeName?: string;
   visible?: number | boolean;
+  perm?: string;
 }
 
 export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[] {
-  return menus.map((menu) => {
+  return menus.filter((menu) => !isButton(menu)).map((menu) => {
     const href = normalizeHref(menu.href);
     const children = menu.children?.length ? toRouteItems(menu.children, href) : [];
     const extra = parseExtra(menu.description);
@@ -41,6 +47,27 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
       children,
     };
   });
+}
+
+/** 从已授权菜单树收集按钮权限；按钮本身不应成为动态路由。 */
+export function toAuthorizedRoutes(menus: OrgMenuItem[]): AuthorizedRoutes {
+  return { routes: toRouteItems(menus), permissions: collectButtonPermissions(menus) };
+}
+
+function collectButtonPermissions(menus: OrgMenuItem[]): string[] {
+  const permissions = new Set<string>();
+  const visit = (items: OrgMenuItem[]) => items.forEach((menu) => {
+    const extra = parseExtra(menu.description);
+    if (isButton(menu) && extra.perm?.trim()) permissions.add(extra.perm.trim());
+    if (menu.children?.length) visit(menu.children);
+  });
+  visit(menus);
+  return [...permissions];
+}
+
+function isButton(menu: OrgMenuItem) {
+  const type = String(menu.type ?? "").toUpperCase();
+  return type === "BUTTON" || type === "B";
 }
 
 function normalizeHref(href?: string) {
