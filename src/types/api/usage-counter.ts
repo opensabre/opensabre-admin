@@ -4,7 +4,11 @@ export type UsageObjectType =
   | "NOTIFICATION_SCENE"
   | "NOTIFICATION_TEMPLATE";
 
-export type UsageEvent = "CAPTCHA_GENERATE" | "CAPTCHA_VERIFY" | "RATE_LIMIT_CHECK" | "NOTIFICATION_SEND";
+export type UsageEvent =
+  | "CAPTCHA_GENERATE"
+  | "CAPTCHA_VERIFY"
+  | "RATE_LIMIT_CHECK"
+  | "NOTIFICATION_SEND";
 export type UsageGranularity = "MINUTE" | "HOUR" | "DAY" | "WEEK";
 
 export interface UsageSummary {

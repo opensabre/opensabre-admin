@@ -19,7 +19,11 @@ const UsageCounterAPI = {
     return request<any, UsageSummary>({ url: `${BASE_URL}/summary`, method: "get", params });
   },
   getSummaries(data: UsageBatchSummaryQuery) {
-    return request<any, UsageObjectSummary[]>({ url: `${BASE_URL}/summaries`, method: "post", data });
+    return request<any, UsageObjectSummary[]>({
+      url: `${BASE_URL}/summaries`,
+      method: "post",
+      data,
+    });
   },
   getRanking(params: Omit<UsageTrendQuery, "granularity" | "objectId"> & { limit?: number }) {
     return request<any, UsageRankingItem[]>({ url: `${BASE_URL}/ranking`, method: "get", params });
