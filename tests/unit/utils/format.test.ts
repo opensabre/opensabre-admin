@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { formatGrowthRate, formatFileSize, formatNumber, formatCurrency } from "@/utils/format";
+import {
+  formatCurrency,
+  formatDateTime,
+  formatFileSize,
+  formatGrowthRate,
+  formatNumber,
+  normalizeDateTimeValues,
+} from "@/utils/format";
 
 describe("Format 工具函数", () => {
   describe("formatGrowthRate()", () => {
@@ -131,6 +138,24 @@ describe("Format 工具函数", () => {
     it("应该处理 null 和 undefined", () => {
       expect(formatCurrency(null as any)).toBe("¥0.00");
       expect(formatCurrency(undefined as any)).toBe("¥0.00");
+    });
+  });
+});
+
+describe("date time formatting", () => {
+  it("formats a local ISO date time without changing its clock time", () => {
+    expect(formatDateTime("2026-07-15T22:20:02")).toBe("2026-07-15 22:20:02");
+  });
+
+  it("normalizes nested API response values", () => {
+    const response = normalizeDateTimeValues({
+      createdTime: "2026-07-15T22:20:02",
+      records: [{ updatedTime: "2026-07-15T22:20:03" }],
+    });
+
+    expect(response).toEqual({
+      createdTime: "2026-07-15 22:20:02",
+      records: [{ updatedTime: "2026-07-15 22:20:03" }],
     });
   });
 });
