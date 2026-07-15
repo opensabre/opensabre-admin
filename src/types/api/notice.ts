@@ -42,6 +42,8 @@ export interface NoticeItem {
   title: string;
   /** 通知内容 */
   content: string;
+  /** 发布人 */
+  publisherName?: string;
   /** 通知类型 */
   type: string;
   /** 通知等级 */

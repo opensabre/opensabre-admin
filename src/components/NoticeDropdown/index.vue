@@ -13,7 +13,8 @@
         <template v-if="list.length > 0">
           <div v-for="item in list" :key="item.id" class="w-500px py-3">
             <div class="flex-y-center">
-              <DictTag v-model="item.type" code="notice_type" size="small" />
+              <el-tag v-if="item.type === 'ANNOUNCEMENT'" type="success" size="small">公告</el-tag>
+              <el-tag v-else type="primary" size="small">通知</el-tag>
               <el-text
                 size="small"
                 class="w-200px cursor-pointer !ml-2 !flex-1"

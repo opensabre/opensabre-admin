@@ -68,7 +68,8 @@
         <el-table-column label="通知标题" prop="title" min-width="200" />
         <el-table-column align="center" label="通知类型" width="150">
           <template #default="scope">
-            <DictTag v-model="scope.row.type" :code="'notice_type'" />
+            <el-tag v-if="scope.row.type === 'ANNOUNCEMENT'" type="success">公告</el-tag>
+            <el-tag v-else type="primary">通知</el-tag>
           </template>
         </el-table-column>
         <el-table-column align="center" label="发布人" prop="publisherName" width="150" />

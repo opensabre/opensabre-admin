@@ -10,6 +10,8 @@ function toItem(message: any): NoticeItem {
   return {
     ...message,
     type: message.kind,
+    isRead: message.read === true ? 1 : 0,
+    publisherName: message.createdBy || "-",
     publishStatus: statusToNumber[message.status] ?? 0,
     targetType: message.targetScope === "ALL_ACTIVE_USERS" ? 1 : 2,
   };

@@ -41,7 +41,8 @@
         <el-table-column label="通知标题" prop="title" min-width="200" />
         <el-table-column align="center" label="通知类型" width="150">
           <template #default="scope">
-            <DictTag v-model="scope.row.type" code="notice_type" />
+            <el-tag v-if="scope.row.type === 'ANNOUNCEMENT'" type="success">公告</el-tag>
+            <el-tag v-else type="primary">通知</el-tag>
           </template>
         </el-table-column>
         <el-table-column align="center" label="通知等级" width="100">
@@ -155,6 +156,8 @@ async function handleReadNotice(id: string) {
   try {
     const data = await NoticeAPI.getInboxDetail(id);
     noticeDetail.value = data;
+    const item = pageData.value.find((notice) => notice.id === id);
+    if (item) item.isRead = 1;
     noticeDialogVisible.value = true;
   } catch (error) {
     ElMessage.error("获取通知详情失败");
