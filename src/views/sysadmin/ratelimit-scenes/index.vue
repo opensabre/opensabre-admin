@@ -48,6 +48,11 @@
         </el-table-column>
         <el-table-column label="最大次数" prop="maxCount" width="100" />
         <el-table-column label="周期(秒)" prop="period" width="110" />
+        <el-table-column label="今日检查" width="100">
+          <template #default="{ row }">
+            {{ usageSummary[row.sceneCode]?.attemptCount ?? 0 }}
+          </template>
+        </el-table-column>
         <el-table-column label="Key 前缀" prop="keyPrefix" min-width="130" show-overflow-tooltip />
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
@@ -57,8 +62,11 @@
           </template>
         </el-table-column>
         <el-table-column label="描述" prop="description" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" label="操作" width="140">
+        <el-table-column fixed="right" label="操作" width="190">
           <template #default="{ row }">
+            <el-button type="primary" size="small" link @click="openUsage(row.sceneCode)">
+              趋势
+            </el-button>
             <el-button
               type="primary"
               size="small"
@@ -189,14 +197,18 @@
 
 <script setup lang="ts">
 import RateLimitSceneAPI from "@/api/sysadmin/rate-limit-scene";
+import UsageCounterAPI from "@/api/sysadmin/usage-counter";
 import type {
   RateLimitAlgorithm,
   RateLimitDimension,
   RateLimitSceneForm,
   RateLimitSceneItem,
   RateLimitScenePayload,
+  UsageObjectSummary,
 } from "@/types/api";
+import dayjs from "dayjs";
 import type { FormRules } from "element-plus";
+import { useRouter } from "vue-router";
 
 defineOptions({ name: "RateLimitScenes", inheritAttrs: false });
 
@@ -204,6 +216,8 @@ const queryFormRef = ref();
 const dataFormRef = ref();
 const loading = ref(false);
 const sceneList = ref<RateLimitSceneItem[]>([]);
+const usageSummary = ref<Record<string, UsageObjectSummary>>({});
+const router = useRouter();
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
@@ -292,10 +306,30 @@ function fetchData() {
   RateLimitSceneAPI.getList()
     .then((data) => {
       sceneList.value = data ?? [];
+      fetchUsageSummary();
     })
     .finally(() => {
       loading.value = false;
     });
+}
+function fetchUsageSummary() {
+  const objectIds = sceneList.value.map((item) => item.sceneCode);
+  if (!objectIds.length) return;
+  UsageCounterAPI.getSummaries({
+    from: dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+    to: dayjs().format("YYYY-MM-DDTHH:mm:ss"),
+    objectType: "RATE_LIMIT_SCENE",
+    objectIds,
+    usageEvent: "RATE_LIMIT_CHECK",
+  }).then((data) => {
+    usageSummary.value = Object.fromEntries((data || []).map((item) => [item.objectId, item]));
+  });
+}
+function openUsage(sceneCode: string) {
+  router.push({
+    path: "/sysadmin/usage-statistics",
+    query: { objectType: "RATE_LIMIT_SCENE", objectId: sceneCode, usageEvent: "RATE_LIMIT_CHECK" },
+  });
 }
 function handleQuery() {
   queryParams.pageNum = 1;

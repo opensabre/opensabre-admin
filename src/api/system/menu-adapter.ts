@@ -29,7 +29,11 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
     return {
       path: toRoutePath(href, parentHref),
       name: extra.routeName || `OrgMenu${menu.id}`,
-      component: children.length ? "Layout" : extra.iframeUrl ? "system/iframe/index" : extra.component || toComponentPath(href),
+      component: children.length
+        ? "Layout"
+        : extra.iframeUrl
+          ? "system/iframe/index"
+          : extra.component || toComponentPath(href),
       redirect: extra.redirect || children[0]?.path,
       meta: {
         title: menu.name || href,
@@ -96,6 +100,7 @@ function toComponentPath(href: string) {
     "sysadmin/notifications": "sysadmin/notification/index",
     "sysadmin/ratelimit-scenes": "sysadmin/ratelimit-scenes/index",
     "sysadmin/ratelimit-scene": "sysadmin/ratelimit-scenes/index",
+    "sysadmin/usage-statistics": "sysadmin/usage-statistics/index",
   };
 
   return legacyOrgMap[path] || `${path}/index`;
