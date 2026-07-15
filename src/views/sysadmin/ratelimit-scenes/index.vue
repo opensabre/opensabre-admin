@@ -206,7 +206,7 @@ import type {
   RateLimitScenePayload,
   UsageObjectSummary,
 } from "@/types/api";
-import dayjs from "dayjs";
+import { dayjs } from "element-plus";
 import type { FormRules } from "element-plus";
 import { useRouter } from "vue-router";
 

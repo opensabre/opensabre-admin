@@ -501,7 +501,7 @@ import type {
   UsageObjectSummary,
   UsageObjectType,
 } from "@/types/api";
-import dayjs from "dayjs";
+import { dayjs } from "element-plus";
 import { useRouter } from "vue-router";
 
 defineOptions({
