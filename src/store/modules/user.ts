@@ -122,6 +122,10 @@ export const useUserStore = defineStore("user", () => {
               "sys:internal-message:publish",
               "sys:internal-message:revoke",
               "sys:internal-message:statistics",
+              // 网关路由会直接发布到 Nacos，必须显式保留三个高风险操作权限。
+              "gateway:route:create",
+              "gateway:route:update",
+              "gateway:route:delete",
               "sys:user:reset-password",
               "sys:dept:create",
               "sys:config:delete",
