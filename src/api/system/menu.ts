@@ -102,18 +102,11 @@ function toOrgMenuForm(data: MenuForm) {
   };
 }
 
-async function getMenuTree(parentId = ROOT_PARENT_ID): Promise<OrgMenuItem[]> {
-  const menus = await request<any, OrgMenuItem[]>({
-    url: `${ORG_MENU_BASE_URL}/parent/${parentId}`,
+async function getMenuTree(): Promise<OrgMenuItem[]> {
+  return request<any, OrgMenuItem[]>({
+    url: `${ORG_MENU_BASE_URL}/tree`,
     method: "get",
   });
-
-  return Promise.all(
-    menus.map(async (menu) => ({
-      ...menu,
-      children: await getMenuTree(menu.id),
-    }))
-  );
 }
 
 function filterMenuTree(menus: MenuItem[], keywords?: string): MenuItem[] {
