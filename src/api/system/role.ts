@@ -1,5 +1,6 @@
 import request from "@/utils/request";
 import type { RoleQueryParams, RoleItem, RoleForm } from "@/types/api";
+import { useManagementTreeStoreHook } from "@/store/modules/management-tree";
 
 const ORG_ROLE_BASE_URL = "/org/role";
 
@@ -74,13 +75,13 @@ const RoleAPI = {
   },
   /** 获取角色下拉数据源 */
   getOptions() {
-    return request<any, OrgRole[]>({ url: `${ORG_ROLE_BASE_URL}/all`, method: "get" }).then(
+    return useManagementTreeStoreHook().load("role:options", () => request<any, OrgRole[]>({ url: `${ORG_ROLE_BASE_URL}/all`, method: "get" }).then(
       (roles) =>
         roles.map((role) => ({
           value: role.id || "",
           label: role.name || role.code || "",
         }))
-    );
+    ));
   },
   /** 获取角色的菜单ID集合 */
   getRoleMenuIds(roleId: string) {
@@ -92,7 +93,7 @@ const RoleAPI = {
       url: `${ORG_ROLE_BASE_URL}/${roleId}/menus`,
       method: "put",
       data: data.map(String),
-    });
+    }).then((result) => { useManagementTreeStoreHook().invalidate("role:"); return result; });
   },
   /** 获取角色的资源ID集合 */
   getRoleResourceIds(roleId: string) {
@@ -107,7 +108,7 @@ const RoleAPI = {
       url: `${ORG_ROLE_BASE_URL}/${roleId}/resources`,
       method: "put",
       data: data.map(String),
-    });
+    }).then((result) => { useManagementTreeStoreHook().invalidate("role:"); return result; });
   },
   /** 获取角色表单数据 */
   getFormData(id: string) {
@@ -117,11 +118,11 @@ const RoleAPI = {
   },
   /** 新增角色 */
   create(data: RoleForm) {
-    return request({ url: `${ORG_ROLE_BASE_URL}`, method: "post", data: toOrgRoleForm(data) });
+    return request({ url: `${ORG_ROLE_BASE_URL}`, method: "post", data: toOrgRoleForm(data) }).then((result) => { useManagementTreeStoreHook().invalidate("role:"); return result; });
   },
   /** 更新角色 */
   update(id: string, data: RoleForm) {
-    return request({ url: `${ORG_ROLE_BASE_URL}/${id}`, method: "put", data: toOrgRoleForm(data) });
+    return request({ url: `${ORG_ROLE_BASE_URL}/${id}`, method: "put", data: toOrgRoleForm(data) }).then((result) => { useManagementTreeStoreHook().invalidate("role:"); return result; });
   },
   /** 批量删除角色，多个以英文逗号(,)分割 */
   deleteByIds(ids: string) {

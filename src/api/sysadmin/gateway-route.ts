@@ -3,6 +3,7 @@ import type {
   GatewayRouteChange,
   GatewayRouteConfig,
   GatewayRoutePublishResult,
+  GatewayDefaultFilterChange,
 } from "@/types/api";
 
 const GATEWAY_ROUTE_BASE_URL = "/sysadmin/gateway/routes";
@@ -32,6 +33,9 @@ const GatewayRouteAPI = {
       method: "delete",
       data: { baseVersion },
     });
+  },
+  updateDefaultFilters(data: GatewayDefaultFilterChange) {
+    return request<any, GatewayRouteConfig>({ url: `${GATEWAY_ROUTE_BASE_URL}/default-filters`, method: "put", data });
   },
 };
 

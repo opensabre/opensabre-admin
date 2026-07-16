@@ -398,6 +398,7 @@ const initialMenuFormData = ref<MenuForm>({
 // 菜单表单数据
 const formData = ref({ ...initialMenuFormData.value });
 const iframePageEnabled = ref(false);
+let dialogRequestId = 0;
 const isExternalLink = computed(
   () =>
     formData.value.type === MenuTypeEnum.MENU &&
@@ -486,26 +487,37 @@ function handleRowClick(row: MenuItem) {
  * @param parentId 父菜单ID
  * @param menuId 菜单ID
  */
-function handleOpenDialog(parentId?: string, menuId?: string) {
-  MenuAPI.getOptions(true)
-    .then((data) => {
-      menuOptions.value = [{ value: "0", label: "顶级菜单", children: data }];
-    })
-    .then(() => {
-      dialog.visible = true;
-      if (menuId) {
-        dialog.title = "编辑菜单";
-        MenuAPI.getFormData(menuId).then((data) => {
-          initialMenuFormData.value = { ...data };
-          formData.value = data;
-          iframePageEnabled.value = !!data.iframeUrl;
-        });
-      } else {
-        dialog.title = "新增菜单";
-        formData.value.parentId = parentId?.toString();
-        iframePageEnabled.value = false;
-      }
-    });
+async function handleOpenDialog(parentId?: string, menuId?: string) {
+  const requestId = ++dialogRequestId;
+
+  try {
+    const [options, menu] = await Promise.all([
+      MenuAPI.getOptions(true),
+      menuId ? MenuAPI.getFormData(menuId) : Promise.resolve(undefined),
+    ]);
+
+    // 忽略后发起的编辑操作完成前返回的旧请求，避免旧数据覆盖当前表单。
+    if (requestId !== dialogRequestId) {
+      return;
+    }
+
+    menuOptions.value = [{ value: "0", label: "顶级菜单", children: options }];
+    if (menu) {
+      dialog.title = "编辑菜单";
+      initialMenuFormData.value = { ...menu };
+      formData.value = menu;
+      iframePageEnabled.value = !!menu.iframeUrl;
+    } else {
+      dialog.title = "新增菜单";
+      formData.value.parentId = parentId?.toString();
+      iframePageEnabled.value = false;
+    }
+    dialog.visible = true;
+  } catch {
+    if (requestId === dialogRequestId) {
+      ElMessage.error("加载菜单数据失败，请重试");
+    }
+  }
 }
 
 // 菜单类型切换
