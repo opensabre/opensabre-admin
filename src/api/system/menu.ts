@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/api";
-import { toRouteItems, type OrgMenuItem } from "./menu-adapter";
+import { toAuthorizedRoutes, type OrgMenuItem } from "./menu-adapter";
 
 const ORG_MENU_BASE_URL = "/org/menu";
 const ROOT_PARENT_ID = "-1";
@@ -80,7 +80,9 @@ function toMenuItem(menu: OrgMenuItem): MenuItem {
 }
 
 function toOrgMenuForm(data: MenuForm) {
-  const href = normalizeHref(data.routePath || data.path || data.perm || data.name);
+  const href = data.type === "B" || data.type === "BUTTON"
+    ? ""
+    : normalizeHref(data.routePath || data.path || data.name);
   return {
     parentId: toOrgParentId(data.parentId),
     name: data.name,
@@ -144,7 +146,7 @@ const MenuAPI = {
       url: `${ORG_MENU_BASE_URL}/user/${userId}`,
       method: "get",
     });
-    return toRouteItems(menus);
+    return toAuthorizedRoutes(menus);
   },
   /** 获取指定父菜单下的菜单列表 */
   getChildren(parentId?: string | number) {
