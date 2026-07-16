@@ -16,9 +16,16 @@ export interface GatewayRouteDefinition {
 /** Nacos 中网关路由配置的当前版本。 */
 export interface GatewayRouteConfig {
   routes: GatewayRoute[];
+  defaultFilters: GatewayRouteDefinition[];
   version: string;
   publishedAt?: string;
   publishedBy?: string;
+}
+
+/** 以当前 Nacos 版本为前置条件的全局过滤器变更。 */
+export interface GatewayDefaultFilterChange {
+  defaultFilters: GatewayRouteDefinition[];
+  baseVersion: string;
 }
 
 /** 以当前 Nacos 配置版本为前置条件的路由变更请求。 */

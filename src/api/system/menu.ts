@@ -1,6 +1,7 @@
 import request from "@/utils/request";
 import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/api";
 import { toAuthorizedRoutes, type OrgMenuItem } from "./menu-adapter";
+import { useManagementTreeStoreHook } from "@/store/modules/management-tree";
 
 const ORG_MENU_BASE_URL = "/org/menu";
 const ROOT_PARENT_ID = "-1";
@@ -103,10 +104,10 @@ function toOrgMenuForm(data: MenuForm) {
 }
 
 async function getMenuTree(): Promise<OrgMenuItem[]> {
-  return request<any, OrgMenuItem[]>({
+  return useManagementTreeStoreHook().load("menu:tree", () => request<any, OrgMenuItem[]>({
     url: `${ORG_MENU_BASE_URL}/tree`,
     method: "get",
-  });
+  }));
 }
 
 function filterMenuTree(menus: MenuItem[], keywords?: string): MenuItem[] {
@@ -170,15 +171,15 @@ const MenuAPI = {
   },
   /** 新增菜单 */
   create(data: MenuForm) {
-    return request({ url: `${ORG_MENU_BASE_URL}`, method: "post", data: toOrgMenuForm(data) });
+    return request({ url: `${ORG_MENU_BASE_URL}`, method: "post", data: toOrgMenuForm(data) }).then((result) => { useManagementTreeStoreHook().invalidate("menu:"); return result; });
   },
   /** 修改菜单 */
   update(id: string, data: MenuForm) {
-    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "put", data: toOrgMenuForm(data) });
+    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "put", data: toOrgMenuForm(data) }).then((result) => { useManagementTreeStoreHook().invalidate("menu:"); return result; });
   },
   /** 删除菜单 */
   deleteById(id: string) {
-    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "delete" });
+    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "delete" }).then((result) => { useManagementTreeStoreHook().invalidate("menu:"); return result; });
   },
 };
 
