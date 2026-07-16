@@ -21,7 +21,16 @@ describe("MenuAPI route adapter", () => {
             href: "/admin/users",
             icon: "fa-user",
             orderNum: 10,
-            children: [],
+            children: [
+              {
+                id: "130",
+                parentId: "102",
+                name: "新增用户",
+                type: "BUTTON",
+                href: "",
+                description: '{"perm":"sys:user:create"}',
+              },
+            ],
           },
           {
             id: "103",
@@ -121,6 +130,29 @@ describe("MenuAPI route adapter", () => {
         ],
       },
     ]);
+  });
+
+  it("does not turn button permissions into child routes", () => {
+    const routes = toRouteItems([
+      {
+        id: "102",
+        name: "用户管理",
+        type: "MENU",
+        href: "/admin/users",
+        children: [
+          { id: "130", name: "新增用户", type: "BUTTON", href: "" },
+          { id: "131", name: "修改用户", type: "B", href: "" },
+        ],
+      },
+    ]);
+
+    expect(routes).toHaveLength(1);
+    expect(routes[0]).toMatchObject({
+      path: "/admin/users",
+      component: "system/user/index",
+      children: [],
+      meta: { title: "用户管理", hidden: false },
+    });
   });
 
   it("uses the generic iframe page for menus with an embedded URL", () => {

@@ -21,7 +21,7 @@ interface MenuExtra {
 }
 
 export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[] {
-  return menus.map((menu) => {
+  return menus.filter((menu) => !isButton(menu)).map((menu) => {
     const href = normalizeHref(menu.href);
     const children = menu.children?.length ? toRouteItems(menu.children, href) : [];
     const extra = parseExtra(menu.description);
@@ -45,6 +45,11 @@ export function toRouteItems(menus: OrgMenuItem[], parentHref = ""): RouteItem[]
       children,
     };
   });
+}
+
+function isButton(menu: OrgMenuItem) {
+  const type = String(menu.type ?? "").toUpperCase();
+  return type === "BUTTON" || type === "B";
 }
 
 function normalizeHref(href?: string) {
