@@ -27,14 +27,14 @@ describe("MenuAPI", () => {
 
     const { default: MenuAPI } = await import("@/api/system/menu");
 
-    const routes = await MenuAPI.getRoutes("101");
+    const authorized = await MenuAPI.getRoutes("101");
 
     expect(requestMock).toHaveBeenCalledTimes(1);
     expect(requestMock).toHaveBeenCalledWith({
       url: "/org/menu/user/101",
       method: "get",
     });
-    expect(routes[0]).toMatchObject({
+    expect(authorized.routes[0]).toMatchObject({
       path: "/admin",
       name: "OrgMenu101",
       component: "admin/index",
@@ -107,6 +107,30 @@ describe("MenuAPI", () => {
         type: "M",
         hasChildren: true,
       }),
+    ]);
+  });
+
+  it("loads menu selector options with one tree request", async () => {
+    requestMock.mockResolvedValueOnce([
+      {
+        id: "1",
+        parentId: "-1",
+        name: "系统管理",
+        type: "CATALOG",
+        href: "/admin",
+        children: [
+          { id: "2", parentId: "1", name: "用户管理", type: "MENU", href: "/admin/users", children: [] },
+        ],
+      },
+    ]);
+
+    const { default: MenuAPI } = await import("@/api/system/menu");
+    const options = await MenuAPI.getOptions(true);
+
+    expect(requestMock).toHaveBeenCalledTimes(1);
+    expect(requestMock).toHaveBeenCalledWith({ url: "/org/menu/tree", method: "get" });
+    expect(options).toEqual([
+      { value: "1", label: "系统管理", children: [{ value: "2", label: "用户管理" }] },
     ]);
   });
 });
