@@ -7,7 +7,7 @@ const entries = new Map<string, { value: unknown; expiresAt: number; pending?: P
 export const useManagementTreeStore = defineStore("managementTree", () => {
   async function load<T>(key: string, loader: () => Promise<T>): Promise<T> {
     const entry = entries.get(key);
-    if (entry?.expiresAt > Date.now()) return entry.value as T;
+    if (entry && entry.expiresAt > Date.now()) return entry.value as T;
     if (entry?.pending) return entry.pending as Promise<T>;
     const pending = loader().then((value) => {
       entries.set(key, { value, expiresAt: Date.now() + TTL });
