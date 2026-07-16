@@ -69,69 +69,8 @@ export const useUserStore = defineStore("user", () => {
             nickname: currentUser.nickname || currentUser.name,
             // 将 roleIds 转换为 roles
             roles: ["ADMIN"],
-            // perms 暂时为空数组，后续可以从其他接口获取
-            perms: [
-              "sys:tenant-plan:update",
-              "sys:dept:update",
-              "sys:tenant-plan:list",
-              "sys:user:create",
-              "sys:config:refresh",
-              "sys:user:export",
-              "sys:dept:delete",
-              "sys:config:update",
-              "sys:tenant-plan:delete",
-              "sys:tenant:delete",
-              "sys:dict:create",
-              "sys:notice:revoke",
-              "sys:notice:list",
-              "sys:dept:list",
-              "sys:tenant:update",
-              "sys:role:list",
-              "sys:dict-item:create",
-              "sys:notice:update",
-              "sys:notice:delete",
-              "sys:tenant:switch",
-              "sys:role:create",
-              "sys:role:update",
-              "sys:dict-item:update",
-              "sys:tenant:create",
-              "sys:menu:update",
-              "sys:menu:delete",
-              "sys:config:create",
-              "sys:dict:delete",
-              "sys:menu:list",
-              "sys:user:import",
-              "sys:user:delete",
-              "sys:config:list",
-              "sys:user:update",
-              "sys:tenant:list",
-              "sys:tenant:plan-assign",
-              "sys:role:assign",
-              "sys:dict:list",
-              "sys:tenant-plan:create",
-              "sys:notice:publish",
-              "sys:user:list",
-              "sys:dict-item:list",
-              "sys:tenant:change-status",
-              "sys:menu:create",
-              "sys:notice:create",
-              "sys:internal-message:query",
-              "sys:internal-message:create",
-              "sys:internal-message:update",
-              "sys:internal-message:delete",
-              "sys:internal-message:publish",
-              "sys:internal-message:revoke",
-              "sys:internal-message:statistics",
-              "sys:user:reset-password",
-              "sys:dept:create",
-              "sys:config:delete",
-              "sys:dict-item:delete",
-              "sys:role:delete",
-              "sys:tenant-plan:assign",
-              "sys:dict:update",
-              "security:online-user:list",
-              "security:online-user:kickout",
-            ],
+            // 页面按钮权限在动态菜单树加载后写入，禁止在此处硬编码业务权限。
+            perms: [],
           };
           Object.assign(userInfo.value, mappedData);
           authStatus.value = "authenticated";
@@ -195,6 +134,11 @@ export const useUserStore = defineStore("user", () => {
     userInfo.value = {} as UserInfo;
     authStatus.value = "anonymous";
     authMode.value = "none";
+  }
+
+  /** 动态路由加载完成后，写入角色已授权的 BUTTON 菜单权限。 */
+  function setPermissions(permissions: string[]) {
+    userInfo.value.perms = [...new Set(permissions)];
   }
 
   /**
@@ -265,6 +209,7 @@ export const useUserStore = defineStore("user", () => {
     logout,
     resetAllState,
     resetUserState,
+    setPermissions,
     refreshToken,
   };
 });

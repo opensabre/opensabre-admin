@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRouteItems, type OrgMenuItem } from "@/api/system/menu-adapter";
+import { toAuthorizedRoutes, toRouteItems, type OrgMenuItem } from "@/api/system/menu-adapter";
 
 describe("MenuAPI route adapter", () => {
   it("converts base-organization menu tree to frontend routes", () => {
@@ -172,5 +172,45 @@ describe("MenuAPI route adapter", () => {
       component: "system/iframe/index",
       meta: { params: { iframeUrl: "/doc.html" } },
     });
+  });
+
+  it("collects button permissions without exposing buttons as routes", () => {
+    const authorized = toAuthorizedRoutes([
+      {
+        id: "120",
+        parentId: "109",
+        name: "网关路由",
+        type: "MENU",
+        href: "/sysadmin/gateway-routes",
+        description: '{"component":"system/gateway-route/index"}',
+        children: [
+          {
+            id: "144",
+            parentId: "120",
+            name: "新增路由",
+            type: "BUTTON",
+            href: "",
+            description: '{"perm":"sys:gateway-route:create"}',
+          },
+          {
+            id: "145",
+            parentId: "120",
+            name: "修改路由",
+            type: "B",
+            href: "",
+            description: '{"perm":"sys:gateway-route:update"}',
+          },
+        ],
+      },
+    ]);
+
+    expect(authorized.permissions).toEqual(["sys:gateway-route:create", "sys:gateway-route:update"]);
+    expect(authorized.routes).toMatchObject([
+      {
+        path: "/sysadmin/gateway-routes",
+        component: "system/gateway-route/index",
+        children: [],
+      },
+    ]);
   });
 });
