@@ -9,7 +9,11 @@
       </template>
     </el-alert>
 
-    <el-card shadow="hover" class="table-section">
+    <el-card
+      v-if="section === 'all' || section === 'authentication'"
+      shadow="hover"
+      class="table-section"
+    >
       <template #header>
         <div class="table-section__toolbar">
           <span>OAuth2 / OIDC 登录认证方式</span>
@@ -86,7 +90,7 @@
       </el-table>
     </el-card>
 
-    <div class="filter-section">
+    <div v-if="section === 'all' || section === 'routes'" class="filter-section">
       <el-form :inline="true">
         <el-form-item label="关键字">
           <el-input v-model="keyword" clearable placeholder="路由 ID、Path 或目标 URI" />
@@ -97,12 +101,16 @@
       </el-form>
     </div>
 
-    <el-card shadow="hover" class="table-section">
+    <el-card
+      v-if="section === 'all' || section === 'policies'"
+      shadow="hover"
+      class="table-section"
+    >
       <template #header>
         <div class="table-section__toolbar">
           <span>全局过滤器与限流</span>
           <el-button
-            v-hasPerm="['gateway:route:update']"
+            v-hasPerm="['gateway:filter:update']"
             type="primary"
             @click="saveDefaultFilters"
           >
@@ -141,7 +149,7 @@
       </el-form>
     </el-card>
 
-    <el-card shadow="hover" class="table-section">
+    <el-card v-if="section === 'all' || section === 'routes'" shadow="hover" class="table-section">
       <div class="table-section__toolbar">
         <span>显式路由（{{ filteredRoutes.length }}）</span>
         <div>
@@ -200,6 +208,7 @@
     </el-card>
 
     <el-dialog
+      v-if="section === 'all' || section === 'routes'"
       v-model="dialog.visible"
       :title="dialog.isEdit ? '编辑网关路由' : '新增网关路由'"
       width="720px"
@@ -292,6 +301,7 @@
       </template>
     </el-dialog>
     <el-dialog
+      v-if="section === 'all' || section === 'authentication'"
       v-model="oauthDialog.visible"
       :title="oauthDialog.index < 0 ? '新增 OAuth2 认证方式' : '编辑 OAuth2 认证方式'"
       width="680px"
@@ -364,6 +374,13 @@ import type {
 import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
 
 defineOptions({ name: "GatewayRoute" });
+const props = withDefaults(
+  defineProps<{ section?: "all" | "authentication" | "policies" | "routes" }>(),
+  {
+    section: "all",
+  }
+);
+const section = computed(() => props.section);
 type EditableDefinition = { name: string; argsText: string };
 const predicateOptions = [
   "Path",
@@ -681,7 +698,12 @@ async function handleDelete(route: GatewayRoute) {
   }
 }
 onMounted(async () => {
-  await Promise.all([loadConfig(), loadOauthClientOptions()]);
+  await Promise.all([
+    loadConfig(),
+    section.value === "all" || section.value === "authentication"
+      ? loadOauthClientOptions()
+      : Promise.resolve(),
+  ]);
 });
 </script>
 
