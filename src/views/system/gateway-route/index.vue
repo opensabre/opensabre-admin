@@ -543,9 +543,9 @@ async function loadConfig() {
 }
 async function loadOauthClientOptions() {
   const result = await OAuthClientAPI.getPage({ pageNum: 1, pageSize: 100 });
-  oauthClientOptions.value = result.data.filter(
-    (item): item is OAuthClientItem & { clientId: string } => Boolean(item.clientId)
-  );
+  oauthClientOptions.value = result.data
+    .filter((item) => Boolean(item.clientId))
+    .map((item) => ({ ...item, clientId: item.clientId! }));
 }
 function syncSelectedClient(clientId: string) {
   const client = oauthClientOptions.value.find((item) => item.clientId === clientId);
