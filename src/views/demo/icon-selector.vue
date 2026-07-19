@@ -2,7 +2,7 @@
 <template>
   <div class="app-container">
     <el-link
-      href="https://gitee.com/youlaiorg/vue3-element-admin/blob/master/src/views/demo/icon-selector.vue"
+      href="https://github.com/opensabre/opensabre-admin"
       type="primary"
       target="_blank"
       class="mb-10"
