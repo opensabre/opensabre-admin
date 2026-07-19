@@ -398,7 +398,7 @@ const config = reactive({
   oauth2Clients: [] as GatewayOauth2Client[],
 });
 const oauthPublishing = ref(false);
-const oauthClientOptions = ref<OAuthClientItem[]>([]);
+const oauthClientOptions = ref<(OAuthClientItem & { clientId: string })[]>([]);
 const oauthDialog = reactive({ visible: false, index: -1 });
 const oauthForm = reactive<GatewayOauth2Client>({
   registrationId: "",
@@ -543,7 +543,9 @@ async function loadConfig() {
 }
 async function loadOauthClientOptions() {
   const result = await OAuthClientAPI.getPage({ pageNum: 1, pageSize: 100 });
-  oauthClientOptions.value = result.data;
+  oauthClientOptions.value = result.data.filter(
+    (item): item is OAuthClientItem & { clientId: string } => Boolean(item.clientId)
+  );
 }
 function syncSelectedClient(clientId: string) {
   const client = oauthClientOptions.value.find((item) => item.clientId === clientId);
