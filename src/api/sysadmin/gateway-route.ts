@@ -4,6 +4,7 @@ import type {
   GatewayRouteConfig,
   GatewayRoutePublishResult,
   GatewayDefaultFilterChange,
+  GatewayOauth2ClientChange,
 } from "@/types/api";
 
 const GATEWAY_ROUTE_BASE_URL = "/sysadmin/gateway/routes";
@@ -35,7 +36,19 @@ const GatewayRouteAPI = {
     });
   },
   updateDefaultFilters(data: GatewayDefaultFilterChange) {
-    return request<any, GatewayRouteConfig>({ url: `${GATEWAY_ROUTE_BASE_URL}/default-filters`, method: "put", data });
+    return request<any, GatewayRouteConfig>({
+      url: `${GATEWAY_ROUTE_BASE_URL}/default-filters`,
+      method: "put",
+      data,
+    });
+  },
+  /** 显式发布网关 OAuth2/OIDC 登录认证方式。 */
+  updateOauth2Clients(data: GatewayOauth2ClientChange) {
+    return request<any, GatewayRouteConfig>({
+      url: `${GATEWAY_ROUTE_BASE_URL}/oauth2-clients`,
+      method: "put",
+      data,
+    });
   },
 };
 

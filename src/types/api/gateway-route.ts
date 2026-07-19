@@ -20,6 +20,24 @@ export interface GatewayRouteConfig {
   version: string;
   publishedAt?: string;
   publishedBy?: string;
+  oauth2Clients?: GatewayOauth2Client[];
+}
+
+/** 网关 OAuth2/OIDC 登录认证方式；clientSecret 仅提交，服务端不会回显。 */
+export interface GatewayOauth2Client {
+  registrationId: string;
+  provider: string;
+  issuerUri: string;
+  clientId: string;
+  clientSecret?: string;
+  redirectUri: string;
+  scopes: string[];
+  enabled: boolean;
+}
+
+export interface GatewayOauth2ClientChange {
+  baseVersion: string;
+  clients: GatewayOauth2Client[];
 }
 
 /** 以当前 Nacos 版本为前置条件的全局过滤器变更。 */
