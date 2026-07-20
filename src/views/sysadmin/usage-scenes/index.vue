@@ -1,20 +1,55 @@
 <template>
   <div class="app-container">
-    <el-card shadow="hover">
-      <template #header>
-        <div class="flex justify-between items-center">
-          <span>计次场景</span>
-          <el-button type="primary" @click="openCreate">新增场景</el-button>
+    <div class="filter-section">
+      <el-form ref="queryFormRef" :model="queryParams" :inline="true">
+        <el-form-item label="关键字" prop="keywords">
+          <el-input
+            v-model="queryParams.keywords"
+            placeholder="名称 / 对象类型 / 对象 ID / 事件"
+            clearable
+            @keyup.enter="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="状态" prop="enabled">
+          <el-select
+            v-model="queryParams.enabled"
+            placeholder="全部"
+            clearable
+            style="width: 100px"
+          >
+            <el-option label="启用" :value="true" />
+            <el-option label="停用" :value="false" />
+          </el-select>
+        </el-form-item>
+        <el-form-item class="search-buttons">
+          <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
+          <el-button icon="refresh" @click="handleResetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <el-card shadow="hover" class="table-section">
+      <div class="table-section__toolbar">
+        <div class="table-section__toolbar--actions">
+          <el-button
+            v-hasPerm="'sysadmin:usage-scene:create'"
+            type="success"
+            icon="plus"
+            @click="openCreate"
+          >
+            新增
+          </el-button>
         </div>
-      </template>
+      </div>
       <el-alert
         class="mb-4"
         type="info"
         :closable="false"
         title="只有启用且已登记的对象类型、对象 ID、事件组合会进入使用量统计。"
       />
-      <el-table v-loading="loading" :data="scenes" stripe>
-        <el-table-column prop="sceneName" label="名称" min-width="150" />
+      <el-table v-loading="loading" :data="scenes" border class="table-section__content">
+        <el-table-column type="index" label="序号" width="60" />
+        <el-table-column prop="sceneName" label="场景名称" min-width="150" />
         <el-table-column prop="objectType" label="对象类型" min-width="150" />
         <el-table-column prop="objectId" label="对象 ID" min-width="150" show-overflow-tooltip />
         <el-table-column prop="usageEvent" label="事件" min-width="150" />
@@ -26,10 +61,29 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column prop="description" label="说明" min-width="180" show-overflow-tooltip />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="remove(row)">删除</el-button>
+            <el-button
+              v-hasPerm="'sysadmin:usage-scene:update'"
+              link
+              type="primary"
+              size="small"
+              icon="edit"
+              @click="openEdit(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              v-hasPerm="'sysadmin:usage-scene:delete'"
+              link
+              type="danger"
+              size="small"
+              icon="delete"
+              @click="remove(row)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -88,9 +142,15 @@ import type { UsageSceneItem } from "@/types/api";
 defineOptions({ name: "UsageScenes", inheritAttrs: false });
 const loading = ref(false);
 const saving = ref(false);
+const queryFormRef = ref();
 const scenes = ref<UsageSceneItem[]>([]);
 const total = ref(0);
-const queryParams = reactive({ pageNum: 1, pageSize: 10 });
+const queryParams = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  keywords: "",
+  enabled: "" as boolean | "",
+});
 const dialog = reactive({ visible: false, editing: false });
 const empty = (): UsageSceneItem => ({
   objectType: "",
@@ -116,6 +176,14 @@ function openCreate() {
   Object.assign(form, empty());
   dialog.editing = false;
   dialog.visible = true;
+}
+function handleQuery() {
+  queryParams.pageNum = 1;
+  load();
+}
+function handleResetQuery() {
+  queryFormRef.value?.resetFields();
+  handleQuery();
 }
 function openEdit(scene: UsageSceneItem) {
   Object.assign(form, scene);
