@@ -46,7 +46,14 @@
     <el-card shadow="hover" class="table-section">
       <div class="table-section__toolbar">
         <div class="table-section__toolbar--actions">
-          <el-button type="success" icon="plus" @click="handleOpenDialog()">新增</el-button>
+          <el-button
+            v-hasPerm="'sysadmin:captcha-scene:create'"
+            type="success"
+            icon="plus"
+            @click="handleOpenDialog()"
+          >
+            新增
+          </el-button>
         </div>
       </div>
 
@@ -93,6 +100,7 @@
               趋势
             </el-button>
             <el-button
+              v-hasPerm="'sysadmin:captcha-scene:update'"
               type="primary"
               size="small"
               link
@@ -102,6 +110,7 @@
               编辑
             </el-button>
             <el-button
+              v-hasPerm="'sysadmin:captcha-scene:delete'"
               type="danger"
               size="small"
               link

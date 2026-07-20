@@ -5,7 +5,12 @@
         <el-card shadow="hover" class="table-section">
           <div class="table-section__toolbar">
             <div class="table-section__toolbar--actions">
-              <el-button type="success" icon="plus" @click="handleOpenSceneDialog()">
+              <el-button
+                v-hasPerm="'sysadmin:notification-scene:create'"
+                type="success"
+                icon="plus"
+                @click="handleOpenSceneDialog()"
+              >
                 新增场景
               </el-button>
             </div>
@@ -51,6 +56,7 @@
                   趋势
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-scene:update'"
                   type="primary"
                   size="small"
                   link
@@ -60,6 +66,7 @@
                   编辑
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-scene:delete'"
                   type="danger"
                   size="small"
                   link
@@ -129,7 +136,12 @@
         <el-card shadow="hover" class="table-section">
           <div class="table-section__toolbar">
             <div class="table-section__toolbar--actions">
-              <el-button type="success" icon="plus" @click="handleOpenTemplateDialog()">
+              <el-button
+                v-hasPerm="'sysadmin:notification-template:create'"
+                type="success"
+                icon="plus"
+                @click="handleOpenTemplateDialog()"
+              >
                 新增模板
               </el-button>
             </div>
@@ -180,6 +192,7 @@
                   趋势
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-template:update'"
                   type="primary"
                   size="small"
                   link
@@ -189,6 +202,7 @@
                   编辑
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-template:delete'"
                   type="danger"
                   size="small"
                   link
@@ -303,6 +317,7 @@
                 </el-button>
                 <el-button
                   v-if="row.status === 'FAILED'"
+                  v-hasPerm="'sysadmin:notification-record:retry'"
                   type="warning"
                   size="small"
                   link

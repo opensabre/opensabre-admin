@@ -31,7 +31,14 @@
     <el-card shadow="hover" class="table-section">
       <div class="table-section__toolbar">
         <div class="table-section__toolbar--actions">
-          <el-button type="success" icon="plus" @click="handleOpenDialog()">新增</el-button>
+          <el-button
+            v-hasPerm="'sysadmin:ratelimit-scene:create'"
+            type="success"
+            icon="plus"
+            @click="handleOpenDialog()"
+          >
+            新增
+          </el-button>
         </div>
       </div>
       <el-table v-loading="loading" :data="pagedData" border class="table-section__content">
@@ -68,6 +75,7 @@
               趋势
             </el-button>
             <el-button
+              v-hasPerm="'sysadmin:ratelimit-scene:update'"
               type="primary"
               size="small"
               link
@@ -77,6 +85,7 @@
               编辑
             </el-button>
             <el-button
+              v-hasPerm="'sysadmin:ratelimit-scene:delete'"
               type="danger"
               size="small"
               link
