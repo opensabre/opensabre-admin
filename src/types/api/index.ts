@@ -26,6 +26,7 @@ export * from "./notification";
 export * from "./gateway-route";
 export * from "./rate-limit-scene";
 export * from "./usage-counter";
+export * from "./usage-scene";
 
 // 其他模块
 export * from "./ai";
