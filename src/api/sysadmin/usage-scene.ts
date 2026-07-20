@@ -1,9 +1,10 @@
 import request from "@/utils/request";
-import type { UsageSceneItem } from "@/types/api";
+import type { PageResult, UsageSceneItem } from "@/types/api";
 
 const BASE_URL = "/sysadmin/usage-scenes";
 const UsageSceneAPI = {
-  list: () => request<any, UsageSceneItem[]>({ url: BASE_URL, method: "get" }),
+  list: (params: { pageNum: number; pageSize: number }) =>
+    request<any, PageResult<UsageSceneItem>>({ url: BASE_URL, method: "get", params }),
   create: (data: UsageSceneItem) => request({ url: BASE_URL, method: "post", data }),
   update: (data: UsageSceneItem) => request({ url: BASE_URL, method: "put", data }),
   remove: (params: Pick<UsageSceneItem, "objectType" | "objectId" | "usageEvent">) =>

@@ -33,6 +33,13 @@
           </template>
         </el-table-column>
       </el-table>
+      <pagination
+        v-if="total > 0"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        :total="total"
+        @pagination="load"
+      />
     </el-card>
     <el-dialog
       v-model="dialog.visible"
@@ -82,6 +89,8 @@ defineOptions({ name: "UsageScenes", inheritAttrs: false });
 const loading = ref(false);
 const saving = ref(false);
 const scenes = ref<UsageSceneItem[]>([]);
+const total = ref(0);
+const queryParams = reactive({ pageNum: 1, pageSize: 10 });
 const dialog = reactive({ visible: false, editing: false });
 const empty = (): UsageSceneItem => ({
   objectType: "",
@@ -96,7 +105,9 @@ const form = reactive<UsageSceneItem>(empty());
 async function load() {
   loading.value = true;
   try {
-    scenes.value = await UsageSceneAPI.list();
+    const result = await UsageSceneAPI.list(queryParams);
+    scenes.value = result.data;
+    total.value = result.page?.total ?? 0;
   } finally {
     loading.value = false;
   }
@@ -121,6 +132,7 @@ async function save() {
       await UsageSceneAPI.create(form);
     }
     dialog.visible = false;
+    queryParams.pageNum = 1;
     await load();
   } finally {
     saving.value = false;
@@ -131,6 +143,7 @@ async function remove(scene: UsageSceneItem) {
     type: "warning",
   });
   await UsageSceneAPI.remove(scene);
+  if (scenes.value.length === 1 && queryParams.pageNum > 1) queryParams.pageNum -= 1;
   await load();
 }
 onMounted(load);
