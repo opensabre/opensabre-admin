@@ -363,7 +363,7 @@
 </template>
 
 <script setup lang="ts">
-import GatewayRouteAPI from "@/api/sysadmin/gateway-route";
+import GatewayRouteAPI from "@/api/gateway-admin/gateway-route";
 import OAuthClientAPI from "@/api/auth/client";
 import type {
   GatewayOauth2Client,

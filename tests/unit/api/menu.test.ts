@@ -204,12 +204,67 @@ describe("MenuAPI route adapter", () => {
       },
     ]);
 
-    expect(authorized.permissions).toEqual(["sys:gateway-route:create", "sys:gateway-route:update"]);
+    expect(authorized.permissions).toEqual([
+      "sys:gateway-route:create",
+      "sys:gateway-route:update",
+    ]);
     expect(authorized.routes).toMatchObject([
       {
         path: "/sysadmin/gateway-routes",
         component: "system/gateway-route/index",
         children: [],
+      },
+    ]);
+  });
+
+  it("converts the initialized gateway management hierarchy", () => {
+    const routes = toRouteItems([
+      {
+        id: "160",
+        name: "网关",
+        type: "MENU",
+        href: "/gateway",
+        children: [
+          {
+            id: "202",
+            parentId: "160",
+            name: "流量治理",
+            type: "MENU",
+            href: "/gateway/traffic",
+            children: [
+              {
+                id: "217",
+                parentId: "202",
+                name: "限流规则",
+                type: "MENU",
+                href: "/gateway/traffic/rate-limits",
+                description:
+                  '{"routeName":"GatewayRateLimits","component":"system/gateway/planned/index","visible":1}',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(routes).toMatchObject([
+      {
+        path: "/gateway",
+        component: "Layout",
+        children: [
+          {
+            path: "traffic",
+            component: "Layout",
+            children: [
+              {
+                path: "rate-limits",
+                name: "GatewayRateLimits",
+                component: "system/gateway/planned/index",
+                meta: { title: "限流规则", hidden: false },
+              },
+            ],
+          },
+        ],
       },
     ]);
   });
