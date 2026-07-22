@@ -72,11 +72,6 @@ export const constantRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: "/sysadmin/gateway-routes",
-    redirect: "/gateway/routes",
-    meta: { hidden: true },
-  },
 ];
 
 /**
