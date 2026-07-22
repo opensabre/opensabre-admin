@@ -6,12 +6,12 @@ vi.mock("@/utils/request", () => ({ default: requestMock }));
 describe("GatewayRouteAPI", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("keeps using base-sysadmin before the control-plane cutover", async () => {
+  it("uses base-gateway-admin after the control-plane cutover", async () => {
     const { default: GatewayRouteAPI } = await import("@/api/gateway-admin/gateway-route");
 
     await GatewayRouteAPI.getConfig();
 
-    expect(requestMock).toHaveBeenCalledWith({ url: "/sysadmin/gateway/routes", method: "get" });
+    expect(requestMock).toHaveBeenCalledWith({ url: "/gateway-admin/routes", method: "get" });
   });
 
   it("accepts the base-gateway-admin route after cutover", async () => {

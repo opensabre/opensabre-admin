@@ -181,7 +181,7 @@ describe("MenuAPI route adapter", () => {
         parentId: "109",
         name: "网关路由",
         type: "MENU",
-        href: "/sysadmin/gateway-routes",
+        href: "/gateway/routes",
         description: '{"component":"system/gateway-route/index"}',
         children: [
           {
@@ -190,7 +190,7 @@ describe("MenuAPI route adapter", () => {
             name: "新增路由",
             type: "BUTTON",
             href: "",
-            description: '{"perm":"sys:gateway-route:create"}',
+            description: '{"perm":"gateway:route:create"}',
           },
           {
             id: "145",
@@ -198,19 +198,16 @@ describe("MenuAPI route adapter", () => {
             name: "修改路由",
             type: "B",
             href: "",
-            description: '{"perm":"sys:gateway-route:update"}',
+            description: '{"perm":"gateway:route:update"}',
           },
         ],
       },
     ]);
 
-    expect(authorized.permissions).toEqual([
-      "sys:gateway-route:create",
-      "sys:gateway-route:update",
-    ]);
+    expect(authorized.permissions).toEqual(["gateway:route:create", "gateway:route:update"]);
     expect(authorized.routes).toMatchObject([
       {
-        path: "/sysadmin/gateway-routes",
+        path: "/gateway/routes",
         component: "system/gateway-route/index",
         children: [],
       },

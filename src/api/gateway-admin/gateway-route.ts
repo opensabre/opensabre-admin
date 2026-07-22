@@ -7,13 +7,13 @@ import type {
   GatewayOauth2ClientChange,
 } from "@/types/api";
 
-const LEGACY_GATEWAY_ROUTE_BASE_URL = "/sysadmin/gateway/routes";
+const GATEWAY_ROUTE_DEFAULT_BASE_URL = "/gateway-admin/routes";
 
 /**
- * 解析网关路由控制面地址。迁移阶段默认访问旧服务，完成部署和数据比对后通过环境变量切换。
+ * 解析独立网关控制面的路由管理地址。
  */
 export function resolveGatewayRouteBaseUrl(configuredBaseUrl?: string) {
-  return configuredBaseUrl?.trim() || LEGACY_GATEWAY_ROUTE_BASE_URL;
+  return configuredBaseUrl?.trim() || GATEWAY_ROUTE_DEFAULT_BASE_URL;
 }
 
 const GATEWAY_ROUTE_BASE_URL = resolveGatewayRouteBaseUrl(
