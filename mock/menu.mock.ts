@@ -153,7 +153,7 @@ export default defineMock([
             },
             {
               path: "services",
-              component: "system/gateway/planned/index",
+              component: "system/gateway/services/index",
               name: "GatewayServices",
               meta: { title: "服务管理", icon: "cluster", hidden: false },
             },
