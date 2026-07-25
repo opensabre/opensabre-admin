@@ -6,7 +6,7 @@ export interface OAuthAuthorizationQueryParams {
   clientId?: string;
   principalName?: string;
   authorizationGrantType?: string;
-  status?: "" | "ACTIVE" | "EXPIRED";
+  status?: "" | OAuthAuthorizationStatus;
 }
 
 export interface OAuthAuthorizationItem {

@@ -31,6 +31,7 @@
         <el-form-item label="状态" prop="status">
           <el-select v-model="queryParams.status" placeholder="全部" clearable style="width: 120px">
             <el-option label="有效" value="ACTIVE" />
+            <el-option label="可刷新" value="REFRESHABLE" />
             <el-option label="已过期" value="EXPIRED" />
           </el-select>
         </el-form-item>
@@ -42,7 +43,7 @@
     </div>
 
     <el-alert
-      title="撤销授权会删除服务端授权记录并阻止 Refresh Token 继续使用；已签发的自包含 JWT Access Token 可能持续有效至过期。"
+      title="终止服务端授权会阻止 Refresh Token 继续使用；已签发的自包含 JWT Access Token 仍会持续有效至过期。"
       type="warning"
       show-icon
       :closable="false"
@@ -58,7 +59,7 @@
           :disabled="selectedIds.length === 0"
           @click="handleBatchRevoke"
         >
-          批量撤销
+          批量终止
         </el-button>
       </div>
 
@@ -110,7 +111,7 @@
               link
               @click="handleRevoke(row)"
             >
-              撤销
+              终止
             </el-button>
           </template>
         </el-table-column>
@@ -237,23 +238,40 @@ function handleBatchRevoke() {
   confirmRevoke(selectedIds.value, `${selectedIds.value.length} 条授权记录`);
 }
 
-function confirmRevoke(ids: string[], target: string) {
-  ElMessageBox.confirm(
-    `确认撤销 ${target}？撤销后 Refresh Token 将无法继续使用。`,
-    "撤销 OAuth2 授权",
-    { confirmButtonText: "确认撤销", cancelButtonText: "取消", type: "warning" }
-  ).then(() => {
-    loading.value = true;
-    Promise.all(ids.map((id) => OAuthAuthorizationAPI.revoke(id)))
-      .then(() => {
-        ElMessage.success("撤销成功");
-        selectedIds.value = [];
-        fetchData();
-      })
-      .finally(() => {
-        loading.value = false;
-      });
-  });
+async function confirmRevoke(ids: string[], target: string) {
+  try {
+    await ElMessageBox.confirm(
+      `确认终止 ${target} 的服务端授权？终止后 Refresh Token 将无法继续使用，已签发的 JWT Access Token 仍有效至过期。`,
+      "终止 OAuth2 服务端授权",
+      { confirmButtonText: "确认终止", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
+    return;
+  }
+
+  loading.value = true;
+  let succeeded = 0;
+  let failed = 0;
+  for (const id of ids) {
+    try {
+      await OAuthAuthorizationAPI.revoke(id);
+      succeeded += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  if (failed === 0) {
+    ElMessage.success(`已终止 ${succeeded} 条服务端授权`);
+  } else {
+    ElMessage.warning(`已终止 ${succeeded} 条，失败 ${failed} 条，请刷新后重试`);
+  }
+  selectedIds.value = [];
+  try {
+    await fetchData();
+  } finally {
+    loading.value = false;
+  }
 }
 
 function scopes(value?: string) {
