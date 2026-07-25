@@ -28,6 +28,7 @@ export * from "./rate-limit-scene";
 export * from "./usage-counter";
 export * from "./usage-scene";
 export * from "./error-catalog";
+export * from "./internal-token-key";
 
 // 其他模块
 export * from "./ai";
