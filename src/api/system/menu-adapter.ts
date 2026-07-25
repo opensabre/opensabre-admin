@@ -117,6 +117,7 @@ function toComponentPath(href: string) {
     "admin/positions": "system/position/index",
     "admin/position": "system/position/index",
     "auth/client": "auth/client/index",
+    "auth/authorization": "auth/authorization/index",
     "auth/online-user": "security/online-user/index",
     "security/audit-log": "security/audit-log/index",
     "security/online-user": "security/online-user/index",

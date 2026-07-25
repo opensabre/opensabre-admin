@@ -13,6 +13,7 @@ export * from "./dept";
 export * from "./resource";
 export * from "./position";
 export * from "./oauth-client";
+export * from "./oauth-authorization";
 export * from "./audit-log";
 export * from "./online-user";
 export * from "./dict";
