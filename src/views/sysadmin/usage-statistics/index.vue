@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div :class="{ 'app-container': !embedded }">
     <el-card shadow="hover" class="mb-4">
       <el-form :inline="true">
         <el-form-item label="统计区间">
@@ -104,6 +104,7 @@ import { dayjs } from "element-plus";
 import { useRoute } from "vue-router";
 
 defineOptions({ name: "UsageStatistics", inheritAttrs: false });
+defineProps<{ embedded?: boolean }>();
 
 const route = useRoute();
 const dateRange = ref([
