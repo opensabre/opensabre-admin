@@ -1,16 +1,12 @@
 <template>
-  <div class="app-container">
+  <div :class="{ 'app-container': !embedded }">
     <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="客户端ID" prop="clientId">
           <el-input v-model.trim="queryParams.clientId" placeholder="客户端ID" clearable />
         </el-form-item>
         <el-form-item label="用户/主体" prop="principalName">
-          <el-input
-            v-model.trim="queryParams.principalName"
-            placeholder="用户名或主体"
-            clearable
-          />
+          <el-input v-model.trim="queryParams.principalName" placeholder="用户名或主体" clearable />
         </el-form-item>
         <el-form-item label="授权类型" prop="authorizationGrantType">
           <el-select
@@ -22,10 +18,7 @@
             <el-option label="authorization_code" value="authorization_code" />
             <el-option label="client_credentials" value="client_credentials" />
             <el-option label="refresh_token" value="refresh_token" />
-            <el-option
-              label="device_code"
-              value="urn:ietf:params:oauth:grant-type:device_code"
-            />
+            <el-option label="device_code" value="urn:ietf:params:oauth:grant-type:device_code" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -179,6 +172,8 @@ defineOptions({
   name: "OAuthAuthorization",
   inheritAttrs: false,
 });
+
+defineProps<{ embedded?: boolean }>();
 
 const queryFormRef = ref();
 const loading = ref(false);
