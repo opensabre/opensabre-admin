@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div :class="{ 'app-container': !embedded }">
     <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="客户端ID" prop="clientId">
@@ -242,6 +242,8 @@ defineOptions({
   name: "OAuthClient",
   inheritAttrs: false,
 });
+
+defineProps<{ embedded?: boolean }>();
 
 const queryFormRef = ref();
 const dataFormRef = ref();

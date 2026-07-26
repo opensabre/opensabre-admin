@@ -4,7 +4,7 @@
 - Status: Active
 - Last refreshed: 2026-07-26
 - Primary product surfaces: OpenSabre 管理后台
-- Evidence reviewed: `src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面
+- Evidence reviewed: `src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器
 
 ## Brand
 - Personality: 稳定、清晰、面向系统管理员
@@ -12,19 +12,19 @@
 - Avoid: 为单个功能引入新的视觉体系或交互模式
 
 ## Product goals
-- Goals: 相关管理能力集中呈现，减少系统管理菜单数量
+- Goals: 相关管理能力集中呈现，减少菜单数量；安全认证能力保持清晰层级
 - Non-goals: 重做现有数据表格、统计图表或权限模型
-- Success signals: 一个菜单进入计次管理，并可在两个 Tab 间切换
+- Success signals: 计次管理和客户端管理分别通过页内 Tab 聚合相关能力；内部 Token 管理位于安全认证下
 
 ## Personas and jobs
 - Primary personas: 平台管理员、运维人员
-- User jobs: 配置计次场景；查看计次使用统计
+- User jobs: 配置计次场景；查看计次使用统计；维护 OAuth2 客户端与服务端授权；轮换内部 Token 密钥
 - Key contexts of use: 桌面端管理后台
 
 ## Information architecture
-- Primary navigation: 系统管理 → 计次管理
-- Core routes/screens: `/sysadmin/usage-management`
-- Content hierarchy: 场景管理 Tab；使用统计 Tab
+- Primary navigation: 系统管理 → 计次管理；安全认证 → 客户端管理 / 内部 Token 管理
+- Core routes/screens: `/sysadmin/usage-management`、`/auth/client`、`/auth/internal-token-keys`
+- Content hierarchy: 计次管理包含场景管理/使用统计 Tab；客户端管理包含客户端/Token Tab；内部 Token 管理保持独立二级菜单
 
 ## Design principles
 - Principle 1: 复用通知管理的页内 Tab 模式
@@ -40,9 +40,9 @@
 - Imagery/iconography: 菜单沿用计次相关图标
 
 ## Components
-- Existing components to reuse: `ElTabs`、计次场景页、使用统计页
-- New/changed components: 计次管理组合页
-- Variants and states: 场景管理、使用统计
+- Existing components to reuse: `ElTabs`、计次场景页、使用统计页、OAuth2 客户端页、OAuth2 授权记录页、内部 Token 密钥页
+- New/changed components: 计次管理组合页、客户端管理组合页
+- Variants and states: 场景管理/使用统计；客户端/Token
 - Token/component ownership: 继续由现有管理端主题和组件维护
 
 ## Accessibility
@@ -67,7 +67,7 @@
 
 ## Content voice
 - Tone: 简洁、明确
-- Terminology: 菜单“计次管理”；Tab“场景管理”“使用统计”
+- Terminology: 菜单“计次管理”“客户端管理”“内部 Token 管理”；Tab“场景管理”“使用统计”“客户端”“Token”
 - Microcopy rules: 保留既有字段名称和操作文案
 
 ## Implementation constraints
