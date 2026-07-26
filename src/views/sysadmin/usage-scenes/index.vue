@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div :class="{ 'app-container': !embedded }">
     <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         <el-form-item label="关键字" prop="keywords">
@@ -140,6 +140,7 @@
 import UsageSceneAPI from "@/api/sysadmin/usage-scene";
 import type { UsageSceneItem } from "@/types/api";
 defineOptions({ name: "UsageScenes", inheritAttrs: false });
+defineProps<{ embedded?: boolean }>();
 const loading = ref(false);
 const saving = ref(false);
 const queryFormRef = ref();
