@@ -4,6 +4,8 @@ export interface ErrorCatalogItem {
   code: string;
   defaultMessage: string;
   sourceApplication: string;
+  owner: string;
+  scope: "COMMON" | "APPLICATION";
   module: string;
   sourceVersion?: string;
   httpStatus?: number;

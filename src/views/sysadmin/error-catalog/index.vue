@@ -50,7 +50,15 @@
           min-width="200"
           show-overflow-tooltip
         />
-        <el-table-column prop="sourceApplication" label="应用" min-width="150" />
+        <el-table-column prop="owner" label="定义归属" min-width="160" />
+        <el-table-column label="范围" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.scope === 'COMMON' ? 'primary' : 'info'">
+              {{ row.scope === "COMMON" ? "公共" : "应用" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sourceApplication" label="最近上报应用" min-width="150" />
         <el-table-column prop="module" label="模块" min-width="120" />
         <el-table-column prop="sourceVersion" label="版本" width="100" />
         <el-table-column prop="httpStatus" label="HTTP" width="80" />
