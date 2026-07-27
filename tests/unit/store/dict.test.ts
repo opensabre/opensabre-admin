@@ -7,7 +7,7 @@ import type { DictItemOption } from "@/types/api";
 // Mock DictAPI
 vi.mock("@/api/system/dict", () => ({
   default: {
-    getDictItems: vi.fn(),
+    getDictItemsBatch: vi.fn(),
   },
 }));
 
@@ -29,27 +29,27 @@ describe("useDictStore", () => {
         { value: "2", label: "选项2" },
       ];
 
-      vi.mocked(DictAPI.getDictItems).mockResolvedValue(mockData);
+      vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({ test_dict: mockData });
 
       await store.loadDictItems("test_dict");
 
       expect(store.getDictItems("test_dict")).toEqual(mockData);
-      expect(DictAPI.getDictItems).toHaveBeenCalledWith("test_dict");
-      expect(DictAPI.getDictItems).toHaveBeenCalledTimes(1);
+      expect(DictAPI.getDictItemsBatch).toHaveBeenCalledWith(["test_dict"]);
+      expect(DictAPI.getDictItemsBatch).toHaveBeenCalledTimes(1);
     });
 
     it("应该从缓存中获取字典数据，不重复请求", async () => {
       const store = useDictStore();
       const mockData: DictItemOption[] = [{ value: "1", label: "选项1" }];
 
-      vi.mocked(DictAPI.getDictItems).mockResolvedValue(mockData);
+      vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({ test_dict: mockData });
 
       // 第一次加载
       await store.loadDictItems("test_dict");
       // 第二次加载（应该从缓存获取）
       await store.loadDictItems("test_dict");
 
-      expect(DictAPI.getDictItems).toHaveBeenCalledTimes(1);
+      expect(DictAPI.getDictItemsBatch).toHaveBeenCalledTimes(1);
       expect(store.getDictItems("test_dict")).toEqual(mockData);
     });
 
@@ -57,7 +57,7 @@ describe("useDictStore", () => {
       const store = useDictStore();
       const mockData: DictItemOption[] = [{ value: "1", label: "选项1" }];
 
-      vi.mocked(DictAPI.getDictItems).mockResolvedValue(mockData);
+      vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({ test_dict: mockData });
 
       // 同时发起多个请求
       const promises = [
@@ -69,7 +69,7 @@ describe("useDictStore", () => {
       await Promise.all(promises);
 
       // 应该只请求一次
-      expect(DictAPI.getDictItems).toHaveBeenCalledTimes(1);
+      expect(DictAPI.getDictItemsBatch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -83,7 +83,7 @@ describe("useDictStore", () => {
       const store = useDictStore();
       const mockData: DictItemOption[] = [{ value: "1", label: "选项1" }];
 
-      vi.mocked(DictAPI.getDictItems).mockResolvedValue(mockData);
+      vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({ test_dict: mockData });
 
       await store.loadDictItems("test_dict");
       expect(store.getDictItems("test_dict")).toEqual(mockData);
@@ -97,9 +97,9 @@ describe("useDictStore", () => {
       const mockData1: DictItemOption[] = [{ value: "1", label: "选项1" }];
       const mockData2: DictItemOption[] = [{ value: "2", label: "选项2" }];
 
-      vi.mocked(DictAPI.getDictItems)
-        .mockResolvedValueOnce(mockData1)
-        .mockResolvedValueOnce(mockData2);
+      vi.mocked(DictAPI.getDictItemsBatch)
+        .mockResolvedValueOnce({ dict1: mockData1 })
+        .mockResolvedValueOnce({ dict2: mockData2 });
 
       await store.loadDictItems("dict1");
       await store.loadDictItems("dict2");
@@ -119,16 +119,29 @@ describe("useDictStore", () => {
       const store = useDictStore();
       const error = new Error("Network error");
 
-      vi.mocked(DictAPI.getDictItems).mockRejectedValue(error);
+      vi.mocked(DictAPI.getDictItemsBatch).mockRejectedValue(error);
 
       await expect(store.loadDictItems("test_dict")).rejects.toThrow("Network error");
 
       // 失败后应该允许重试
       const mockData: DictItemOption[] = [{ value: "1", label: "选项1" }];
-      vi.mocked(DictAPI.getDictItems).mockResolvedValue(mockData);
+      vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({ test_dict: mockData });
 
       await store.loadDictItems("test_dict");
       expect(store.getDictItems("test_dict")).toEqual(mockData);
     });
+  });
+
+  it("应该一次加载多个字典", async () => {
+    const store = useDictStore();
+    vi.mocked(DictAPI.getDictItemsBatch).mockResolvedValue({
+      dict1: [{ value: "1", label: "选项1" }],
+      dict2: [{ value: "2", label: "选项2" }],
+    });
+
+    await store.loadDicts(["dict1", "dict2", "dict1"]);
+
+    expect(DictAPI.getDictItemsBatch).toHaveBeenCalledWith(["dict1", "dict2"]);
+    expect(store.getDictItems("dict2")[0].label).toBe("选项2");
   });
 });

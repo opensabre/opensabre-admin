@@ -22,15 +22,13 @@
             </el-form-item>
 
             <el-form-item label="状态" prop="status">
-              <el-select
+              <DictSelect
                 v-model="queryParams.status"
+                code="common_status"
                 placeholder="全部"
                 clearable
                 style="width: 100px"
-              >
-                <el-option label="正常" :value="1" />
-                <el-option label="禁用" :value="0" />
-              </el-select>
+              />
             </el-form-item>
 
             <el-form-item label="创建时间">

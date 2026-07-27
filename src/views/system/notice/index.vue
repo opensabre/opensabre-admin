@@ -13,16 +13,13 @@
         </el-form-item>
 
         <el-form-item label="发布状态" prop="publishStatus">
-          <el-select
+          <DictSelect
             v-model="queryParams.publishStatus"
+            code="notice_publish_status"
             clearable
             placeholder="全部"
             style="width: 100px"
-          >
-            <el-option :value="0" label="未发布" />
-            <el-option :value="1" label="已发布" />
-            <el-option :value="-1" label="已撤回" />
-          </el-select>
+          />
         </el-form-item>
 
         <el-form-item class="search-buttons">
@@ -186,10 +183,7 @@
           <DictSelect v-model="formData.level" code="notice_level" />
         </el-form-item>
         <el-form-item label="目标类型" prop="targetType">
-          <el-radio-group v-model="formData.targetType">
-            <el-radio :value="1">全体</el-radio>
-            <el-radio :value="2">指定</el-radio>
-          </el-radio-group>
+          <DictRadio v-model="formData.targetType" code="notice_target_type" />
         </el-form-item>
         <el-form-item v-if="formData.targetType == 2" label="指定用户" prop="targetUserIds">
           <el-select v-model="formData.targetUserIds" multiple search placeholder="请选择指定用户">
