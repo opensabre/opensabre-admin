@@ -41,4 +41,15 @@ describe("OAuthAuthorizationAPI", () => {
       method: "delete",
     });
   });
+
+  it("uses the expired authorization cleanup endpoint", async () => {
+    requestMock.mockResolvedValueOnce(2);
+
+    await OAuthAuthorizationAPI.cleanupExpired();
+
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/auth/authorizations/expired/cleanup",
+      method: "delete",
+    });
+  });
 });
