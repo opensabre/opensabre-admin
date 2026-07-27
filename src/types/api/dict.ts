@@ -23,6 +23,10 @@ export interface DictTypeItem {
   dictCode: string;
   /** 状态(1:启用;0:禁用) */
   status: number;
+  /** 来源(MANUAL/ENUM) */
+  sourceType: "MANUAL" | "ENUM";
+  /** 枚举来源应用 */
+  sourceApplication?: string;
 }
 
 /** 字典表单对象 */
@@ -37,6 +41,8 @@ export interface DictTypeForm {
   status?: number;
   /** 备注 */
   remark?: string;
+  sourceType?: "MANUAL" | "ENUM";
+  sourceApplication?: string;
 }
 
 /** 字典项分页查询参数 */

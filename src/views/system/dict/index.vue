@@ -43,9 +43,17 @@
         class="table-section__content"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column type="selection" width="55" align="center" :selectable="isSelectable" />
         <el-table-column label="字典名称" prop="name" />
         <el-table-column label="字典编码" prop="dictCode" />
+        <el-table-column label="来源" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.sourceType === 'ENUM' ? 'warning' : 'info'">
+              {{ row.sourceType === "ENUM" ? "应用枚举" : "后台维护" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="来源应用" prop="sourceApplication" min-width="150" />
         <el-table-column label="状态" prop="status">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">
@@ -76,6 +84,7 @@
               link
               size="small"
               icon="delete"
+              :disabled="scope.row.sourceType === 'ENUM'"
               @click.stop="handleDelete(scope.row.id)"
             >
               删除
@@ -106,7 +115,11 @@
         </el-form-item>
 
         <el-form-item label="字典编码" prop="dictCode">
-          <el-input v-model="formData.dictCode" placeholder="请输入字典编码" />
+          <el-input
+            v-model="formData.dictCode"
+            placeholder="请输入字典编码"
+            :disabled="formData.sourceType === 'ENUM'"
+          />
         </el-form-item>
 
         <el-form-item label="状态">
@@ -203,6 +216,10 @@ function handleSelectionChange(selection: any) {
   ids.value = selection.map((item: any) => item.id);
 }
 
+function isSelectable(row: DictTypeItem) {
+  return row.sourceType !== "ENUM";
+}
+
 // 新增字典
 function handleAddClick() {
   dialog.visible = true;
@@ -290,7 +307,11 @@ function handleDelete(id?: number) {
 function handleOpenDictData(row: DictTypeItem) {
   router.push({
     name: "DictItem",
-    query: { dictCode: row.dictCode, title: `【${row.name}】字典数据` },
+    query: {
+      dictCode: row.dictCode,
+      sourceType: row.sourceType,
+      title: `【${row.name}】字典数据`,
+    },
   });
 }
 

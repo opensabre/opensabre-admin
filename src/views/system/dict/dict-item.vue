@@ -22,10 +22,17 @@
     <el-card shadow="never" class="table-section">
       <div class="table-section__toolbar">
         <div class="table-section__toolbar--actions">
-          <el-button type="success" icon="plus" @click="handleOpenDialog()">新增</el-button>
+          <el-button
+            type="success"
+            icon="plus"
+            :disabled="isEnumDictionary"
+            @click="handleOpenDialog()"
+          >
+            新增
+          </el-button>
           <el-button
             type="danger"
-            :disabled="ids.length === 0"
+            :disabled="ids.length === 0 || isEnumDictionary"
             icon="delete"
             @click="handleDelete()"
           >
@@ -41,7 +48,12 @@
         border
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column
+          type="selection"
+          width="55"
+          align="center"
+          :selectable="() => !isEnumDictionary"
+        />
         <el-table-column label="字典项标签" prop="label" />
         <el-table-column label="字典项值" prop="value" />
         <el-table-column label="排序" prop="sort" />
@@ -69,6 +81,7 @@
               link
               size="small"
               icon="delete"
+              :disabled="isEnumDictionary"
               @click.stop="handleDelete(scope.row.id)"
             >
               删除
@@ -98,7 +111,11 @@
           <el-input v-model="formData.label" placeholder="请输入字典标签" />
         </el-form-item>
         <el-form-item label="字典项值" prop="value">
-          <el-input v-model="formData.value" placeholder="请输入字典值" />
+          <el-input
+            v-model="formData.value"
+            placeholder="请输入字典值"
+            :disabled="isEnumDictionary"
+          />
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="formData.status">
@@ -161,6 +178,7 @@ import type { DictItemQueryParams, DictItem, DictItemForm } from "@/types/api";
 const route = useRoute();
 
 const dictCode = ref(route.query.dictCode as string);
+const isEnumDictionary = computed(() => route.query.sourceType === "ENUM");
 
 const queryFormRef = ref();
 const dataFormRef = ref();
