@@ -44,6 +44,12 @@ const OAuthAuthorizationAPI = {
       method: "delete",
     });
   },
+  cleanupExpired() {
+    return request<any, number>({
+      url: `${AUTHORIZATION_BASE_URL}/expired/cleanup`,
+      method: "delete",
+    });
+  },
 };
 
 export default OAuthAuthorizationAPI;

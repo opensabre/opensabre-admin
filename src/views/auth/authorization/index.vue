@@ -54,6 +54,14 @@
         >
           批量终止
         </el-button>
+        <el-button
+          v-hasPerm="['auth:authorization:cleanup']"
+          type="warning"
+          icon="delete"
+          @click="handleCleanupExpired"
+        >
+          清理已失效 Token
+        </el-button>
       </div>
 
       <el-table
@@ -263,6 +271,28 @@ async function confirmRevoke(ids: string[], target: string) {
   }
   selectedIds.value = [];
   try {
+    await fetchData();
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleCleanupExpired() {
+  try {
+    await ElMessageBox.confirm(
+      "将永久删除所有 Token、授权码和设备码均已过期的授权记录，此操作不可恢复。确认继续？",
+      "清理已失效 Token",
+      { confirmButtonText: "确认清理", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const count = await OAuthAuthorizationAPI.cleanupExpired();
+    ElMessage.success(`已清理 ${count} 条失效授权记录`);
+    selectedIds.value = [];
     await fetchData();
   } finally {
     loading.value = false;

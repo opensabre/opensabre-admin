@@ -14,7 +14,7 @@
 ## Product goals
 - Goals: 相关管理能力集中呈现，减少菜单数量；安全认证能力保持清晰层级
 - Non-goals: 重做现有数据表格、统计图表或权限模型
-- Success signals: 计次管理和客户端管理分别通过页内 Tab 聚合相关能力；内部 Token 管理位于安全认证下
+- Success signals: 计次管理和客户端管理分别通过页内 Tab 聚合相关能力；内部认证位于安全认证下
 
 ## Personas and jobs
 - Primary personas: 平台管理员、运维人员
@@ -22,9 +22,9 @@
 - Key contexts of use: 桌面端管理后台
 
 ## Information architecture
-- Primary navigation: 系统管理 → 计次管理；安全认证 → 客户端管理 / 内部 Token 管理
+- Primary navigation: 系统管理 → 计次管理；安全认证 → 客户端管理 / 内部认证
 - Core routes/screens: `/sysadmin/usage-management`、`/auth/client`、`/auth/internal-token-keys`
-- Content hierarchy: 计次管理包含场景管理/使用统计 Tab；客户端管理包含客户端/Token Tab；内部 Token 管理保持独立二级菜单
+- Content hierarchy: 计次管理包含场景管理/使用统计 Tab；客户端管理包含客户端/Token 签发 Tab；内部认证保持独立二级菜单
 
 ## Design principles
 - Principle 1: 复用通知管理的页内 Tab 模式
@@ -42,7 +42,7 @@
 ## Components
 - Existing components to reuse: `ElTabs`、计次场景页、使用统计页、OAuth2 客户端页、OAuth2 授权记录页、内部 Token 密钥页
 - New/changed components: 计次管理组合页、客户端管理组合页
-- Variants and states: 场景管理/使用统计；客户端/Token
+- Variants and states: 场景管理/使用统计；客户端/Token 签发
 - Token/component ownership: 继续由现有管理端主题和组件维护
 
 ## Accessibility
@@ -67,7 +67,7 @@
 
 ## Content voice
 - Tone: 简洁、明确
-- Terminology: 菜单“计次管理”“客户端管理”“内部 Token 管理”；Tab“场景管理”“使用统计”“客户端”“Token”
+- Terminology: 菜单“计次管理”“客户端管理”“内部认证”；Tab“场景管理”“使用统计”“客户端”“Token 签发”
 - Microcopy rules: 保留既有字段名称和操作文案
 
 ## Implementation constraints

@@ -4,7 +4,7 @@
       <el-tab-pane label="客户端" name="clients" lazy>
         <OAuthClient embedded />
       </el-tab-pane>
-      <el-tab-pane label="Token" name="tokens" lazy>
+      <el-tab-pane label="Token 签发" name="tokens" lazy>
         <OAuthAuthorization embedded />
       </el-tab-pane>
     </el-tabs>
