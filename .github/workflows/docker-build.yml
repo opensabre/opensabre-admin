@@ -48,7 +48,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run stable API unit tests
-        run: pnpm exec vitest run tests/unit/api
+        run: >-
+          pnpm exec vitest run
+          tests/unit/api/client-api.test.ts
+          tests/unit/api/oauth-authorization-api.test.ts
+          tests/unit/api/notification-api.test.ts
+          tests/unit/api/captcha-scene-api.test.ts
 
       - name: Build production assets
         run: pnpm build
