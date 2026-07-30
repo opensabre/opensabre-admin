@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="filter-section">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-        <el-form-item label="关键字">
+        <el-form-item label="关键字" prop="keywords">
           <el-input
             v-model="queryParams.keywords"
             placeholder="错误码 / 文案 / 模块"
@@ -10,7 +10,7 @@
             @keyup.enter="search"
           />
         </el-form-item>
-        <el-form-item label="应用">
+        <el-form-item label="应用" prop="application">
           <el-input
             v-model="queryParams.application"
             placeholder="如 base-sysadmin"
@@ -18,7 +18,7 @@
             @keyup.enter="search"
           />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="状态" prop="deprecated">
           <el-select
             v-model="queryParams.deprecated"
             clearable
