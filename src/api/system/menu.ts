@@ -1,6 +1,7 @@
 import request from "@/utils/request";
 import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/api";
-import { toRouteItems, type OrgMenuItem } from "./menu-adapter";
+import { toAuthorizedRoutes, type OrgMenuItem } from "./menu-adapter";
+import { useManagementTreeStoreHook } from "@/store/modules/management-tree";
 
 const ORG_MENU_BASE_URL = "/org/menu";
 const ROOT_PARENT_ID = "-1";
@@ -8,6 +9,7 @@ const FRONT_ROOT_PARENT_ID = "0";
 
 interface MenuExtra {
   component?: string;
+  iframeUrl?: string;
   keepAlive?: number | boolean;
   perm?: string;
   redirect?: string;
@@ -32,6 +34,7 @@ function toOrgParentId(parentId?: string) {
 
 function normalizeHref(href?: string) {
   if (!href) return "";
+  if (/^(https?:)?\/\//.test(href)) return href;
   return href.startsWith("/") ? href : `/${href}`;
 }
 
@@ -62,28 +65,36 @@ function toMenuItem(menu: OrgMenuItem): MenuItem {
     path: normalizeHref(menu.href),
     routeName: extra.routeName || `OrgMenu${menu.id}`,
     routePath,
-    component: extra.component || (type === "M" ? `${routePath}/index` : undefined),
+    component: extra.iframeUrl
+      ? "system/iframe/index"
+      : extra.component || (type === "M" ? `${routePath}/index` : undefined),
+    iframeUrl: extra.iframeUrl,
     redirect: extra.redirect,
     icon: menu.icon,
     sort: Number(menu.orderNum ?? 0),
     visible: extra.visible ?? 1,
     perm: extra.perm,
     keepAlive: extra.keepAlive ?? 1,
+    hasChildren: type !== "B",
     children: menu.children?.map(toMenuItem),
   } as MenuItem & MenuForm;
 }
 
 function toOrgMenuForm(data: MenuForm) {
-  const href = normalizeHref(data.routePath || data.path || data.perm || data.name);
+  const href =
+    data.type === "B" || data.type === "BUTTON"
+      ? ""
+      : normalizeHref(data.routePath || data.path || data.name);
   return {
     parentId: toOrgParentId(data.parentId),
     name: data.name,
     type: data.type,
     href,
     icon: data.icon,
-    orderNum: String(data.sort ?? 0),
+    orderNum: data.sort ?? 0,
     description: JSON.stringify({
       component: data.component,
+      iframeUrl: data.iframeUrl,
       keepAlive: data.keepAlive,
       perm: data.perm,
       redirect: data.redirect,
@@ -93,17 +104,12 @@ function toOrgMenuForm(data: MenuForm) {
   };
 }
 
-async function getMenuTree(parentId = ROOT_PARENT_ID): Promise<OrgMenuItem[]> {
-  const menus = await request<any, OrgMenuItem[]>({
-    url: `${ORG_MENU_BASE_URL}/parent/${parentId}`,
-    method: "get",
-  });
-
-  return Promise.all(
-    menus.map(async (menu) => ({
-      ...menu,
-      children: await getMenuTree(menu.id),
-    }))
+async function getMenuTree(): Promise<OrgMenuItem[]> {
+  return useManagementTreeStoreHook().load("menu:tree", () =>
+    request<any, OrgMenuItem[]>({
+      url: `${ORG_MENU_BASE_URL}/tree`,
+      method: "get",
+    })
   );
 }
 
@@ -137,16 +143,27 @@ const MenuAPI = {
       url: `${ORG_MENU_BASE_URL}/user/${userId}`,
       method: "get",
     });
-    return toRouteItems(menus);
+    return toAuthorizedRoutes(menus);
+  },
+  /** 获取指定父菜单下的菜单列表 */
+  getChildren(parentId?: string | number) {
+    const id = parentId == null ? ROOT_PARENT_ID : String(parentId);
+    return request<any, OrgMenuItem[]>({
+      url: `${ORG_MENU_BASE_URL}/parent/${id}`,
+      method: "get",
+    }).then((menus) => menus.map(toMenuItem));
   },
   /** 获取菜单树形列表 */
   async getList(queryParams: MenuQueryParams = {}) {
-    const menus = (await getMenuTree()).map(toMenuItem);
-    return filterMenuTree(menus, queryParams.keywords);
+    if (queryParams.keywords?.trim()) {
+      const menus = (await getMenuTree()).map(toMenuItem);
+      return filterMenuTree(menus, queryParams.keywords);
+    }
+    return this.getChildren(ROOT_PARENT_ID);
   },
   /** 获取菜单下拉数据源 */
   async getOptions(onlyParent?: boolean) {
-    return toOptions(await this.getList({}), onlyParent);
+    return toOptions((await getMenuTree()).map(toMenuItem), onlyParent);
   },
   /** 获取菜单表单数据 */
   getFormData(id: string) {
@@ -157,15 +174,30 @@ const MenuAPI = {
   },
   /** 新增菜单 */
   create(data: MenuForm) {
-    return request({ url: `${ORG_MENU_BASE_URL}`, method: "post", data: toOrgMenuForm(data) });
+    return request({ url: `${ORG_MENU_BASE_URL}`, method: "post", data: toOrgMenuForm(data) }).then(
+      (result) => {
+        useManagementTreeStoreHook().invalidate("menu:");
+        return result;
+      }
+    );
   },
   /** 修改菜单 */
   update(id: string, data: MenuForm) {
-    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "put", data: toOrgMenuForm(data) });
+    return request({
+      url: `${ORG_MENU_BASE_URL}/${id}`,
+      method: "put",
+      data: toOrgMenuForm(data),
+    }).then((result) => {
+      useManagementTreeStoreHook().invalidate("menu:");
+      return result;
+    });
   },
   /** 删除菜单 */
   deleteById(id: string) {
-    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "delete" });
+    return request({ url: `${ORG_MENU_BASE_URL}/${id}`, method: "delete" }).then((result) => {
+      useManagementTreeStoreHook().invalidate("menu:");
+      return result;
+    });
   },
 };
 

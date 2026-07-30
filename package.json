@@ -3,6 +3,7 @@
   "description": "Opensabre开发管理平台",
   "version": "4.0.0",
   "private": true,
+  "packageManager": "pnpm@10.26.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

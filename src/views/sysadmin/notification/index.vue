@@ -5,7 +5,12 @@
         <el-card shadow="hover" class="table-section">
           <div class="table-section__toolbar">
             <div class="table-section__toolbar--actions">
-              <el-button type="success" icon="plus" @click="handleOpenSceneDialog()">
+              <el-button
+                v-hasPerm="'sysadmin:notification-scene:create'"
+                type="success"
+                icon="plus"
+                @click="handleOpenSceneDialog()"
+              >
                 新增场景
               </el-button>
             </div>
@@ -21,6 +26,11 @@
             <el-table-column type="index" label="序号" width="60" />
             <el-table-column label="场景编码" prop="sceneCode" min-width="160" />
             <el-table-column label="场景名称" prop="sceneName" min-width="160" />
+            <el-table-column label="今日发送" width="100">
+              <template #default="{ row }">
+                {{ sceneUsageSummary[row.sceneCode]?.attemptCount ?? 0 }}
+              </template>
+            </el-table-column>
             <el-table-column label="状态" width="90">
               <template #default="{ row }">
                 <el-tag :type="row.enabled ? 'success' : 'info'">
@@ -35,9 +45,18 @@
               show-overflow-tooltip
             />
             <el-table-column label="更新时间" prop="updatedTime" width="180" />
-            <el-table-column fixed="right" label="操作" width="140">
+            <el-table-column fixed="right" label="操作" width="190">
               <template #default="{ row }">
                 <el-button
+                  type="primary"
+                  size="small"
+                  link
+                  @click="openUsage('NOTIFICATION_SCENE', row.sceneCode)"
+                >
+                  趋势
+                </el-button>
+                <el-button
+                  v-hasPerm="'sysadmin:notification-scene:update'"
                   type="primary"
                   size="small"
                   link
@@ -47,6 +66,7 @@
                   编辑
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-scene:delete'"
                   type="danger"
                   size="small"
                   link
@@ -116,7 +136,12 @@
         <el-card shadow="hover" class="table-section">
           <div class="table-section__toolbar">
             <div class="table-section__toolbar--actions">
-              <el-button type="success" icon="plus" @click="handleOpenTemplateDialog()">
+              <el-button
+                v-hasPerm="'sysadmin:notification-template:create'"
+                type="success"
+                icon="plus"
+                @click="handleOpenTemplateDialog()"
+              >
                 新增模板
               </el-button>
             </div>
@@ -144,6 +169,11 @@
             <el-table-column label="标题" prop="title" min-width="160" show-overflow-tooltip />
             <el-table-column label="内容" prop="content" min-width="220" show-overflow-tooltip />
             <el-table-column label="排序" prop="sort" width="80" />
+            <el-table-column label="今日发送" width="100">
+              <template #default="{ row }">
+                {{ templateUsageSummary[row.id]?.attemptCount ?? 0 }}
+              </template>
+            </el-table-column>
             <el-table-column label="状态" width="90">
               <template #default="{ row }">
                 <el-tag :type="row.enabled ? 'success' : 'info'">
@@ -151,9 +181,18 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column fixed="right" label="操作" width="140">
+            <el-table-column fixed="right" label="操作" width="190">
               <template #default="{ row }">
                 <el-button
+                  type="primary"
+                  size="small"
+                  link
+                  @click="openUsage('NOTIFICATION_TEMPLATE', row.id)"
+                >
+                  趋势
+                </el-button>
+                <el-button
+                  v-hasPerm="'sysadmin:notification-template:update'"
                   type="primary"
                   size="small"
                   link
@@ -163,6 +202,7 @@
                   编辑
                 </el-button>
                 <el-button
+                  v-hasPerm="'sysadmin:notification-template:delete'"
                   type="danger"
                   size="small"
                   link
@@ -277,6 +317,7 @@
                 </el-button>
                 <el-button
                   v-if="row.status === 'FAILED'"
+                  v-hasPerm="'sysadmin:notification-record:retry'"
                   type="warning"
                   size="small"
                   link
@@ -462,6 +503,7 @@
 
 <script setup lang="ts">
 import NotificationAdminAPI from "@/api/sysadmin/notification";
+import UsageCounterAPI from "@/api/sysadmin/usage-counter";
 import type {
   NotificationChannel,
   NotificationRecordItem,
@@ -471,7 +513,11 @@ import type {
   NotificationTemplateForm,
   NotificationTemplateItem,
   NotificationTemplateQueryParams,
+  UsageObjectSummary,
+  UsageObjectType,
 } from "@/types/api";
+import { dayjs } from "element-plus";
+import { useRouter } from "vue-router";
 
 defineOptions({
   name: "NotificationAdmin",
@@ -487,6 +533,9 @@ const templateList = ref<NotificationTemplateItem[]>([]);
 const recordList = ref<NotificationRecordItem[]>([]);
 const recordTotal = ref(0);
 const currentRecord = ref<NotificationRecordItem | null>(null);
+const sceneUsageSummary = ref<Record<string, UsageObjectSummary>>({});
+const templateUsageSummary = ref<Record<string, UsageObjectSummary>>({});
+const router = useRouter();
 
 const templateQueryFormRef = ref();
 const recordQueryFormRef = ref();
@@ -579,6 +628,11 @@ function fetchScenes() {
   NotificationAdminAPI.getSceneList()
     .then((data) => {
       sceneList.value = data ?? [];
+      fetchUsageSummary(
+        "NOTIFICATION_SCENE",
+        sceneList.value.map((item) => item.sceneCode),
+        sceneUsageSummary
+      );
     })
     .finally(() => {
       sceneLoading.value = false;
@@ -590,10 +644,40 @@ function fetchTemplates() {
   NotificationAdminAPI.getTemplateList(templateQueryParams)
     .then((data) => {
       templateList.value = data ?? [];
+      fetchUsageSummary(
+        "NOTIFICATION_TEMPLATE",
+        templateList.value.map((item) => item.id).filter(Boolean) as string[],
+        templateUsageSummary
+      );
     })
     .finally(() => {
       templateLoading.value = false;
     });
+}
+
+function fetchUsageSummary(
+  objectType: UsageObjectType,
+  objectIds: string[],
+  target: Ref<Record<string, UsageObjectSummary>>
+) {
+  if (!objectIds.length) return;
+  UsageCounterAPI.getSummaries({
+    from: dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+    to: dayjs().format("YYYY-MM-DDTHH:mm:ss"),
+    objectType,
+    objectIds,
+    usageEvent: "NOTIFICATION_SEND",
+  }).then((data) => {
+    target.value = Object.fromEntries((data || []).map((item) => [item.objectId, item]));
+  });
+}
+
+function openUsage(objectType: UsageObjectType, objectId?: string) {
+  if (!objectId) return;
+  router.push({
+    path: "/sysadmin/usage-statistics",
+    query: { objectType, objectId, usageEvent: "NOTIFICATION_SEND" },
+  });
 }
 
 function fetchRecords() {

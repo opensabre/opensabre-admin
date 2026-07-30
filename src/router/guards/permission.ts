@@ -62,8 +62,9 @@ export function setupPermissionGuard() {
           throw new Error("Current user id is missing");
         }
 
-        const dynamicRoutes = await permissionStore.generateRoutes(userId);
-        dynamicRoutes.forEach((route: RouteRecordRaw) => {
+        const generated = await permissionStore.generateRoutes(userId);
+        userStore.setPermissions(generated.permissions);
+        generated.routes.forEach((route: RouteRecordRaw) => {
           router.addRoute(route);
         });
 

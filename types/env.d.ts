@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_PORT: number;
   readonly VITE_APP_NAME: string;
   readonly VITE_APP_BASE_API: string;
+  /** 网关路由控制面地址；默认使用 /gateway-admin/routes。 */
+  readonly VITE_GATEWAY_ROUTE_API_BASE?: string;
   readonly VITE_APP_API_URL: string;
   readonly VITE_APP_TITLE?: string;
   readonly VITE_APP_TENANT_ENABLED?: string;

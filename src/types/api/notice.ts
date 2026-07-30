@@ -28,8 +28,8 @@ export interface NoticeForm {
   level?: string;
   /** 发布状态(0:草稿;1:已发布;2:已撤回) */
   publishStatus?: number;
-  /** 目标用户ID(多个以英文逗号(,)分割) */
-  targetUserIds?: string;
+  /** 目标用户名 */
+  targetUserIds?: string | string[];
   /** 目标类型 (1:全部,2:指定用户等) */
   targetType?: number;
 }
@@ -42,6 +42,8 @@ export interface NoticeItem {
   title: string;
   /** 通知内容 */
   content: string;
+  /** 发布人 */
+  publisherName?: string;
   /** 通知类型 */
   type: string;
   /** 通知等级 */
@@ -54,6 +56,8 @@ export interface NoticeItem {
   publishTime?: Date;
   /** 撤回时间 */
   revokeTime?: Date;
+  /** 收件人范围 */
+  targetType?: number;
 }
 
 /** 通知详情对象 */

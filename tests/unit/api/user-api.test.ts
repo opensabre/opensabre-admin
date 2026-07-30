@@ -108,6 +108,26 @@ describe("UserAPI", () => {
     });
   });
 
+  it("loads the authenticated user instead of a fixed user ID", async () => {
+    requestMock.mockResolvedValueOnce({
+      id: "200",
+      username: "operator",
+      name: "操作员",
+      roleIds: ["103"],
+    });
+
+    const { default: UserAPI } = await import("@/api/system/user");
+
+    await expect(UserAPI.getInfo()).resolves.toMatchObject({
+      id: "200",
+      username: "operator",
+    });
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/org/user/current",
+      method: "get",
+    });
+  });
+
   it("creates organization user with initial password", async () => {
     requestMock.mockResolvedValueOnce(true);
 

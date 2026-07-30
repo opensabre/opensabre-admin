@@ -110,7 +110,7 @@ function toOrgUserQuery(queryParams: UserQueryParams) {
 
 function getCurrentOrgUser() {
   return request<any, OrgUser>({
-    url: `${ORG_USER_BASE_URL}/101`,
+    url: `${ORG_USER_BASE_URL}/current`,
     method: "get",
   });
 }

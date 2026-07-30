@@ -13,6 +13,8 @@ export * from "./dept";
 export * from "./resource";
 export * from "./position";
 export * from "./oauth-client";
+export * from "./oauth-authorization";
+export * from "./oauth-authorization-consent";
 export * from "./audit-log";
 export * from "./online-user";
 export * from "./dict";
@@ -23,6 +25,12 @@ export * from "./notice";
 export * from "./tenant";
 export * from "./captcha-scene";
 export * from "./notification";
+export * from "./gateway-route";
+export * from "./rate-limit-scene";
+export * from "./usage-counter";
+export * from "./usage-scene";
+export * from "./error-catalog";
+export * from "./internal-token-key";
 
 // 其他模块
 export * from "./ai";

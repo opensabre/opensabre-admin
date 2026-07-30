@@ -29,6 +29,9 @@ http.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    const username = useUserStoreHook().userInfo.username;
+    if (username) config.headers["X-Username"] = username;
+
     return config;
   },
   (error) => Promise.reject(error)

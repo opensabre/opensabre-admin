@@ -2,7 +2,7 @@
   <div class="app-container h-full flex flex-1 flex-col">
     <div class="mb-10">
       <el-link
-        href="https://gitee.com/youlaiorg/vue3-element-admin/blob/master/src/views/demo/curd-demo.vue"
+        href="https://github.com/opensabre/opensabre-admin"
         type="primary"
         target="_blank"
       >

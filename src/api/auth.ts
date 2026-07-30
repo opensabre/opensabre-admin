@@ -8,7 +8,7 @@ const AUTH_BASE_URL = "/v1/auth";
  * OAuth2 配置
  */
 export const OAuth2_CONFIG: OAuth2Config = {
-  authorizeUrl: "/oauth2/authorization/base-gateway-client",
+  authorizeUrl: `/oauth2/authorization/${import.meta.env.VITE_OAUTH2_REGISTRATION_ID || "base-gateway-client"}`,
 };
 
 const AuthAPI = {

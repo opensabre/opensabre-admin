@@ -5,8 +5,8 @@
       <div class="oops mb-5 text-[2rem] font-bold">OOPS</div>
       <div class="info text-gray mb-7 text-[0.8125rem]">
         该页面无法访问
-        <el-link type="primary" href="https://www.youlai.tech" target="_blank">
-          有来开源官网
+        <el-link type="primary" href="https://opensabre.github.io/docs" target="_blank">
+          OpenSabre 文档
         </el-link>
       </div>
       <div class="headline mb-2.5 text-xl font-bold text-[#222]">抱歉，您访问的页面不存在</div>

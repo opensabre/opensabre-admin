@@ -35,7 +35,7 @@ export function useNotice() {
   }
 
   async function read(id: string) {
-    detail.value = await NoticeAPI.getDetail(id);
+    detail.value = await NoticeAPI.getInboxDetail(id);
     dialogVisible.value = true;
 
     // 从列表中移除已读项

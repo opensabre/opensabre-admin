@@ -1,5 +1,5 @@
 # 使用官方 Node.js 运行时作为基础镜像
-FROM node:20-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:22.18.0-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -7,11 +7,11 @@ WORKDIR /app
 # 复制 package.json 和 pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml* ./
 
-# 安装 pnpm
-RUN npm install -g pnpm
+# 启用 Node.js 内置的包管理器代理
+RUN corepack enable
 
 # 安装依赖
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # 复制源代码
 COPY . .

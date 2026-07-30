@@ -1,6 +1,6 @@
 <template>
   <a
-    href="https://github.com/youlaitech"
+    href="https://github.com/opensabre"
     target="_blank"
     class="github-corner"
     aria-label="View source on Github"
