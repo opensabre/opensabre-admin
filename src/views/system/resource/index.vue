@@ -62,7 +62,7 @@
         <el-table-column label="类型" prop="type" width="100" />
         <el-table-column label="请求方式" prop="method" width="100" align="center">
           <template #default="scope">
-            <el-tag>{{ scope.row.method }}</el-tag>
+            <el-tag class="table-value-tag">{{ scope.row.method }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="资源路径" prop="url" min-width="180" show-overflow-tooltip />

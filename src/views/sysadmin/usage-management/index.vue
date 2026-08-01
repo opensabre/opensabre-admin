@@ -14,8 +14,10 @@
 <script setup lang="ts">
 import UsageScenes from "@/views/sysadmin/usage-scenes/index.vue";
 import UsageStatistics from "@/views/sysadmin/usage-statistics/index.vue";
+import { useRoute } from "vue-router";
 
 defineOptions({ name: "UsageManagement", inheritAttrs: false });
 
-const activeTab = ref("scenes");
+const route = useRoute();
+const activeTab = ref(route.query.tab === "statistics" ? "statistics" : "scenes");
 </script>

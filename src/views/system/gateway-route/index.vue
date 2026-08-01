@@ -141,7 +141,11 @@
           </el-form-item>
         </template>
         <el-form-item label="其他全局过滤器">
-          <el-tag v-for="filter in nonRateLimitFilters" :key="filter.name" class="mr-2">
+          <el-tag
+            v-for="filter in nonRateLimitFilters"
+            :key="filter.name"
+            class="table-value-tag mr-2"
+          >
             {{ filter.name }}
           </el-tag>
           <span v-if="!nonRateLimitFilters.length" class="text-gray">未配置</span>

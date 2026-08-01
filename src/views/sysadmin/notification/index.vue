@@ -163,7 +163,7 @@
             </el-table-column>
             <el-table-column label="渠道" width="90">
               <template #default="{ row }">
-                <el-tag>{{ formatChannel(row.channel) }}</el-tag>
+                <el-tag class="table-value-tag">{{ formatChannel(row.channel) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="标题" prop="title" min-width="160" show-overflow-tooltip />
@@ -286,7 +286,7 @@
             </el-table-column>
             <el-table-column label="渠道" width="90">
               <template #default="{ row }">
-                <el-tag>{{ formatChannel(row.channel) }}</el-tag>
+                <el-tag class="table-value-tag">{{ formatChannel(row.channel) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="目标" prop="target" min-width="160" show-overflow-tooltip />
@@ -675,8 +675,8 @@ function fetchUsageSummary(
 function openUsage(objectType: UsageObjectType, objectId?: string) {
   if (!objectId) return;
   router.push({
-    path: "/sysadmin/usage-statistics",
-    query: { objectType, objectId, usageEvent: "NOTIFICATION_SEND" },
+    path: "/sysadmin/usage-management",
+    query: { tab: "statistics", objectType, objectId, usageEvent: "NOTIFICATION_SEND" },
   });
 }
 
