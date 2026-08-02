@@ -41,7 +41,11 @@
         <el-table-column label="用户/主体" prop="principalName" min-width="180" />
         <el-table-column label="授权项" min-width="300">
           <template #default="{ row }">
-            <el-tag v-for="authority in authorities(row.authorities)" :key="authority" class="mr-1">
+            <el-tag
+              v-for="authority in authorities(row.authorities)"
+              :key="authority"
+              class="table-value-tag mr-1"
+            >
               {{ authority }}
             </el-tag>
           </template>

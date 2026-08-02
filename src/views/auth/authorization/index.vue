@@ -87,7 +87,11 @@
         />
         <el-table-column label="Scope" min-width="180">
           <template #default="{ row }">
-            <el-tag v-for="scope in scopes(row.authorizedScopes)" :key="scope" class="mr-1">
+            <el-tag
+              v-for="scope in scopes(row.authorizedScopes)"
+              :key="scope"
+              class="table-value-tag mr-1"
+            >
               {{ scope }}
             </el-tag>
           </template>

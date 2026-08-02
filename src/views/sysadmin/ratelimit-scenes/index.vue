@@ -47,7 +47,7 @@
         <el-table-column label="场景名称" prop="sceneName" min-width="150" />
         <el-table-column label="算法" width="150">
           <template #default="{ row }">
-            <el-tag effect="plain">{{ formatAlgorithm(row.algorithm) }}</el-tag>
+            <el-tag class="table-value-tag">{{ formatAlgorithm(row.algorithm) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="限次维度" min-width="180">
@@ -336,8 +336,13 @@ function fetchUsageSummary() {
 }
 function openUsage(sceneCode: string) {
   router.push({
-    path: "/sysadmin/usage-statistics",
-    query: { objectType: "RATE_LIMIT_SCENE", objectId: sceneCode, usageEvent: "RATE_LIMIT_CHECK" },
+    path: "/sysadmin/usage-management",
+    query: {
+      tab: "statistics",
+      objectType: "RATE_LIMIT_SCENE",
+      objectId: sceneCode,
+      usageEvent: "RATE_LIMIT_CHECK",
+    },
   });
 }
 function handleQuery() {

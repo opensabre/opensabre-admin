@@ -2,9 +2,9 @@
 
 ## Source of truth
 - Status: Active
-- Last refreshed: 2026-07-26
+- Last refreshed: 2026-08-01
 - Primary product surfaces: OpenSabre 管理后台
-- Evidence reviewed: `src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器
+- Evidence reviewed: `src/styles/variables.scss`、`src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器、菜单合并迁移脚本
 
 ## Brand
 - Personality: 稳定、清晰、面向系统管理员
@@ -32,7 +32,7 @@
 - Tradeoffs: 旧页面组件继续保留，组合页面负责统一入口
 
 ## Visual language
-- Color: 沿用 Element Plus 与项目主题
+- Color: 沿用 Element Plus 与项目主题；表格当前行使用低透明度主题色，所有默认/primary 类型值（含错误码范围、Scope）使用中性色标签，状态标签保留语义色
 - Typography: 沿用全局字体与字号
 - Spacing/layout rhythm: 沿用 `app-container` 和既有卡片间距
 - Shape/radius/elevation: 沿用现有卡片与表格
@@ -41,8 +41,8 @@
 
 ## Components
 - Existing components to reuse: `ElTabs`、计次场景页、使用统计页、OAuth2 客户端页、OAuth2 授权记录页、内部 Token 密钥页
-- New/changed components: 计次管理组合页、客户端管理组合页
-- Variants and states: 场景管理/使用统计；客户端/Token 签发
+- New/changed components: 计次管理组合页、客户端管理组合页、全局表格当前行状态、表格中性值标签
+- Variants and states: 场景管理/使用统计；客户端/Token 签发；类型值与状态值使用不同的标签层级
 - Token/component ownership: 继续由现有管理端主题和组件维护
 
 ## Accessibility

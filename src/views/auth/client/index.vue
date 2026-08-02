@@ -56,7 +56,7 @@
             <el-tag
               v-for="item in scope.row.authorizationGrantTypes || []"
               :key="item"
-              class="mr-1"
+              class="table-value-tag mr-1"
             >
               {{ item }}
             </el-tag>
@@ -64,7 +64,7 @@
         </el-table-column>
         <el-table-column label="作用域" min-width="220">
           <template #default="scope">
-            <el-tag v-for="item in scope.row.scopes || []" :key="item" class="mr-1">
+            <el-tag v-for="item in scope.row.scopes || []" :key="item" class="table-value-tag mr-1">
               {{ item }}
             </el-tag>
           </template>

@@ -69,7 +69,7 @@
         <el-table-column label="场景名称" prop="sceneName" min-width="150" />
         <el-table-column label="类型" prop="captchaType" width="110">
           <template #default="{ row }">
-            <el-tag>{{ formatCaptchaType(row.captchaType) }}</el-tag>
+            <el-tag class="table-value-tag">{{ formatCaptchaType(row.captchaType) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="通知模板" min-width="180" show-overflow-tooltip>
@@ -420,8 +420,13 @@ function fetchUsageSummary() {
 
 function openUsage(sceneCode: string) {
   router.push({
-    path: "/sysadmin/usage-statistics",
-    query: { objectType: "CAPTCHA_SCENE", objectId: sceneCode, usageEvent: "CAPTCHA_GENERATE" },
+    path: "/sysadmin/usage-management",
+    query: {
+      tab: "statistics",
+      objectType: "CAPTCHA_SCENE",
+      objectId: sceneCode,
+      usageEvent: "CAPTCHA_GENERATE",
+    },
   });
 }
 
