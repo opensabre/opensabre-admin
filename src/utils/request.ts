@@ -1,4 +1,5 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from "axios";
+import { ElMessage } from "element-plus";
 import qs from "qs";
 import { ApiCodeEnum } from "@/enums/api";
 import { useUserStoreHook } from "@/store/modules/user";
@@ -42,7 +43,12 @@ http.interceptors.request.use(
 // ============================================
 
 http.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
+  async (response: AxiosResponse<ApiResponse>) => {
+    if (isLoginRedirectResponse(response)) {
+      await redirectToLogin("登录已过期，请重新登录");
+      return Promise.reject(new Error("Session Invalid"));
+    }
+
     // 二进制数据直接返回
     const { responseType } = response.config;
     if (responseType === "blob" || responseType === "arraybuffer") {
@@ -96,6 +102,25 @@ http.interceptors.response.use(
     return Promise.reject(new Error(msg || "Error"));
   }
 );
+
+/**
+ * 浏览器会自动跟随 API 的 302 登录重定向，Axios 最终只能看到登录页的 200 HTML 响应。
+ */
+function isLoginRedirectResponse(response: AxiosResponse): boolean {
+  const responseUrl = response.request?.responseURL;
+  if (typeof responseUrl === "string" && responseUrl) {
+    try {
+      if (new URL(responseUrl, window.location.origin).pathname === "/login") {
+        return true;
+      }
+    } catch {
+      // 非法响应地址继续通过 Content-Type 判断。
+    }
+  }
+
+  const contentType = response.headers["content-type"];
+  return typeof contentType === "string" && contentType.toLowerCase().includes("text/html");
+}
 
 export default http;
 
