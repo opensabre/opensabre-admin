@@ -1,70 +1,31 @@
-﻿<template>
-  <template v-if="tagType">
-    <el-tag :type="tagType" :size="tagSize">{{ label }}</el-tag>
-  </template>
-  <template v-else>
-    <span>{{ label }}</span>
-  </template>
+<template>
+  <el-tag v-if="tagType" :type="tagType" :size="size">{{ label }}</el-tag>
+  <span v-else>{{ label }}</span>
 </template>
 
 <script setup lang="ts">
-import { useDictStore } from "@/store";
+import { useDict } from "@/composables/useDict";
 
-const props = defineProps({
-  code: String, // 字典编码
-  modelValue: [String, Number], // 字典项的值
-  size: {
-    type: String,
-    default: "default", // 标签大小
-  },
-});
-
-const label = ref("");
-const tagType = ref<"success" | "warning" | "info" | "primary" | "danger" | undefined>(); // 标签类型
-const tagSize = ref<"default" | "large" | "small">(props.size as "default" | "large" | "small"); // 标签大小
-
-const dictStore = useDictStore();
-
-/**
- * 根据字典项的值获取对应的 label 和 tagType
- * @param dictCode 字典编码
- * @param value 字典项的值
- * @returns 包含 label 和 tagType 的对象
- */
-const getLabelAndTagByValue = async (dictCode: string, value: any) => {
-  // 按需加载字典数据
-  await dictStore.loadDictItems(dictCode);
-  // 从缓存中获取字典数据
-  const dictItems = dictStore.getDictItems(dictCode);
-  // 查找对应的字典项
-  const dictItem = dictItems.find((item) => item.value == value);
-  return {
-    label: dictItem?.label || "",
-    tagType: dictItem?.tagType,
-  };
-};
-
-/**
- * 更新 label 和 tagType
- */
-const updateLabelAndTag = async () => {
-  if (!props.code || props.modelValue === undefined) return;
-  const { label: newLabel, tagType: newTagType } = await getLabelAndTagByValue(
-    props.code,
-    props.modelValue
-  );
-  label.value = newLabel;
-  tagType.value = newTagType as typeof tagType.value;
-};
-
-// 初始化或code变化时更新标签和标签样式
-watch(
-  [() => props.code, () => props.modelValue],
-  async () => {
-    if (props.code) {
-      await updateLabelAndTag();
-    }
-  },
-  { immediate: true }
+const props = withDefaults(
+  defineProps<{
+    code?: string;
+    dictCode?: string;
+    modelValue?: string | number;
+    value?: string | number;
+    fallback?: string;
+    size?: "default" | "large" | "small";
+  }>(),
+  { size: "default" }
 );
+
+const dictionaryCode = computed(() => props.dictCode || props.code || "");
+const currentValue = computed(() => props.value ?? props.modelValue);
+const { options } = useDict(dictionaryCode);
+const item = computed(() =>
+  options.value.find((option) => String(option.value) === String(currentValue.value))
+);
+const label = computed(
+  () => item.value?.label ?? props.fallback ?? String(currentValue.value ?? "")
+);
+const tagType = computed(() => item.value?.tagType || undefined);
 </script>

@@ -1,12 +1,12 @@
-﻿<template>
+<template>
   <el-select
     v-if="type === 'select'"
     v-model="selectedValue"
+    v-bind="$attrs"
     :placeholder="placeholder"
     :disabled="disabled"
-    clearable
+    :loading="loading"
     :style="style"
-    @change="handleChange"
   >
     <el-option
       v-for="option in options"
@@ -15,25 +15,28 @@
       :value="option.value"
     />
   </el-select>
-
   <el-radio-group
     v-else-if="type === 'radio'"
     v-model="selectedValue"
+    v-bind="$attrs"
     :disabled="disabled"
     :style="style"
-    @change="handleChange"
   >
-    <el-radio v-for="option in options" :key="option.value" :value="option.value">
+    <component
+      :is="button ? ElRadioButton : ElRadio"
+      v-for="option in options"
+      :key="option.value"
+      :value="option.value"
+    >
       {{ option.label }}
-    </el-radio>
+    </component>
   </el-radio-group>
-
   <el-checkbox-group
-    v-else-if="type === 'checkbox'"
+    v-else
     v-model="selectedValue"
+    v-bind="$attrs"
     :disabled="disabled"
     :style="style"
-    @change="handleChange"
   >
     <el-checkbox v-for="option in options" :key="option.value" :value="option.value">
       {{ option.label }}
@@ -42,82 +45,39 @@
 </template>
 
 <script setup lang="ts">
-import { useDictStore } from "@/store";
+import { ElRadio, ElRadioButton } from "element-plus";
+import { useDict } from "@/composables/useDict";
 
-const dictStore = useDictStore();
+defineOptions({ inheritAttrs: false });
 
-const props = defineProps({
-  code: {
-    type: String,
-    required: true,
-  },
-  modelValue: {
-    type: [String, Number, Array],
-    required: false,
-  },
-  type: {
-    type: String,
-    default: "select",
-    validator: (value: string) => ["select", "radio", "checkbox"].includes(value),
-  },
-  placeholder: {
-    type: String,
-    default: "请选择",
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  style: {
-    type: Object,
-    default: () => {
-      return {
-        width: "300px",
-      };
-    },
-  },
-});
-
-const emit = defineEmits(["update:modelValue"]);
-
-const options = ref<Array<{ label: string; value: string | number }>>([]);
-
-const selectedValue = ref<any>(
-  typeof props.modelValue === "string" || typeof props.modelValue === "number"
-    ? props.modelValue
-    : Array.isArray(props.modelValue)
-      ? props.modelValue
-      : undefined
+const props = withDefaults(
+  defineProps<{
+    code?: string;
+    dictCode?: string;
+    modelValue?: string | number | Array<string | number>;
+    type?: "select" | "radio" | "checkbox";
+    placeholder?: string;
+    disabled?: boolean;
+    button?: boolean;
+    style?: Record<string, string>;
+  }>(),
+  {
+    type: "select",
+    placeholder: "请选择",
+    disabled: false,
+    button: false,
+    style: () => ({ width: "300px" }),
+  }
 );
 
-// 监听 modelValue 和 options 的变化
-watch(
-  [() => props.modelValue, () => options.value],
-  ([newValue, newOptions]) => {
-    if (newOptions.length > 0 && newValue !== undefined) {
-      if (props.type === "checkbox") {
-        selectedValue.value = Array.isArray(newValue) ? newValue : [];
-      } else {
-        const matchedOption = newOptions.find(
-          (option) => String(option.value) === String(newValue)
-        );
-        selectedValue.value = matchedOption?.value;
-      }
-    } else {
-      selectedValue.value = undefined;
-    }
-  },
-  { immediate: true }
-);
+const emit = defineEmits<{
+  "update:modelValue": [value: string | number | Array<string | number> | undefined];
+}>();
 
-// 监听 selectedValue 的变化并触发 update:modelValue
-function handleChange(val: any) {
-  emit("update:modelValue", val);
-}
-
-// 获取字典数据
-onMounted(async () => {
-  await dictStore.loadDictItems(props.code);
-  options.value = dictStore.getDictItems(props.code);
+const dictionaryCode = computed(() => props.dictCode || props.code || "");
+const { options, loading } = useDict(dictionaryCode);
+const selectedValue = computed<any>({
+  get: () => props.modelValue,
+  set: (value) => emit("update:modelValue", value),
 });
 </script>
