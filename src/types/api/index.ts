@@ -26,6 +26,7 @@ export * from "./tenant";
 export * from "./captcha-scene";
 export * from "./notification";
 export * from "./gateway-route";
+export * from "./gateway-api-route";
 export * from "./rate-limit-scene";
 export * from "./usage-counter";
 export * from "./usage-scene";
