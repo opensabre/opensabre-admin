@@ -6,6 +6,9 @@ import type {
   GatewayApiPublication,
   GatewayApplicationRoute,
   GatewayApplicationRouteChange,
+  GatewayReleaseResult,
+  GatewayReleaseValidationResult,
+  GatewayRouteConfigSnapshot,
 } from "@/types/api/gateway-api-route";
 
 const BASE_URL = "/gateway-admin";
@@ -35,6 +38,26 @@ const GatewayApiRouteAPI = {
     return request<any, GatewayApplicationRoute[]>({
       url: `${BASE_URL}/application-routes`,
       method: "get",
+    });
+  },
+  getCurrentConfig() {
+    return request<any, GatewayRouteConfigSnapshot>({
+      url: `${BASE_URL}/routes`,
+      method: "get",
+    });
+  },
+  validateRelease(baseVersion: string) {
+    return request<any, GatewayReleaseValidationResult>({
+      url: `${BASE_URL}/releases/validate`,
+      method: "post",
+      data: { baseVersion },
+    });
+  },
+  publishRelease(baseVersion: string) {
+    return request<any, GatewayReleaseResult>({
+      url: `${BASE_URL}/releases`,
+      method: "post",
+      data: { baseVersion },
     });
   },
   savePublication(apiId: string, data: GatewayApiPublicationChange) {

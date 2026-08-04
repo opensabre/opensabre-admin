@@ -15,6 +15,15 @@
           <span class="font-medium">网关 API 资产与发布状态</span>
           <div class="flex items-center gap-2">
             <el-button type="success" :loading="syncing" @click="syncApis">同步 OpenAPI</el-button>
+            <el-button
+              type="warning"
+              :loading="publishing"
+              :disabled="pendingDraftCount === 0"
+              @click="publishDrafts"
+            >
+              发布到网关
+              <span v-if="pendingDraftCount">（{{ pendingDraftCount }}）</span>
+            </el-button>
             <el-button type="primary" :loading="loading" @click="loadAll">刷新</el-button>
           </div>
         </div>
@@ -236,6 +245,7 @@ import type {
 } from "@/types/api/gateway-api-route";
 import type { GatewayServiceSummary } from "@/types/api/gateway-service";
 import type { OptionItem } from "@/types/api";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 defineOptions({ name: "GatewayApiRoutes" });
 
@@ -243,6 +253,7 @@ const activeTab = ref("apis");
 const loading = ref(false);
 const syncing = ref(false);
 const saving = ref(false);
+const publishing = ref(false);
 const serviceId = ref("");
 const services = ref<GatewayServiceSummary[]>([]);
 const resourceOptions = ref<OptionItem[]>([]);
@@ -274,6 +285,11 @@ const applicationRouteForm = reactive<GatewayApplicationRouteChange>({
 
 const publicationByApi = computed(
   () => new Map(publications.value.map((publication) => [publication.apiId, publication]))
+);
+const pendingDraftCount = computed(
+  () =>
+    publications.value.filter((publication) => publication.status === "DRAFT").length +
+    applicationRoutes.value.filter((route) => route.status === "DRAFT").length
 );
 
 function statusType(status?: string) {
@@ -321,6 +337,37 @@ async function syncApis() {
     await loadAll();
   } finally {
     syncing.value = false;
+  }
+}
+
+/** 通过发布中心将当前草稿编译并写入 Nacos，网关刷新后才会实际对外暴露。 */
+async function publishDrafts() {
+  if (pendingDraftCount.value === 0) {
+    ElMessage.warning("当前没有待发布的 API 或应用级路由草稿");
+    return;
+  }
+  publishing.value = true;
+  try {
+    const currentConfig = await GatewayApiRouteAPI.getCurrentConfig();
+    const candidate = await GatewayApiRouteAPI.validateRelease(currentConfig.version);
+    try {
+      await ElMessageBox.confirm(
+        `将发布 ${candidate.apiRouteCount} 个 API、${candidate.applicationRouteCount} 个应用级路由，发布后立即进入网关运行时配置。`,
+        "确认发布到网关",
+        { type: "warning", confirmButtonText: "发布", cancelButtonText: "取消" }
+      );
+    } catch {
+      return;
+    }
+    const result = await GatewayApiRouteAPI.publishRelease(candidate.baseVersion);
+    if (result.status === "SUCCEEDED") {
+      ElMessage.success(`发布成功，配置版本：${result.targetVersion}`);
+    } else {
+      ElMessage.warning(`发布已完成但状态为 ${result.status}，请到发布中心查看实例生效情况`);
+    }
+    await loadAll();
+  } finally {
+    publishing.value = false;
   }
 }
 
