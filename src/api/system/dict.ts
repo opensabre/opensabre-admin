@@ -124,6 +124,24 @@ const DictAPI = {
       }))
     );
   },
+  /** 批量获取字典项列表 */
+  getDictItemsBatch(dictCodes: string[]) {
+    return request<any, Record<string, DictItemOption[]>>({
+      url: `${DICT_BASE_URL}/items/options`,
+      method: "get",
+      params: { codes: dictCodes.join(",") },
+    }).then((groups) =>
+      Object.fromEntries(
+        Object.entries(groups ?? {}).map(([code, items]) => [
+          code,
+          (items ?? []).map((item) => ({
+            ...item,
+            tagType: decodeDictTagType((item as any).tagType),
+          })),
+        ])
+      )
+    );
+  },
   /** 新增字典项 */
   createDictItem(dictCode: string, data: DictItemForm) {
     return request({

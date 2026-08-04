@@ -1,11 +1,17 @@
-import { store } from "@/store";
+import { store } from "@/store/instance";
 import DictAPI from "@/api/system/dict";
 import type { DictItemOption } from "@/types/api";
 import { STORAGE_KEYS } from "@/constants";
 
 export const useDictStore = defineStore("dict", () => {
+  const CACHE_TTL = 5 * 60 * 1000;
+  type CacheEntry = { items: DictItemOption[]; loadedAt: number };
+
   // 字典数据缓存
-  const dictCache = useStorage<Record<string, DictItemOption[]>>(STORAGE_KEYS.DICT_CACHE, {});
+  const dictCache = useStorage<Record<string, CacheEntry | DictItemOption[]>>(
+    STORAGE_KEYS.DICT_CACHE,
+    {}
+  );
 
   // 请求队列（防止重复请求）
   const requestQueue: Record<string, Promise<void>> = {};
@@ -16,7 +22,19 @@ export const useDictStore = defineStore("dict", () => {
    * @param data 字典项列表
    */
   const cacheDictItems = (dictCode: string, data: DictItemOption[]) => {
-    dictCache.value[dictCode] = data;
+    dictCache.value[dictCode] = { items: data, loadedAt: Date.now() };
+  };
+
+  const getEntry = (dictCode: string): CacheEntry | undefined => {
+    const cached = dictCache.value[dictCode];
+    if (!cached) return undefined;
+    // 兼容升级前持久化的数组格式，并使其立即刷新。
+    return Array.isArray(cached) ? { items: cached, loadedAt: 0 } : cached;
+  };
+
+  const isFresh = (dictCode: string) => {
+    const entry = getEntry(dictCode);
+    return !!entry && Date.now() - entry.loadedAt < CACHE_TTL;
   };
 
   /**
@@ -24,21 +42,25 @@ export const useDictStore = defineStore("dict", () => {
    * @param dictCode 字典编码
    */
   const loadDictItems = async (dictCode: string) => {
-    if (dictCache.value[dictCode]) return;
-    // 防止重复请求
-    if (!requestQueue[dictCode]) {
-      requestQueue[dictCode] = DictAPI.getDictItems(dictCode)
-        .then((data) => {
-          cacheDictItems(dictCode, data);
-          Reflect.deleteProperty(requestQueue, dictCode);
-        })
-        .catch((error) => {
-          // 请求失败，清理队列，允许重试
-          Reflect.deleteProperty(requestQueue, dictCode);
-          throw error;
-        });
-    }
-    await requestQueue[dictCode];
+    await loadDicts([dictCode]);
+  };
+
+  /**
+   * 一次加载多个字典，已缓存或正在请求的编码不会重复请求。
+   */
+  const loadDicts = async (dictCodes: string[]) => {
+    const codes = [...new Set(dictCodes.map((code) => code.trim()).filter(Boolean))];
+    const waiting = codes.filter((code) => requestQueue[code]).map((code) => requestQueue[code]);
+    if (waiting.length) await Promise.all(waiting);
+
+    const missing = codes.filter((code) => !isFresh(code) && !requestQueue[code]);
+    if (!missing.length) return;
+
+    const request = DictAPI.getDictItemsBatch(missing)
+      .then((groups) => missing.forEach((code) => cacheDictItems(code, groups[code] ?? [])))
+      .finally(() => missing.forEach((code) => Reflect.deleteProperty(requestQueue, code)));
+    missing.forEach((code) => (requestQueue[code] = request));
+    await request;
   };
 
   /**
@@ -47,7 +69,7 @@ export const useDictStore = defineStore("dict", () => {
    * @returns 字典项列表
    */
   const getDictItems = (dictCode: string): DictItemOption[] => {
-    return dictCache.value[dictCode] || [];
+    return getEntry(dictCode)?.items ?? [];
   };
 
   /**
@@ -69,6 +91,7 @@ export const useDictStore = defineStore("dict", () => {
 
   return {
     loadDictItems,
+    loadDicts,
     getDictItems,
     removeDictItem,
     clearDictCache,

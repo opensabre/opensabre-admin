@@ -11,34 +11,26 @@
           />
         </el-form-item>
         <el-form-item label="对象类型">
-          <el-select v-model="filters.objectType" clearable style="width: 160px">
-            <el-option
-              v-for="item in objectTypes"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <DictSelect
+            v-model="filters.objectType"
+            code="usage_object_type"
+            clearable
+            style="width: 160px"
+          />
         </el-form-item>
         <el-form-item label="对象 ID">
           <el-input v-model="filters.objectId" clearable placeholder="场景编码或模板 ID" />
         </el-form-item>
         <el-form-item label="事件">
-          <el-select v-model="filters.usageEvent" clearable style="width: 150px">
-            <el-option
-              v-for="item in events"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <DictSelect
+            v-model="filters.usageEvent"
+            code="usage_event"
+            clearable
+            style="width: 150px"
+          />
         </el-form-item>
         <el-form-item label="粒度">
-          <el-select v-model="filters.granularity" style="width: 110px">
-            <el-option label="小时" value="HOUR" />
-            <el-option label="天" value="DAY" />
-            <el-option label="周" value="WEEK" />
-          </el-select>
+          <DictSelect v-model="filters.granularity" code="usage_granularity" style="width: 110px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="loading" @click="loadData">查询</el-button>
@@ -126,18 +118,6 @@ const filters = reactive<{
   usageEvent: route.query.usageEvent as UsageEvent | undefined,
   granularity: "HOUR",
 });
-const objectTypes: Array<{ label: string; value: UsageObjectType }> = [
-  { label: "验证码场景", value: "CAPTCHA_SCENE" },
-  { label: "限次场景", value: "RATE_LIMIT_SCENE" },
-  { label: "通知场景", value: "NOTIFICATION_SCENE" },
-  { label: "通知模板", value: "NOTIFICATION_TEMPLATE" },
-];
-const events: Array<{ label: string; value: UsageEvent }> = [
-  { label: "验证码生成", value: "CAPTCHA_GENERATE" },
-  { label: "验证码校验", value: "CAPTCHA_VERIFY" },
-  { label: "限次检查", value: "RATE_LIMIT_CHECK" },
-  { label: "通知发送", value: "NOTIFICATION_SEND" },
-];
 const trendOptions = computed(() => ({
   tooltip: { trigger: "axis" },
   legend: { data: ["发起", "成功", "失败"] },
