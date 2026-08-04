@@ -25,6 +25,14 @@ export interface GatewayApiPublication {
   lockVersion?: number;
 }
 
+export interface GatewayApiPublicationChange {
+  externalPath: string;
+  upstreamPath?: string;
+  authMode: "PUBLIC" | "AUTHENTICATED" | "RESOURCE_REQUIRED";
+  resourceId?: string;
+  lockVersion?: number;
+}
+
 /** 应用级路由声明。 */
 export interface GatewayApplicationRoute {
   id: string;
@@ -39,4 +47,22 @@ export interface GatewayApplicationRoute {
   approvalStatus: string;
   publishedVersion?: string;
   lockVersion?: number;
+}
+
+export interface GatewayApplicationRouteChange {
+  serviceId: string;
+  routeName: string;
+  externalPath: string;
+  targetUri: string;
+  httpMethod?: string;
+  rewritePath?: string;
+  lockVersion?: number;
+}
+
+export interface GatewayApiSyncResult {
+  serviceId: string;
+  discovered: number;
+  created: number;
+  updated: number;
+  missing: number;
 }

@@ -33,4 +33,58 @@ describe("GatewayApiRouteAPI", () => {
       method: "get",
     });
   });
+
+  it("syncs APIs and saves publication/application route drafts", async () => {
+    const { default: api } = await import("@/api/gateway-admin/gateway-api-route");
+
+    await api.syncApis("base-organization");
+    await api.savePublication("api-1", {
+      externalPath: "/users/{id}",
+      authMode: "AUTHENTICATED",
+    });
+    await api.createApplicationRoute({
+      serviceId: "base-organization",
+      routeName: "organization-api",
+      externalPath: "/organization/**",
+      targetUri: "lb://base-organization",
+    });
+    await api.updateApplicationRoute("route-1", {
+      serviceId: "base-organization",
+      routeName: "organization-api",
+      externalPath: "/organization/**",
+      targetUri: "lb://base-organization",
+      lockVersion: 0,
+    });
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      url: "/gateway-admin/services/base-organization/apis/sync",
+      method: "post",
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      url: "/gateway-admin/apis/api-1/publication",
+      method: "put",
+      data: { externalPath: "/users/{id}", authMode: "AUTHENTICATED" },
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      url: "/gateway-admin/application-routes",
+      method: "post",
+      data: {
+        serviceId: "base-organization",
+        routeName: "organization-api",
+        externalPath: "/organization/**",
+        targetUri: "lb://base-organization",
+      },
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(4, {
+      url: "/gateway-admin/application-routes/route-1",
+      method: "put",
+      data: {
+        serviceId: "base-organization",
+        routeName: "organization-api",
+        externalPath: "/organization/**",
+        targetUri: "lb://base-organization",
+        lockVersion: 0,
+      },
+    });
+  });
 });
