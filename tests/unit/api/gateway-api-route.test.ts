@@ -87,4 +87,27 @@ describe("GatewayApiRouteAPI", () => {
       },
     });
   });
+
+  it("validates and publishes the current gateway draft", async () => {
+    const { default: api } = await import("@/api/gateway-admin/gateway-api-route");
+
+    await api.getCurrentConfig();
+    await api.validateRelease("base-version");
+    await api.publishRelease("base-version");
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      url: "/gateway-admin/routes",
+      method: "get",
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      url: "/gateway-admin/releases/validate",
+      method: "post",
+      data: { baseVersion: "base-version" },
+    });
+    expect(requestMock).toHaveBeenNthCalledWith(3, {
+      url: "/gateway-admin/releases",
+      method: "post",
+      data: { baseVersion: "base-version" },
+    });
+  });
 });

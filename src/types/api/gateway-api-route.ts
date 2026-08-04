@@ -66,3 +66,25 @@ export interface GatewayApiSyncResult {
   updated: number;
   missing: number;
 }
+
+/** 当前 Nacos 网关配置的并发基线。 */
+export interface GatewayRouteConfigSnapshot {
+  version: string;
+}
+
+/** 网关发布预检结果。 */
+export interface GatewayReleaseValidationResult {
+  baseVersion: string;
+  apiRouteCount: number;
+  applicationRouteCount: number;
+}
+
+/** 网关正式发布结果。 */
+export interface GatewayReleaseResult {
+  releaseId: string;
+  sourceVersion: string;
+  targetVersion: string;
+  apiCount: number;
+  applicationRouteCount: number;
+  status: "PUBLISHING" | "SUCCEEDED" | "PARTIALLY_APPLIED" | "FAILED" | "RECONCILIATION_REQUIRED";
+}
