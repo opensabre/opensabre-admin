@@ -11,6 +11,14 @@ export interface GatewayApiAsset {
   lastDiscoveredTime?: string;
 }
 
+/** 网关 API 资产分页结果。 */
+export interface GatewayApiAssetPage {
+  total: number;
+  page: number;
+  pageSize: number;
+  apis: GatewayApiAsset[];
+}
+
 /** API 对外发布声明。 */
 export interface GatewayApiPublication {
   id: string;

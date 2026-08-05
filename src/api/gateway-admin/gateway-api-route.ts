@@ -1,6 +1,7 @@
 import request from "@/utils/request";
 import type {
   GatewayApiAsset,
+  GatewayApiAssetPage,
   GatewayApiPublicationChange,
   GatewayApiSyncResult,
   GatewayApiPublication,
@@ -15,8 +16,8 @@ const BASE_URL = "/gateway-admin";
 
 /** API 级网关路由管理接口。 */
 const GatewayApiRouteAPI = {
-  listApis(params?: { serviceId?: string; status?: string }) {
-    return request<any, GatewayApiAsset[]>({
+  listApis(params?: { serviceId?: string; status?: string; page?: number; pageSize?: number }) {
+    return request<any, GatewayApiAssetPage>({
       url: `${BASE_URL}/apis`,
       method: "get",
       params,
