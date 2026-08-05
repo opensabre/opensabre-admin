@@ -5,8 +5,8 @@
       type="info"
       show-icon
       :closable="false"
-      title="API 级路由管理"
-      description="API 默认不对外暴露；只有保存发布声明并经过发布流程后才会进入网关运行时配置。/服务名/** 等应用级通配路由单独展示。"
+      title="API 路由管理"
+      description="统一管理 API 级发布和应用级路由。API 默认不对外暴露；保存草稿并经过发布流程后才会进入网关运行时配置。"
     />
 
     <el-card shadow="hover">
@@ -51,7 +51,7 @@
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button :loading="loading" @click="loadApis">查询</el-button>
+              <el-button :loading="loading" @click="handleApiSearch">查询</el-button>
             </el-form-item>
           </el-form>
 
@@ -84,6 +84,17 @@
               </template>
             </el-table-column>
           </el-table>
+          <div class="mt-4 flex justify-end">
+            <el-pagination
+              v-model:current-page="apiPagination.page"
+              v-model:page-size="apiPagination.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="apiPagination.total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleApiPageSizeChange"
+              @current-change="loadApis"
+            />
+          </div>
         </el-tab-pane>
 
         <el-tab-pane label="API 发布声明" name="publications">
@@ -100,7 +111,9 @@
 
         <el-tab-pane label="应用级路由" name="application-routes">
           <div class="mb-3 flex items-center justify-between">
-            <span class="text-sm text-gray-500">应用级通配路由草稿</span>
+            <span class="text-sm text-gray-500">
+              原路由管理已合并到此处，统一按应用级路由草稿发布
+            </span>
             <el-button type="success" icon="plus" @click="openApplicationRouteDialog()">
               新增应用路由
             </el-button>
@@ -258,6 +271,7 @@ const serviceId = ref("");
 const services = ref<GatewayServiceSummary[]>([]);
 const resourceOptions = ref<OptionItem[]>([]);
 const apis = ref<GatewayApiAsset[]>([]);
+const apiPagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const publications = ref<GatewayApiPublication[]>([]);
 const applicationRoutes = ref<GatewayApplicationRoute[]>([]);
 const httpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
@@ -299,9 +313,24 @@ function statusType(status?: string) {
 }
 
 async function loadApis() {
-  apis.value = await GatewayApiRouteAPI.listApis({
+  const result = await GatewayApiRouteAPI.listApis({
     serviceId: serviceId.value.trim() || undefined,
+    page: apiPagination.page,
+    pageSize: apiPagination.pageSize,
   });
+  apis.value = result.apis || [];
+  apiPagination.total = result.total || 0;
+  apiPagination.page = result.page || 1;
+}
+
+function handleApiPageSizeChange() {
+  apiPagination.page = 1;
+  void loadApis();
+}
+
+function handleApiSearch() {
+  apiPagination.page = 1;
+  void loadApis();
 }
 
 async function loadServices() {
