@@ -4,6 +4,7 @@ import qs from "qs";
 import { ApiCodeEnum } from "@/enums/api";
 import { useUserStoreHook } from "@/store/modules/user";
 import { AuthStorage, redirectToLogin } from "@/utils/auth";
+import { normalizeDateTimeValues } from "@/utils/format";
 
 // ============================================
 // HTTP 请求实例
@@ -59,10 +60,12 @@ http.interceptors.response.use(
     const message = mesg || msg; // 优先使用 mesg（OpenSabre 标准），兼容 msg
 
     if (code === ApiCodeEnum.SUCCESS) {
+      // 将后端 ISO 时间统一转换为页面展示格式，避免表格和详情直接显示 T 分隔符。
+      const normalizedData = normalizeDateTimeValues(data);
       // 分页接口需要同时返回 data 与 page 元信息
       const page = (response.data as any)?.page;
-      if (page != null) return { data, page };
-      return data;
+      if (page != null) return { data: normalizedData, page };
+      return normalizedData;
     }
 
     // 需要选择租户（特殊业务码，传递给调用方处理）
