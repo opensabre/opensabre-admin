@@ -802,7 +802,7 @@ import type {
   GatewayApplicationRouteChange,
   GatewayEffectivePolicy,
   GatewayPolicyMode,
-  GatewayPolicyType,
+  GatewayGovernancePolicyType,
 } from "@/types/api/gateway-api-route";
 import type { GatewayServiceSummary } from "@/types/api/gateway-service";
 import type { OptionItem } from "@/types/api";
@@ -852,12 +852,14 @@ const publicationFilters = ref<EditableDefinition[]>([]);
 const apiFilterOptions = filterOptions.filter(
   (name) => name !== "Retry" && name !== "CircuitBreaker"
 );
-const policyItems: { type: GatewayPolicyType; label: string }[] = [
+const policyItems: { type: GatewayGovernancePolicyType; label: string }[] = [
   { type: "RATE_LIMIT", label: "限流" },
   { type: "TIMEOUT", label: "超时" },
   { type: "CIRCUIT_BREAKER", label: "熔断" },
 ];
-const effectivePolicies = reactive<Partial<Record<GatewayPolicyType, GatewayEffectivePolicy>>>({});
+const effectivePolicies = reactive<
+  Partial<Record<GatewayGovernancePolicyType, GatewayEffectivePolicy>>
+>({});
 const policyForms = reactive({
   RATE_LIMIT: {
     mode: "INHERIT" as GatewayPolicyMode,
@@ -1094,7 +1096,7 @@ function nextPublicationStep() {
   publicationStep.value++;
 }
 
-function effectivePolicyText(type: GatewayPolicyType) {
+function effectivePolicyText(type: GatewayGovernancePolicyType) {
   const policy = effectivePolicies[type];
   if (!policy || policy.effectiveMode === "DISABLED") return "未启用（当前继承链没有启用该策略）";
   const source = { API: "API", APPLICATION: "应用", GLOBAL: "全局" }[
@@ -1103,7 +1105,7 @@ function effectivePolicyText(type: GatewayPolicyType) {
   return `${policyConfigText(type, policy.effectiveConfig || {})}（来源：${source}）`;
 }
 
-function policyConfigText(type: GatewayPolicyType, config: Record<string, any>) {
+function policyConfigText(type: GatewayGovernancePolicyType, config: Record<string, any>) {
   if (type === "RATE_LIMIT") {
     const keyNames: Record<string, string> = {
       IP: "IP",
@@ -1128,7 +1130,7 @@ function policyModeTagType(mode: GatewayPolicyMode) {
   return mode === "ENABLED" ? "warning" : mode === "DISABLED" ? "danger" : "info";
 }
 
-function selectedPolicyText(type: GatewayPolicyType) {
+function selectedPolicyText(type: GatewayGovernancePolicyType) {
   const form = policyForms[type];
   if (form.mode === "INHERIT") return effectivePolicyText(type);
   if (form.mode === "DISABLED") return "该 API 明确不启用此策略";
@@ -1331,14 +1333,14 @@ onMounted(loadServices);
 
 .policy-field {
   display: flex;
-  min-width: 0;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .policy-field label {
-  color: var(--el-text-color-regular);
   font-size: 13px;
+  color: var(--el-text-color-regular);
 }
 
 .policy-field :deep(.el-select),

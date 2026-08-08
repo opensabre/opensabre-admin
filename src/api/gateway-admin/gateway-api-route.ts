@@ -14,6 +14,7 @@ import type {
   GatewayPolicyChange,
   GatewayPolicyType,
   GatewayEffectivePolicy,
+  GatewayPolicyScopeType,
 } from "@/types/api/gateway-api-route";
 
 const BASE_URL = "/gateway-admin";
@@ -139,6 +140,26 @@ const GatewayApiRouteAPI = {
       url: `${BASE_URL}/policies`,
       method: "put",
       params: { scopeType: "API", scopeId: apiId, policyType },
+      data,
+    });
+  },
+  listPolicies(scopeType: GatewayPolicyScopeType, scopeId?: string) {
+    return request<any, GatewayPolicy[]>({
+      url: `${BASE_URL}/policies`,
+      method: "get",
+      params: { scopeType, scopeId },
+    });
+  },
+  savePolicy(
+    scopeType: GatewayPolicyScopeType,
+    scopeId: string | undefined,
+    policyType: GatewayPolicyType,
+    data: GatewayPolicyChange
+  ) {
+    return request<any, GatewayPolicy>({
+      url: `${BASE_URL}/policies`,
+      method: "put",
+      params: { scopeType, scopeId, policyType },
       data,
     });
   },
