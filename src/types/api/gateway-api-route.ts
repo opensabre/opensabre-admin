@@ -23,13 +23,19 @@ export interface GatewayApiAssetPage {
 export interface GatewayApiPublication {
   id: string;
   apiId: string;
+  serviceId?: string;
+  operationId?: string;
+  httpMethod?: string;
+  apiSummary?: string;
   externalPath: string;
   upstreamPath?: string;
   authMode: string;
+  resourceId?: string;
   status: string;
   riskLevel: string;
   approvalStatus: string;
   publishedVersion?: string;
+  filters?: GatewayRuntimeRouteDefinition[];
   lockVersion?: number;
 }
 
@@ -38,6 +44,31 @@ export interface GatewayApiPublicationChange {
   upstreamPath?: string;
   authMode: "PUBLIC" | "AUTHENTICATED" | "RESOURCE_REQUIRED";
   resourceId?: string;
+  filters?: GatewayRuntimeRouteDefinition[];
+  lockVersion?: number;
+}
+
+export type GatewayPolicyType = "RATE_LIMIT" | "TIMEOUT" | "CIRCUIT_BREAKER";
+export type GatewayPolicyMode = "INHERIT" | "ENABLED" | "DISABLED";
+
+export interface GatewayPolicy {
+  policyType: GatewayPolicyType;
+  mode: GatewayPolicyMode;
+  lockVersion?: number;
+}
+
+export interface GatewayEffectivePolicy {
+  policyType: GatewayPolicyType;
+  effectiveMode: GatewayPolicyMode;
+  effectiveConfig?: Record<string, any>;
+  sourceScope?: "API" | "APPLICATION" | "GLOBAL";
+}
+
+export interface GatewayPolicyChange {
+  mode: GatewayPolicyMode;
+  rateLimit?: Record<string, any>;
+  timeout?: Record<string, any>;
+  circuitBreaker?: Record<string, any>;
   lockVersion?: number;
 }
 
@@ -50,11 +81,17 @@ export interface GatewayApplicationRoute {
   targetUri: string;
   httpMethod?: string;
   rewritePath?: string;
+  routeOrder?: number;
+  predicates?: GatewayRuntimeRouteDefinition[];
+  filters?: GatewayRuntimeRouteDefinition[];
   status: string;
   riskLevel: string;
   approvalStatus: string;
   publishedVersion?: string;
   lockVersion?: number;
+  /** 直接来自当前网关运行配置的兼容路由，只读展示。 */
+  runtimeOnly?: boolean;
+  sourceRouteId?: string;
 }
 
 export interface GatewayApplicationRouteChange {
@@ -64,6 +101,9 @@ export interface GatewayApplicationRouteChange {
   targetUri: string;
   httpMethod?: string;
   rewritePath?: string;
+  routeOrder?: number;
+  predicates?: GatewayRuntimeRouteDefinition[];
+  filters?: GatewayRuntimeRouteDefinition[];
   lockVersion?: number;
 }
 
@@ -78,6 +118,19 @@ export interface GatewayApiSyncResult {
 /** 当前 Nacos 网关配置的并发基线。 */
 export interface GatewayRouteConfigSnapshot {
   version: string;
+  routes?: GatewayRuntimeRoute[];
+}
+
+export interface GatewayRuntimeRouteDefinition {
+  name: string;
+  args: Record<string, string>;
+}
+
+export interface GatewayRuntimeRoute {
+  id: string;
+  uri: string;
+  predicates?: GatewayRuntimeRouteDefinition[];
+  filters?: GatewayRuntimeRouteDefinition[];
 }
 
 /** 网关发布预检结果。 */

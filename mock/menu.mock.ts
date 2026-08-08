@@ -167,7 +167,7 @@ export default defineMock([
               path: "api-routes",
               component: "system/gateway/api-routes/index",
               name: "GatewayApiRoutes",
-              meta: { title: "API 路由管理", icon: "api", hidden: false },
+              meta: { title: "路由管理", icon: "api", hidden: false },
             },
             {
               path: "traffic",

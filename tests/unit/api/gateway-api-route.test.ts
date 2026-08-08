@@ -110,4 +110,38 @@ describe("GatewayApiRouteAPI", () => {
       data: { baseVersion: "base-version" },
     });
   });
+
+  it("keeps existing runtime application routes visible when the managed table is empty", async () => {
+    const { mergeApplicationRouteViews } = await import("@/api/gateway-admin/gateway-api-route");
+
+    const routes = mergeApplicationRouteViews([], {
+      version: "v1",
+      routes: [
+        {
+          id: "base-organization",
+          uri: "lb://base-organization",
+          predicates: [{ name: "Path", args: { pattern: "/api/org/**" } }],
+          filters: [{ name: "StripPrefix", args: { parts: "2" } }],
+        },
+        {
+          id: "api-123",
+          uri: "lb://base-organization",
+          predicates: [
+            { name: "Method", args: { method: "GET" } },
+            { name: "Path", args: { pattern: "/users/{id}" } },
+          ],
+        },
+      ],
+    });
+
+    expect(routes).toEqual([
+      expect.objectContaining({
+        id: "runtime:base-organization",
+        serviceId: "base-organization",
+        externalPath: "/api/org/**",
+        status: "PUBLISHED",
+        runtimeOnly: true,
+      }),
+    ]);
+  });
 });
