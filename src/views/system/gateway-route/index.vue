@@ -376,6 +376,14 @@ import type {
   OAuthClientItem,
 } from "@/types/api";
 import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
+import {
+  definitionText,
+  emptyDefinition,
+  filterOptions,
+  parseArgs,
+  predicateOptions,
+  type EditableDefinition,
+} from "./route-definition";
 
 defineOptions({ name: "GatewayRoute" });
 const props = withDefaults(
@@ -385,29 +393,6 @@ const props = withDefaults(
   }
 );
 const section = computed(() => props.section);
-type EditableDefinition = { name: string; argsText: string };
-const predicateOptions = [
-  "Path",
-  "Host",
-  "Method",
-  "Header",
-  "Query",
-  "RemoteAddr",
-  "After",
-  "Before",
-  "Between",
-];
-const filterOptions = [
-  "StripPrefix",
-  "PrefixPath",
-  "RewritePath",
-  "AddRequestHeader",
-  "AddResponseHeader",
-  "RemoveRequestHeader",
-  "RemoveResponseHeader",
-  "Retry",
-  "CircuitBreaker",
-];
 const formRef = ref<FormInstance>();
 const loading = ref(false);
 const publishing = ref(false);
@@ -460,9 +445,6 @@ const filteredRoutes = computed(() => {
         `${route.id} ${route.uri} ${pathSummary(route)}`.toLowerCase().includes(search)
       );
 });
-function emptyDefinition(): EditableDefinition {
-  return { name: "", argsText: "" };
-}
 function pathSummary(route: GatewayRoute) {
   return (
     route.predicates
@@ -477,24 +459,6 @@ function filterSummary(route: GatewayRoute) {
     route.filters
       .map((item) => `${item.name}(${Object.values(item.args).filter(Boolean).join(", ")})`)
       .join("，") || "-"
-  );
-}
-function definitionText(item: GatewayRouteDefinition) {
-  return item.name === "Path"
-    ? item.args.pattern || item.args.value || ""
-    : Object.entries(item.args)
-        .map(([key, value]) => (key === "value" ? value : `${key}=${value}`))
-        .join(",");
-}
-function parseArgs(name: string, text: string): Record<string, string> {
-  const value = text.trim();
-  if (!value) return {};
-  if (name === "Path") return { pattern: value };
-  return Object.fromEntries(
-    value.split(",").map((part) => {
-      const [key, ...rest] = part.trim().split("=");
-      return rest.length ? [key.trim(), rest.join("=").trim()] : ["value", key.trim()];
-    })
   );
 }
 function toRoute(): GatewayRoute {
