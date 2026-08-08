@@ -48,12 +48,25 @@ export interface GatewayApiPublicationChange {
   lockVersion?: number;
 }
 
-export type GatewayPolicyType = "RATE_LIMIT" | "TIMEOUT" | "CIRCUIT_BREAKER";
+export type GatewayGovernancePolicyType = "RATE_LIMIT" | "TIMEOUT" | "CIRCUIT_BREAKER";
+export type GatewayPolicyType = GatewayGovernancePolicyType | "ACCESS_CONTROL";
 export type GatewayPolicyMode = "INHERIT" | "ENABLED" | "DISABLED";
+export type GatewayPolicyScopeType = "GLOBAL" | "APPLICATION" | "API";
+
+export interface GatewayAccessControlEntry {
+  cidr: string;
+  description?: string;
+}
+
+export interface GatewayAccessControlConfig {
+  accessMode: "ALLOWLIST" | "DENYLIST";
+  entries: GatewayAccessControlEntry[];
+}
 
 export interface GatewayPolicy {
   policyType: GatewayPolicyType;
   mode: GatewayPolicyMode;
+  configJson?: string;
   lockVersion?: number;
 }
 
@@ -69,6 +82,7 @@ export interface GatewayPolicyChange {
   rateLimit?: Record<string, any>;
   timeout?: Record<string, any>;
   circuitBreaker?: Record<string, any>;
+  accessControl?: GatewayAccessControlConfig;
   lockVersion?: number;
 }
 
