@@ -171,29 +171,27 @@ export default defineMock([
             },
             {
               path: "traffic",
-              component: "Layout",
+              component: "system/gateway/traffic/index",
               name: "GatewayTraffic",
-              meta: { title: "流量治理", icon: "timer", hidden: false, alwaysShow: true },
-              children: [
-                {
-                  path: "rate-limits",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayRateLimits",
-                  meta: { title: "限流规则", hidden: false },
-                },
-                {
-                  path: "circuit-breakers",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayCircuitBreakers",
-                  meta: { title: "熔断规则", hidden: false },
-                },
-                {
-                  path: "fallbacks",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayFallbacks",
-                  meta: { title: "降级策略", hidden: false },
-                },
-              ],
+              meta: { title: "流量治理", icon: "timer", hidden: false },
+            },
+            {
+              path: "traffic/rate-limits",
+              component: "system/gateway/traffic/index",
+              name: "GatewayRateLimits",
+              meta: { title: "限流规则", hidden: true },
+            },
+            {
+              path: "traffic/circuit-breakers",
+              component: "system/gateway/traffic/index",
+              name: "GatewayCircuitBreakers",
+              meta: { title: "熔断规则", hidden: true },
+            },
+            {
+              path: "traffic/fallbacks",
+              component: "system/gateway/traffic/index",
+              name: "GatewayFallbacks",
+              meta: { title: "降级策略", hidden: true },
             },
             {
               path: "security",
@@ -217,23 +215,21 @@ export default defineMock([
             },
             {
               path: "global",
-              component: "Layout",
+              component: "system/gateway/global/index",
               name: "GatewayGlobalRules",
-              meta: { title: "全局规则", icon: "setting", hidden: false, alwaysShow: true },
-              children: [
-                {
-                  path: "filters",
-                  component: "system/gateway/policy/index",
-                  name: "GatewayGlobalFilters",
-                  meta: { title: "全局过滤器", hidden: false },
-                },
-                {
-                  path: "cors",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayCors",
-                  meta: { title: "跨域规则", hidden: false },
-                },
-              ],
+              meta: { title: "全局规则", icon: "setting", hidden: false },
+            },
+            {
+              path: "global/filters",
+              component: "system/gateway/global/index",
+              name: "GatewayGlobalFilters",
+              meta: { title: "全局过滤器", hidden: true },
+            },
+            {
+              path: "global/cors",
+              component: "system/gateway/global/index",
+              name: "GatewayCors",
+              meta: { title: "跨域规则", hidden: true },
             },
             {
               path: "releases",

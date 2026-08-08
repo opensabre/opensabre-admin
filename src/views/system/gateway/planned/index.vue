@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-card shadow="never">
-      <el-empty :description="`${title}功能规划中`">
+      <el-empty :description="`${displayTitle}功能规划中`">
         <template #image>
           <el-icon :size="72" color="var(--el-color-primary)"><Tools /></el-icon>
         </template>
@@ -21,6 +21,7 @@ import { Tools } from "@element-plus/icons-vue";
 
 defineOptions({ name: "GatewayPlanned" });
 
+const props = defineProps<{ title?: string }>();
 const route = useRoute();
-const title = computed(() => String(route.meta.title || "网关管理"));
+const displayTitle = computed(() => props.title || String(route.meta.title || "网关管理"));
 </script>
