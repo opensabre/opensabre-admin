@@ -28,13 +28,13 @@ function publish() {
 
 export default defineMock([
   {
-    url: "sysadmin/gateway/routes",
+    url: "gateway-admin/routes",
     method: ["GET"],
     body: () =>
       success({ routes, version, publishedAt: "2026-07-14T10:30:00+08:00", publishedBy: "admin" }),
   },
   {
-    url: "sysadmin/gateway/routes",
+    url: "gateway-admin/routes",
     method: ["POST"],
     body({ body }) {
       if (body.baseVersion !== version)
@@ -46,7 +46,7 @@ export default defineMock([
     },
   },
   {
-    url: "sysadmin/gateway/routes/:id",
+    url: "gateway-admin/routes/:id",
     method: ["PUT"],
     body({ body, params }) {
       if (body.baseVersion !== version)
@@ -56,7 +56,7 @@ export default defineMock([
     },
   },
   {
-    url: "sysadmin/gateway/routes/:id",
+    url: "gateway-admin/routes/:id",
     method: ["DELETE"],
     body({ body, params }) {
       if (body.baseVersion !== version)
