@@ -32,7 +32,7 @@
  Pinia 是否已有 dictCode 缓存？
       │是                 │否
       ▼                   ▼
- 直接使用       GET /sysadmin/v1/dicts/{code}/items/options
+ 直接使用       GET /sysadmin/v1/dicts/items/options?codes={code}
       │                   │
       └─────────缓存后────┘
                   │
@@ -66,14 +66,15 @@
 
 ### 批量加载
 
-单页同时使用多个字典时，可以调用 `GET /sysadmin/v1/dicts/items/options?codes=...` 批量获取启用项。
+字典 Store 统一调用 `GET /sysadmin/v1/dicts/items/options?codes=...` 获取启用项；单个字典也通过
+`codes={code}` 调用该批量接口。单页同时使用多个字典时，`useDicts` 会把多个 code 合并为一次请求。
 通用组件仍按 `dictCode` 独立缓存，业务页面不应自行建立第二套长期缓存。
 
 ## 缓存与并发请求
 
 Pinia 字典 Store 使用 `useStorage` 按 `dictCode` 缓存字典项，因此刷新页面后仍可复用浏览器存储：
 
-1. 已缓存的字典不重复请求。
+1. 已缓存且未超过 5 分钟 TTL 的字典不重复请求。
 2. 同一字典首次加载时，`requestQueue` 合并并发请求。
 3. 请求失败会清理队列，使下一次调用可以重试。
 4. 退出登录或 Session 重置时清空全部字典缓存。
