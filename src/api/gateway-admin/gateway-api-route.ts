@@ -122,6 +122,13 @@ const GatewayApiRouteAPI = {
       data,
     });
   },
+  offlineApi(apiId: string, lockVersion: number) {
+    return request<any, GatewayApiPublication>({
+      url: `${BASE_URL}/apis/${encodeURIComponent(apiId)}/offline`,
+      method: "post",
+      data: { lockVersion },
+    });
+  },
   listApiPolicies(apiId: string) {
     return request<any, GatewayPolicy[]>({
       url: `${BASE_URL}/policies`,
@@ -129,7 +136,7 @@ const GatewayApiRouteAPI = {
       params: { scopeType: "API", scopeId: apiId },
     });
   },
-  getEffectivePolicy(policyType: GatewayPolicyType, serviceId: string, apiId: string) {
+  getEffectivePolicy(policyType: GatewayPolicyType, serviceId?: string, apiId?: string) {
     return request<any, GatewayEffectivePolicy>({
       url: `${BASE_URL}/policies/effective`,
       method: "get",
@@ -176,6 +183,13 @@ const GatewayApiRouteAPI = {
       url: `${BASE_URL}/application-routes/${encodeURIComponent(id)}`,
       method: "put",
       data,
+    });
+  },
+  offlineApplicationRoute(id: string, lockVersion: number) {
+    return request<any, GatewayApplicationRoute>({
+      url: `${BASE_URL}/application-routes/${encodeURIComponent(id)}/offline`,
+      method: "post",
+      data: { lockVersion },
     });
   },
 };

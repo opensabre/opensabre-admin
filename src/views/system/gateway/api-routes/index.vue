@@ -111,9 +111,17 @@
                 <DictTag v-model="row.status" code="gateway_publication_status" />
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="90" fixed="right">
+            <el-table-column label="操作" width="170" fixed="right">
               <template #default="{ row }">
                 <el-button link type="primary" @click="openPublicationDetail(row)">查看</el-button>
+                <el-button
+                  v-if="row.status === 'PUBLISHED'"
+                  link
+                  type="danger"
+                  @click="offlineApi(row)"
+                >
+                  取消发布
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -151,7 +159,7 @@
                 <DictTag v-model="row.status" code="gateway_publication_status" />
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="190" fixed="right">
+            <el-table-column label="操作" width="270" fixed="right">
               <template #default="{ row }">
                 <el-button
                   link
@@ -178,6 +186,15 @@
                   @click="publishApplicationRoute(row)"
                 >
                   发布
+                </el-button>
+                <el-button
+                  v-if="!row.runtimeOnly && row.status === 'PUBLISHED'"
+                  link
+                  type="danger"
+                  size="small"
+                  @click="offlineApplicationRoute(row)"
+                >
+                  取消发布
                 </el-button>
               </template>
             </el-table-column>
@@ -288,137 +305,18 @@
         </el-form-item>
       </el-form>
 
-      <div v-else-if="publicationStep === 1">
-        <el-alert
-          title="默认继承应用或全局配置；只有需要例外时才设置 API 覆盖。"
-          type="info"
-          :closable="false"
-          class="mb-4"
+      <div v-show="publicationStep === 1">
+        <GovernancePolicySettings
+          v-if="publicationDialog.api"
+          ref="apiPolicySettingsRef"
+          scope-type="API"
+          :scope-id="publicationDialog.api.id"
+          :service-id="publicationDialog.api.serviceId"
+          :api-id="publicationDialog.api.id"
         />
-        <el-card v-for="item in policyItems" :key="item.type" shadow="never" class="mb-3">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <span class="font-medium">{{ item.label }}</span>
-              <div class="mt-2 text-sm text-gray-600">
-                继承后生效：{{ effectivePolicyText(item.type) }}
-              </div>
-            </div>
-            <el-select v-model="policyForms[item.type].mode" class="w-36">
-              <el-option label="继承默认" value="INHERIT" />
-              <el-option label="API 覆盖" value="ENABLED" />
-              <el-option label="API 禁用" value="DISABLED" />
-            </el-select>
-          </div>
-          <div v-if="policyForms[item.type].mode === 'ENABLED'" class="policy-fields mt-4">
-            <template v-if="item.type === 'RATE_LIMIT'">
-              <div class="policy-field">
-                <label>限流维度</label>
-                <el-select v-model="policyForms.RATE_LIMIT.config.keyType">
-                  <el-option label="按 IP" value="IP" />
-                  <el-option label="按用户" value="USER" />
-                  <el-option label="按客户端" value="OAUTH_CLIENT" />
-                  <el-option label="按 API" value="API" />
-                </el-select>
-              </div>
-              <div class="policy-field">
-                <label>每秒令牌数</label>
-                <el-input-number
-                  v-model="policyForms.RATE_LIMIT.config.replenishRate"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>突发容量</label>
-                <el-input-number
-                  v-model="policyForms.RATE_LIMIT.config.burstCapacity"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>单次请求令牌</label>
-                <el-input-number
-                  v-model="policyForms.RATE_LIMIT.config.requestedTokens"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-            </template>
-            <template v-else-if="item.type === 'TIMEOUT'">
-              <div class="policy-field">
-                <label>连接超时（ms）</label>
-                <el-input-number
-                  v-model="policyForms.TIMEOUT.config.connectTimeoutMs"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>响应超时（ms）</label>
-                <el-input-number
-                  v-model="policyForms.TIMEOUT.config.responseTimeoutMs"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-            </template>
-            <template v-else>
-              <div class="policy-field">
-                <label>失败率阈值（%）</label>
-                <el-input-number
-                  v-model="policyForms.CIRCUIT_BREAKER.config.failureRateThreshold"
-                  :min="1"
-                  :max="100"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>慢调用率阈值（%）</label>
-                <el-input-number
-                  v-model="policyForms.CIRCUIT_BREAKER.config.slowCallRateThreshold"
-                  :min="1"
-                  :max="100"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>慢调用判定（ms）</label>
-                <el-input-number
-                  v-model="policyForms.CIRCUIT_BREAKER.config.slowCallDurationThresholdMs"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>最少调用数</label>
-                <el-input-number
-                  v-model="policyForms.CIRCUIT_BREAKER.config.minimumNumberOfCalls"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>熔断等待（ms）</label>
-                <el-input-number
-                  v-model="policyForms.CIRCUIT_BREAKER.config.waitDurationInOpenStateMs"
-                  :min="1"
-                  controls-position="right"
-                />
-              </div>
-              <div class="policy-field">
-                <label>降级地址（可选）</label>
-                <el-input
-                  v-model="policyForms.CIRCUIT_BREAKER.config.fallbackUri"
-                  placeholder="如 forward:/fallback"
-                />
-              </div>
-            </template>
-          </div>
-        </el-card>
       </div>
 
-      <el-form v-else-if="publicationStep === 2" label-width="120px">
+      <el-form v-if="publicationStep === 2" label-width="120px">
         <el-alert
           title="跨域由应用级或全局配置统一管理，本次 API 发布无需重复填写。"
           type="info"
@@ -452,7 +350,7 @@
         </el-form-item>
       </el-form>
 
-      <div v-else class="space-y-4">
+      <div v-if="publicationStep === 3" class="space-y-4">
         <el-alert
           title="请确认以下配置。保存后形成草稿，还需通过页面顶部“发布到网关”才会生效。"
           type="warning"
@@ -496,11 +394,8 @@
         <el-card shadow="never">
           <template #header><span class="font-medium">流量处理</span></template>
           <el-descriptions :column="1" border>
-            <el-descriptions-item v-for="item in policyItems" :key="item.type" :label="item.label">
-              <el-tag :type="policyModeTagType(policyForms[item.type].mode)" class="mr-2">
-                {{ policyModeText(policyForms[item.type].mode) }}
-              </el-tag>
-              {{ selectedPolicyText(item.type) }}
+            <el-descriptions-item label="流量治理">
+              已按流量处理步骤中的继承或自定义配置保存
             </el-descriptions-item>
           </el-descriptions>
         </el-card>
@@ -583,8 +478,24 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置高级过滤器，使用自动路径转换" :image-size="60" />
+        <div class="mb-2 mt-5 font-medium">治理策略</div>
+        <GovernancePolicySettings
+          :key="`api-detail-${publicationDetailDialog.data.apiId}`"
+          scope-type="API"
+          :scope-id="publicationDetailDialog.data.apiId"
+          :service-id="publicationDetailDialog.data.serviceId"
+          :api-id="publicationDetailDialog.data.apiId"
+          readonly
+        />
       </template>
       <template #footer>
+        <el-button
+          v-if="publicationDetailDialog.data?.status === 'PUBLISHED'"
+          type="danger"
+          @click="offlineApi(publicationDetailDialog.data)"
+        >
+          取消发布
+        </el-button>
         <el-button type="primary" @click="publicationDetailDialog.visible = false">关闭</el-button>
       </template>
     </el-dialog>
@@ -652,6 +563,14 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置过滤器" :image-size="60" />
+        <div class="mb-2 mt-5 font-medium">治理策略</div>
+        <GovernancePolicySettings
+          :key="`application-detail-${applicationRouteDetailDialog.data.serviceId}`"
+          scope-type="APPLICATION"
+          :scope-id="applicationRouteDetailDialog.data.serviceId"
+          :service-id="applicationRouteDetailDialog.data.serviceId"
+          readonly
+        />
       </template>
       <template #footer>
         <el-button @click="applicationRouteDetailDialog.visible = false">关闭</el-button>
@@ -674,13 +593,24 @@
         >
           发布
         </el-button>
+        <el-button
+          v-if="
+            applicationRouteDetailDialog.data &&
+            !applicationRouteDetailDialog.data.runtimeOnly &&
+            applicationRouteDetailDialog.data.status === 'PUBLISHED'
+          "
+          type="danger"
+          @click="offlineApplicationRoute(applicationRouteDetailDialog.data)"
+        >
+          取消发布
+        </el-button>
       </template>
     </el-dialog>
 
     <el-dialog
       v-model="applicationRouteDialog.visible"
       :title="applicationRouteDialog.editing ? '编辑应用级路由' : '新增应用级路由'"
-      width="760px"
+      width="1080px"
     >
       <el-form label-width="110px">
         <el-form-item label="服务名" required>
@@ -778,6 +708,20 @@
           </div>
         </el-form-item>
       </el-form>
+      <div class="mb-3 mt-5 font-medium">应用级治理策略</div>
+      <GovernancePolicySettings
+        v-if="applicationRouteForm.serviceId"
+        ref="applicationPolicySettingsRef"
+        scope-type="APPLICATION"
+        :scope-id="applicationRouteForm.serviceId"
+        :service-id="applicationRouteForm.serviceId"
+      />
+      <el-alert
+        v-else
+        title="选择服务后可查看继承的全局默认值，并决定是否配置应用级自定义策略。"
+        type="info"
+        :closable="false"
+      />
       <template #footer>
         <el-button @click="applicationRouteDialog.visible = false">取消</el-button>
         <el-button type="primary" :loading="saving" @click="saveApplicationRoute">
@@ -794,15 +738,13 @@ import GatewayApiRouteAPI, {
 } from "@/api/gateway-admin/gateway-api-route";
 import GatewayServiceAPI from "@/api/gateway-admin/gateway-service";
 import ResourceAPI from "@/api/system/resource";
+import GovernancePolicySettings from "@/views/system/gateway/components/GovernancePolicySettings.vue";
 import type {
   GatewayApiAsset,
   GatewayApiPublicationChange,
   GatewayApiPublication,
   GatewayApplicationRoute,
   GatewayApplicationRouteChange,
-  GatewayEffectivePolicy,
-  GatewayPolicyMode,
-  GatewayGovernancePolicyType,
 } from "@/types/api/gateway-api-route";
 import type { GatewayServiceSummary } from "@/types/api/gateway-service";
 import type { OptionItem } from "@/types/api";
@@ -831,6 +773,9 @@ const apis = ref<GatewayApiAsset[]>([]);
 const apiPagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const publications = ref<GatewayApiPublication[]>([]);
 const applicationRoutes = ref<GatewayApplicationRoute[]>([]);
+type SettingsExpose = { load: () => Promise<void>; save: () => Promise<void> };
+const apiPolicySettingsRef = ref<SettingsExpose>();
+const applicationPolicySettingsRef = ref<SettingsExpose>();
 
 const publicationDialog = reactive<{
   visible: boolean;
@@ -852,38 +797,6 @@ const publicationFilters = ref<EditableDefinition[]>([]);
 const apiFilterOptions = filterOptions.filter(
   (name) => name !== "Retry" && name !== "CircuitBreaker"
 );
-const policyItems: { type: GatewayGovernancePolicyType; label: string }[] = [
-  { type: "RATE_LIMIT", label: "限流" },
-  { type: "TIMEOUT", label: "超时" },
-  { type: "CIRCUIT_BREAKER", label: "熔断" },
-];
-const effectivePolicies = reactive<
-  Partial<Record<GatewayGovernancePolicyType, GatewayEffectivePolicy>>
->({});
-const policyForms = reactive({
-  RATE_LIMIT: {
-    mode: "INHERIT" as GatewayPolicyMode,
-    lockVersion: undefined as number | undefined,
-    config: { keyType: "IP", replenishRate: 20, burstCapacity: 40, requestedTokens: 1 },
-  },
-  TIMEOUT: {
-    mode: "INHERIT" as GatewayPolicyMode,
-    lockVersion: undefined as number | undefined,
-    config: { connectTimeoutMs: 1000, responseTimeoutMs: 5000 },
-  },
-  CIRCUIT_BREAKER: {
-    mode: "INHERIT" as GatewayPolicyMode,
-    lockVersion: undefined as number | undefined,
-    config: {
-      failureRateThreshold: 50,
-      slowCallRateThreshold: 100,
-      slowCallDurationThresholdMs: 5000,
-      minimumNumberOfCalls: 10,
-      waitDurationInOpenStateMs: 5000,
-      fallbackUri: "",
-    },
-  },
-});
 const applicationRouteDialog = reactive({ visible: false, editing: false, id: "" });
 const applicationRouteDetailDialog = reactive<{
   visible: boolean;
@@ -912,8 +825,22 @@ const publicationByApi = computed(
 );
 const pendingDraftCount = computed(
   () =>
-    publications.value.filter((publication) => publication.status === "DRAFT").length +
-    applicationRoutes.value.filter((route) => route.status === "DRAFT").length
+    publications.value.filter(
+      (publication) =>
+        publication.status === "DRAFT" ||
+        (publication.status === "OFFLINE" && !publication.publishedVersion)
+    ).length +
+    applicationRoutes.value.filter(
+      (route) => route.status === "DRAFT" || (route.status === "OFFLINE" && !route.publishedVersion)
+    ).length
+);
+const pendingOfflineCount = computed(
+  () =>
+    publications.value.filter(
+      (publication) => publication.status === "OFFLINE" && !publication.publishedVersion
+    ).length +
+    applicationRoutes.value.filter((route) => route.status === "OFFLINE" && !route.publishedVersion)
+      .length
 );
 
 function authModeLabel(mode?: string) {
@@ -1000,7 +927,7 @@ async function publishDrafts() {
     const candidate = await GatewayApiRouteAPI.validateRelease(currentConfig.version);
     try {
       await ElMessageBox.confirm(
-        `${focusedPublicationRouteName.value ? `路由“${focusedPublicationRouteName.value}”已包含在本次候选中。` : ""}当前发布机制会统一发布全部待生效草稿：${candidate.apiRouteCount} 个 API、${candidate.applicationRouteCount} 个应用级路由。发布后立即进入网关运行时配置。`,
+        `${focusedPublicationRouteName.value ? `路由“${focusedPublicationRouteName.value}”已包含在本次候选中。` : ""}当前发布机制会统一处理全部待生效变更：${candidate.apiRouteCount} 个 API 路由、${candidate.applicationRouteCount} 个应用级路由${pendingOfflineCount.value ? `，其中 ${pendingOfflineCount.value} 个路由待取消发布` : ""}。发布后立即进入网关运行时配置。`,
         "确认发布到网关",
         { type: "warning", confirmButtonText: "发布", cancelButtonText: "取消" }
       );
@@ -1038,25 +965,24 @@ async function openPublicationDialog(api: GatewayApiAsset) {
   pathMode.value = publicationFilters.value.length ? "ADVANCED" : "SIMPLE";
   if (publicationForm.authMode === "RESOURCE_REQUIRED") void loadResourceOptions();
   publicationForm.lockVersion = current?.lockVersion;
-  const [localPolicies, ...resolved] = await Promise.all([
-    GatewayApiRouteAPI.listApiPolicies(api.id),
-    ...policyItems.map((item) =>
-      GatewayApiRouteAPI.getEffectivePolicy(item.type, api.serviceId, api.id)
-    ),
-  ]);
-  policyItems.forEach((item, index) => {
-    effectivePolicies[item.type] = resolved[index];
-    const local = localPolicies.find((policy) => policy.policyType === item.type);
-    policyForms[item.type].mode = local?.mode || "INHERIT";
-    policyForms[item.type].lockVersion = local?.lockVersion;
-    if (
-      local?.mode === "ENABLED" &&
-      resolved[index]?.sourceScope === "API" &&
-      resolved[index]?.effectiveConfig
-    ) {
-      Object.assign(policyForms[item.type].config, resolved[index].effectiveConfig);
-    }
-  });
+  await nextTick();
+  await apiPolicySettingsRef.value?.load();
+}
+
+async function offlineApi(publication: GatewayApiPublication) {
+  try {
+    await ElMessageBox.confirm(
+      `取消发布后，${publication.httpMethod || ""} ${publication.externalPath} 将在下一次“发布到网关”时从运行配置删除。`,
+      "确认取消 API 发布",
+      { type: "warning", confirmButtonText: "标记待下线", cancelButtonText: "取消" }
+    );
+  } catch {
+    return;
+  }
+  await GatewayApiRouteAPI.offlineApi(publication.apiId, publication.lockVersion ?? 0);
+  publicationDetailDialog.visible = false;
+  ElMessage.success("API 已标记为待下线，请点击“发布到网关”使其生效");
+  await loadAll();
 }
 
 watch(pathMode, (mode) => {
@@ -1096,47 +1022,6 @@ function nextPublicationStep() {
   publicationStep.value++;
 }
 
-function effectivePolicyText(type: GatewayGovernancePolicyType) {
-  const policy = effectivePolicies[type];
-  if (!policy || policy.effectiveMode === "DISABLED") return "未启用（当前继承链没有启用该策略）";
-  const source = { API: "API", APPLICATION: "应用", GLOBAL: "全局" }[
-    policy.sourceScope || "GLOBAL"
-  ];
-  return `${policyConfigText(type, policy.effectiveConfig || {})}（来源：${source}）`;
-}
-
-function policyConfigText(type: GatewayGovernancePolicyType, config: Record<string, any>) {
-  if (type === "RATE_LIMIT") {
-    const keyNames: Record<string, string> = {
-      IP: "IP",
-      USER: "用户",
-      OAUTH_CLIENT: "OAuth 客户端",
-      API: "API",
-    };
-    return `按${keyNames[config.keyType] || config.keyType}，每秒 ${config.replenishRate} 个令牌，突发容量 ${config.burstCapacity}，单次消耗 ${config.requestedTokens}`;
-  }
-  if (type === "TIMEOUT") {
-    return `连接超时 ${config.connectTimeoutMs} ms，响应超时 ${config.responseTimeoutMs} ms`;
-  }
-  const fallback = config.fallbackUri ? `，降级地址 ${config.fallbackUri}` : "，未配置降级地址";
-  return `失败率 ${config.failureRateThreshold}%，慢调用率 ${config.slowCallRateThreshold}%，慢调用判定 ${config.slowCallDurationThresholdMs} ms，最少 ${config.minimumNumberOfCalls} 次调用，熔断等待 ${config.waitDurationInOpenStateMs} ms${fallback}`;
-}
-
-function policyModeText(mode: GatewayPolicyMode) {
-  return { INHERIT: "继承默认", ENABLED: "API 覆盖", DISABLED: "API 禁用" }[mode];
-}
-
-function policyModeTagType(mode: GatewayPolicyMode) {
-  return mode === "ENABLED" ? "warning" : mode === "DISABLED" ? "danger" : "info";
-}
-
-function selectedPolicyText(type: GatewayGovernancePolicyType) {
-  const form = policyForms[type];
-  if (form.mode === "INHERIT") return effectivePolicyText(type);
-  if (form.mode === "DISABLED") return "该 API 明确不启用此策略";
-  return policyConfigText(type, form.config);
-}
-
 const automaticPathDescription = computed(() => {
   const method = publicationDialog.api?.httpMethod || "请求";
   const externalPath = publicationForm.externalPath || "对外路径";
@@ -1162,21 +1047,6 @@ const selectedResourceText = computed(() => {
   );
 });
 
-async function savePolicies(apiId: string) {
-  await Promise.all(
-    policyItems.map((item) => {
-      const form = policyForms[item.type];
-      const data: any = { mode: form.mode, lockVersion: form.lockVersion };
-      if (form.mode === "ENABLED") {
-        if (item.type === "RATE_LIMIT") data.rateLimit = form.config;
-        if (item.type === "TIMEOUT") data.timeout = form.config;
-        if (item.type === "CIRCUIT_BREAKER") data.circuitBreaker = form.config;
-      }
-      return GatewayApiRouteAPI.saveApiPolicy(apiId, item.type, data);
-    })
-  );
-}
-
 async function savePublication() {
   const api = publicationDialog.api;
   if (!api || !publicationForm.externalPath.trim()) {
@@ -1199,7 +1069,10 @@ async function savePublication() {
       resourceId:
         publicationForm.authMode === "RESOURCE_REQUIRED" ? publicationForm.resourceId : undefined,
     });
-    await savePolicies(api.id);
+    if (!apiPolicySettingsRef.value) {
+      throw new Error("API 流量治理配置尚未加载，请关闭窗口后重试");
+    }
+    await apiPolicySettingsRef.value.save();
     ElMessage.success("API 发布草稿已保存");
     publicationDialog.visible = false;
     await loadAll();
@@ -1219,6 +1092,7 @@ function openApplicationRouteDialog(route?: GatewayApplicationRoute) {
   applicationRouteForm.httpMethod = route?.httpMethod || "";
   applicationRouteForm.rewritePath = route?.rewritePath || "";
   applicationRouteForm.routeOrder = route?.routeOrder ?? 100;
+  applicationRouteForm.lockVersion = route?.lockVersion;
   applicationRouteForm.predicates = (route?.predicates || []).map((item) => ({
     name: item.name,
     argsText: definitionText(item),
@@ -1247,6 +1121,22 @@ function editApplicationRouteFromDetail() {
 async function publishApplicationRoute(route: GatewayApplicationRoute) {
   focusedPublicationRouteName.value = route.routeName;
   if (await publishDrafts()) applicationRouteDetailDialog.visible = false;
+}
+
+async function offlineApplicationRoute(route: GatewayApplicationRoute) {
+  try {
+    await ElMessageBox.confirm(
+      `取消发布后，应用路由“${route.routeName}”将在下一次“发布到网关”时从运行配置删除。`,
+      "确认取消应用路由发布",
+      { type: "warning", confirmButtonText: "标记待下线", cancelButtonText: "取消" }
+    );
+  } catch {
+    return;
+  }
+  await GatewayApiRouteAPI.offlineApplicationRoute(route.id, route.lockVersion ?? 0);
+  applicationRouteDetailDialog.visible = false;
+  ElMessage.success("应用路由已标记为待下线，请点击“发布到网关”使其生效");
+  await loadAll();
 }
 
 async function saveApplicationRoute() {
@@ -1291,6 +1181,7 @@ async function saveApplicationRoute() {
     } else {
       await GatewayApiRouteAPI.createApplicationRoute(payload);
     }
+    await applicationPolicySettingsRef.value?.save();
     ElMessage.success(applicationRouteDialog.editing ? "应用路由草稿已更新" : "应用路由草稿已创建");
     applicationRouteDialog.visible = false;
     await loadAll();
