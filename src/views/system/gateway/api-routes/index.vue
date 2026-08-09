@@ -478,7 +478,7 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置高级过滤器，使用自动路径转换" :image-size="60" />
-        <div class="mb-2 mt-5 font-medium">流量治理</div>
+        <div class="mb-2 mt-5 font-medium">治理策略</div>
         <GovernancePolicySettings
           :key="`api-detail-${publicationDetailDialog.data.apiId}`"
           scope-type="API"
@@ -563,7 +563,7 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置过滤器" :image-size="60" />
-        <div class="mb-2 mt-5 font-medium">流量治理</div>
+        <div class="mb-2 mt-5 font-medium">治理策略</div>
         <GovernancePolicySettings
           :key="`application-detail-${applicationRouteDetailDialog.data.serviceId}`"
           scope-type="APPLICATION"
@@ -708,7 +708,7 @@
           </div>
         </el-form-item>
       </el-form>
-      <div class="mb-3 mt-5 font-medium">应用级流量治理</div>
+      <div class="mb-3 mt-5 font-medium">应用级治理策略</div>
       <GovernancePolicySettings
         v-if="applicationRouteForm.serviceId"
         ref="applicationPolicySettingsRef"

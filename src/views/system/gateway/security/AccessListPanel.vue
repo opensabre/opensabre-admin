@@ -3,42 +3,20 @@
     <template #header>
       <div class="panel-header">
         <div>
-          <strong>IP 黑白名单</strong>
-          <div class="panel-description">策略保存为草稿，发布后才会应用到网关路由。</div>
+          <strong>IP 黑白名单全局默认值</strong>
+          <div class="panel-description">
+            这里只维护全局默认值；应用与 API 的继承或自定义配置请到对应路由发布页面维护。
+          </div>
         </div>
         <el-button @click="loadPolicy">刷新</el-button>
       </div>
     </template>
 
     <el-form label-width="110px" class="access-form">
-      <el-form-item label="作用域">
-        <el-radio-group v-model="form.scopeType" @change="handleScopeChange">
-          <el-radio-button value="GLOBAL">全局</el-radio-button>
-          <el-radio-button value="APPLICATION">应用</el-radio-button>
-          <el-radio-button value="API">API</el-radio-button>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item v-if="form.scopeType !== 'GLOBAL'" label="作用域" required>
-        <el-select
-          v-model="form.scopeId"
-          filterable
-          :placeholder="form.scopeType === 'APPLICATION' ? '请选择应用' : '请选择 API'"
-          style="max-width: 420px"
-          @change="loadPolicy"
-        >
-          <el-option
-            v-for="option in scopeOptions"
-            :key="option.value"
-            :label="option.label"
-            :value="option.value"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="策略状态">
         <el-radio-group v-model="form.mode">
-          <el-radio value="INHERIT">继承上级</el-radio>
-          <el-radio value="ENABLED">启用</el-radio>
-          <el-radio value="DISABLED">显式关闭</el-radio>
+          <el-radio value="ENABLED">启用默认值</el-radio>
+          <el-radio value="DISABLED">停用</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -102,9 +80,7 @@ import GatewayApiRouteAPI from "@/api/gateway-admin/gateway-api-route";
 import type {
   GatewayAccessControlConfig,
   GatewayAccessControlEntry,
-  GatewayApiAsset,
   GatewayPolicyMode,
-  GatewayPolicyScopeType,
 } from "@/types/api/gateway-api-route";
 
 defineOptions({ name: "GatewayAccessListPanel" });
@@ -112,57 +88,19 @@ defineOptions({ name: "GatewayAccessListPanel" });
 const loading = ref(false);
 const saving = ref(false);
 const publishing = ref(false);
-const apiAssets = ref<GatewayApiAsset[]>([]);
 const form = reactive({
-  scopeType: "GLOBAL" as GatewayPolicyScopeType,
-  scopeId: "",
   mode: "DISABLED" as GatewayPolicyMode,
   accessMode: "DENYLIST" as GatewayAccessControlConfig["accessMode"],
   entries: [{ cidr: "", description: "" }] as GatewayAccessControlEntry[],
   lockVersion: undefined as number | undefined,
 });
 
-const scopeOptions = computed(() => {
-  if (form.scopeType === "APPLICATION") {
-    return [...new Set(apiAssets.value.map((item) => item.serviceId))]
-      .sort()
-      .map((serviceId) => ({ value: serviceId, label: serviceId }));
-  }
-  return apiAssets.value.map((item) => ({
-    value: item.id,
-    label: `${item.httpMethod} ${item.upstreamPath} (${item.serviceId})`,
-  }));
-});
-
-onMounted(async () => {
-  try {
-    const firstPage = await GatewayApiRouteAPI.listApis({ page: 1, pageSize: 200 });
-    const pageCount = Math.ceil(firstPage.total / firstPage.pageSize);
-    const remainingPages = await Promise.all(
-      Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
-        GatewayApiRouteAPI.listApis({ page: index + 2, pageSize: 200 })
-      )
-    );
-    apiAssets.value = [firstPage, ...remainingPages].flatMap((page) => page.apis);
-  } finally {
-    await loadPolicy();
-  }
-});
-
-function handleScopeChange() {
-  form.scopeId = "";
-  resetPolicy();
-  if (form.scopeType === "GLOBAL") loadPolicy();
-}
+onMounted(loadPolicy);
 
 async function loadPolicy() {
-  if (form.scopeType !== "GLOBAL" && !form.scopeId) return;
   loading.value = true;
   try {
-    const policies = await GatewayApiRouteAPI.listPolicies(
-      form.scopeType,
-      form.scopeType === "GLOBAL" ? undefined : form.scopeId
-    );
+    const policies = await GatewayApiRouteAPI.listPolicies("GLOBAL");
     const policy = policies.find((item) => item.policyType === "ACCESS_CONTROL");
     resetPolicy();
     if (!policy) return;
@@ -181,26 +119,17 @@ async function loadPolicy() {
 }
 
 async function savePolicy() {
-  if (form.scopeType !== "GLOBAL" && !form.scopeId) {
-    ElMessage.warning("请先填写作用域 ID");
-    return;
-  }
   if (form.mode === "ENABLED" && !validateEntries()) return;
   saving.value = true;
   try {
-    const policy = await GatewayApiRouteAPI.savePolicy(
-      form.scopeType,
-      form.scopeType === "GLOBAL" ? undefined : form.scopeId,
-      "ACCESS_CONTROL",
-      {
-        mode: form.mode,
-        accessControl:
-          form.mode === "ENABLED"
-            ? { accessMode: form.accessMode, entries: form.entries.map((entry) => ({ ...entry })) }
-            : undefined,
-        lockVersion: form.lockVersion,
-      }
-    );
+    const policy = await GatewayApiRouteAPI.savePolicy("GLOBAL", undefined, "ACCESS_CONTROL", {
+      mode: form.mode,
+      accessControl:
+        form.mode === "ENABLED"
+          ? { accessMode: form.accessMode, entries: form.entries.map((entry) => ({ ...entry })) }
+          : undefined,
+      lockVersion: form.lockVersion,
+    });
     form.lockVersion = policy.lockVersion;
     ElMessage.success("访问控制策略已保存，发布后生效");
   } finally {
@@ -248,7 +177,7 @@ function removeEntry(index: number) {
 }
 
 function resetPolicy() {
-  form.mode = form.scopeType === "GLOBAL" ? "DISABLED" : "INHERIT";
+  form.mode = "DISABLED";
   form.accessMode = "DENYLIST";
   form.entries = emptyEntries();
   form.lockVersion = undefined;

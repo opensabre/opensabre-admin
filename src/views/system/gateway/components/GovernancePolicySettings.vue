@@ -92,7 +92,7 @@
           </div>
         </template>
 
-        <template v-else>
+        <template v-else-if="item.type === 'CIRCUIT_BREAKER'">
           <div class="policy-field">
             <label>失败率阈值（%）</label>
             <el-input-number
@@ -144,6 +144,65 @@
             />
           </div>
         </template>
+
+        <template v-else>
+          <div class="policy-field">
+            <label>名单模式</label>
+            <el-radio-group
+              v-model="forms.ACCESS_CONTROL.config.accessMode"
+              :disabled="fieldsReadonly(item.type)"
+            >
+              <el-radio value="DENYLIST">黑名单：命中拒绝</el-radio>
+              <el-radio value="ALLOWLIST">白名单：仅命中放行</el-radio>
+            </el-radio-group>
+          </div>
+          <div class="policy-field policy-field--wide">
+            <label>IP/CIDR</label>
+            <div class="entry-list">
+              <div
+                v-for="(entry, index) in forms.ACCESS_CONTROL.config.entries"
+                :key="index"
+                class="entry-row"
+              >
+                <el-input
+                  v-model.trim="entry.cidr"
+                  :disabled="fieldsReadonly(item.type)"
+                  maxlength="64"
+                  placeholder="如 10.0.0.0/8"
+                />
+                <el-input
+                  v-model.trim="entry.description"
+                  :disabled="fieldsReadonly(item.type)"
+                  maxlength="100"
+                  placeholder="说明（可选）"
+                />
+                <el-button
+                  v-if="!fieldsReadonly(item.type)"
+                  link
+                  type="danger"
+                  @click="removeAccessEntry(index)"
+                >
+                  删除
+                </el-button>
+              </div>
+              <el-button
+                v-if="!fieldsReadonly(item.type)"
+                type="primary"
+                plain
+                @click="addAccessEntry"
+              >
+                新增规则
+              </el-button>
+            </div>
+          </div>
+          <el-alert
+            v-if="forms.ACCESS_CONTROL.config.accessMode === 'ALLOWLIST'"
+            title="白名单会拒绝所有未命中的来源，请确认代理和运维出口地址已加入。"
+            type="warning"
+            :closable="false"
+            class="policy-field--wide"
+          />
+        </template>
       </div>
       <el-empty v-else description="当前层级明确停用该策略" :image-size="48" />
     </el-card>
@@ -153,9 +212,10 @@
 <script setup lang="ts">
 import GatewayApiRouteAPI from "@/api/gateway-admin/gateway-api-route";
 import type {
+  GatewayAccessControlConfig,
   GatewayCircuitBreakerConfig,
   GatewayEffectivePolicy,
-  GatewayGovernancePolicyType,
+  GatewayPolicyType,
   GatewayPolicyChange,
   GatewayPolicyMode,
   GatewayPolicyScopeType,
@@ -170,18 +230,18 @@ const props = withDefaults(
     serviceId?: string;
     apiId?: string;
     readonly?: boolean;
-    policyTypes?: GatewayGovernancePolicyType[];
+    policyTypes?: GatewayPolicyType[];
   }>(),
   {
     scopeId: "",
     serviceId: "",
     apiId: "",
     readonly: false,
-    policyTypes: () => ["RATE_LIMIT", "TIMEOUT", "CIRCUIT_BREAKER"],
+    policyTypes: () => ["RATE_LIMIT", "TIMEOUT", "CIRCUIT_BREAKER", "ACCESS_CONTROL"],
   }
 );
 
-const items: { type: GatewayGovernancePolicyType; label: string; description: string }[] = [
+const items: { type: GatewayPolicyType; label: string; description: string }[] = [
   { type: "RATE_LIMIT", label: "限流", description: "使用 Redis 令牌桶限制请求速率。" },
   { type: "TIMEOUT", label: "超时", description: "控制连接下游及等待响应的最长时间。" },
   {
@@ -189,16 +249,20 @@ const items: { type: GatewayGovernancePolicyType; label: string; description: st
     label: "熔断与降级",
     description: "按失败率或慢调用率熔断，可转发至内部降级地址。",
   },
+  {
+    type: "ACCESS_CONTROL",
+    label: "IP 黑白名单",
+    description: "按来源 IP/CIDR 允许或拒绝请求。",
+  },
 ];
 
 const loading = ref(false);
-const effectivePolicies = reactive<
-  Partial<Record<GatewayGovernancePolicyType, GatewayEffectivePolicy>>
->({});
+const effectivePolicies = reactive<Partial<Record<GatewayPolicyType, GatewayEffectivePolicy>>>({});
 const forms = reactive({
   RATE_LIMIT: policyForm<GatewayRateLimitConfig>(defaultRateLimit()),
   TIMEOUT: policyForm<GatewayTimeoutConfig>(defaultTimeout()),
   CIRCUIT_BREAKER: policyForm<GatewayCircuitBreakerConfig>(defaultCircuitBreaker()),
+  ACCESS_CONTROL: policyForm<GatewayAccessControlConfig>(defaultAccessControl()),
 });
 
 const visibleItems = computed(() => items.filter((item) => props.policyTypes.includes(item.type)));
@@ -268,6 +332,11 @@ async function save() {
             ...forms.CIRCUIT_BREAKER.config,
             fallbackUri: forms.CIRCUIT_BREAKER.config.fallbackUri || undefined,
           };
+        if (item.type === "ACCESS_CONTROL")
+          data.accessControl = {
+            accessMode: forms.ACCESS_CONTROL.config.accessMode,
+            entries: forms.ACCESS_CONTROL.config.entries.map((entry) => ({ ...entry })),
+          };
       }
       return GatewayApiRouteAPI.savePolicy(
         props.scopeType,
@@ -278,7 +347,7 @@ async function save() {
     })
   );
   saved.forEach((policy) => {
-    forms[policy.policyType as GatewayGovernancePolicyType].lockVersion = policy.lockVersion;
+    forms[policy.policyType as GatewayPolicyType].lockVersion = policy.lockVersion;
   });
   await load();
 }
@@ -294,24 +363,34 @@ function validate() {
   if (forms.CIRCUIT_BREAKER.mode === "ENABLED" && fallback && !fallback.startsWith("forward:/")) {
     throw new Error("降级地址仅支持 forward:/ 开头的内部地址");
   }
+  if (forms.ACCESS_CONTROL.mode === "ENABLED") {
+    const cidrs = forms.ACCESS_CONTROL.config.entries.map((entry) =>
+      entry.cidr.trim().toLowerCase()
+    );
+    const cidrPattern = /^[0-9a-fA-F:.]+(?:\/\d{1,3})?$/;
+    if (!cidrs.length || cidrs.some((cidr) => !cidr || !cidrPattern.test(cidr))) {
+      throw new Error("请填写合法的 IP 或 CIDR");
+    }
+    if (new Set(cidrs).size !== cidrs.length) throw new Error("IP/CIDR 不能重复");
+  }
 }
 
-function handleModeChange(type: GatewayGovernancePolicyType) {
+function handleModeChange(type: GatewayPolicyType) {
   if (forms[type].mode !== "ENABLED") return;
   const inherited = effectivePolicies[type]?.effectiveConfig;
   if (inherited) Object.assign(forms[type].config, inherited);
 }
 
-function displayMode(type: GatewayGovernancePolicyType) {
+function displayMode(type: GatewayPolicyType) {
   if (forms[type].mode !== "INHERIT") return forms[type].mode;
   return effectivePolicies[type]?.effectiveMode || "DISABLED";
 }
 
-function fieldsReadonly(type: GatewayGovernancePolicyType) {
+function fieldsReadonly(type: GatewayPolicyType) {
   return props.readonly || forms[type].mode !== "ENABLED";
 }
 
-function effectivePolicyText(type: GatewayGovernancePolicyType) {
+function effectivePolicyText(type: GatewayPolicyType) {
   const policy = effectivePolicies[type];
   if (!policy || policy.effectiveMode === "DISABLED") return "未启用";
   const source = { API: "API 自定义", APPLICATION: "应用自定义", GLOBAL: "全局默认" }[
@@ -320,12 +399,14 @@ function effectivePolicyText(type: GatewayGovernancePolicyType) {
   return `${policyConfigText(type, policy.effectiveConfig || {})}（来源：${source}）`;
 }
 
-function policyConfigText(type: GatewayGovernancePolicyType, config: Record<string, any>) {
+function policyConfigText(type: GatewayPolicyType, config: Record<string, any>) {
   if (type === "RATE_LIMIT")
     return `按 ${config.keyType}，每秒 ${config.replenishRate}，突发 ${config.burstCapacity}，单次 ${config.requestedTokens}`;
   if (type === "TIMEOUT")
     return `连接 ${config.connectTimeoutMs} ms，响应 ${config.responseTimeoutMs} ms`;
-  return `失败率 ${config.failureRateThreshold}%，慢调用率 ${config.slowCallRateThreshold}%，熔断等待 ${config.waitDurationInOpenStateMs} ms${config.fallbackUri ? `，降级 ${config.fallbackUri}` : ""}`;
+  if (type === "CIRCUIT_BREAKER")
+    return `失败率 ${config.failureRateThreshold}%，慢调用率 ${config.slowCallRateThreshold}%，熔断等待 ${config.waitDurationInOpenStateMs} ms${config.fallbackUri ? `，降级 ${config.fallbackUri}` : ""}`;
+  return `${config.accessMode === "ALLOWLIST" ? "白名单" : "黑名单"}，${config.entries?.length || 0} 条规则`;
 }
 
 function modeText(mode: GatewayPolicyMode) {
@@ -352,11 +433,12 @@ function resetAll() {
     delete effectivePolicies[item.type];
   });
 }
-function resetConfig(type: GatewayGovernancePolicyType) {
+function resetConfig(type: GatewayPolicyType) {
   if (type === "RATE_LIMIT") Object.assign(forms.RATE_LIMIT.config, defaultRateLimit());
   if (type === "TIMEOUT") Object.assign(forms.TIMEOUT.config, defaultTimeout());
   if (type === "CIRCUIT_BREAKER")
     Object.assign(forms.CIRCUIT_BREAKER.config, defaultCircuitBreaker());
+  if (type === "ACCESS_CONTROL") Object.assign(forms.ACCESS_CONTROL.config, defaultAccessControl());
 }
 function defaultRateLimit(): GatewayRateLimitConfig {
   return { keyType: "IP", replenishRate: 10, burstCapacity: 20, requestedTokens: 1 };
@@ -373,6 +455,22 @@ function defaultCircuitBreaker(): GatewayCircuitBreakerConfig {
     waitDurationInOpenStateMs: 10000,
     fallbackUri: "",
   };
+}
+function defaultAccessControl(): GatewayAccessControlConfig {
+  return { accessMode: "DENYLIST", entries: [{ cidr: "", description: "" }] };
+}
+function addAccessEntry() {
+  if (forms.ACCESS_CONTROL.config.entries.length >= 20) {
+    ElMessage.warning("每项策略最多配置 20 条 IP/CIDR");
+    return;
+  }
+  forms.ACCESS_CONTROL.config.entries.push({ cidr: "", description: "" });
+}
+function removeAccessEntry(index: number) {
+  forms.ACCESS_CONTROL.config.entries.splice(index, 1);
+  if (!forms.ACCESS_CONTROL.config.entries.length) {
+    forms.ACCESS_CONTROL.config.entries.push({ cidr: "", description: "" });
+  }
 }
 
 defineExpose({ load, save });
@@ -398,6 +496,19 @@ defineExpose({ load, save });
 .policy-field label {
   font-size: 13px;
   color: var(--el-text-color-regular);
+}
+.policy-field--wide {
+  grid-column: 1 / -1;
+}
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.entry-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.5fr) 50px;
+  gap: 10px;
 }
 .policy-field :deep(.el-select),
 .policy-field :deep(.el-input-number) {
