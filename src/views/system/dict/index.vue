@@ -46,10 +46,10 @@
         <el-table-column type="selection" width="55" align="center" :selectable="isSelectable" />
         <el-table-column label="字典名称" prop="name" />
         <el-table-column label="字典编码" prop="dictCode" />
-        <el-table-column label="来源" width="100">
+        <el-table-column label="来源" width="160">
           <template #default="{ row }">
             <el-tag :type="row.sourceType === 'ENUM' ? 'warning' : 'info'">
-              {{ row.sourceType === "ENUM" ? "应用枚举" : "后台维护" }}
+              {{ row.sourceType === "ENUM" ? "应用上报（静态）" : "手工维护（动态）" }}
             </el-tag>
           </template>
         </el-table-column>
@@ -75,6 +75,7 @@
               link
               size="small"
               icon="edit"
+              :disabled="scope.row.sourceType === 'ENUM'"
               @click.stop="handleEditClick(scope.row.id)"
             >
               编辑
