@@ -12,6 +12,7 @@ import type {
   GatewayRuntimeRoute,
   GatewayPolicy,
   GatewayPolicyChange,
+  GatewayAnyPolicyType,
   GatewayPolicyType,
   GatewayEffectivePolicy,
   GatewayPolicyScopeType,
@@ -153,7 +154,7 @@ const GatewayApiRouteAPI = {
   savePolicy(
     scopeType: GatewayPolicyScopeType,
     scopeId: string | undefined,
-    policyType: GatewayPolicyType,
+    policyType: GatewayAnyPolicyType,
     data: GatewayPolicyChange
   ) {
     return request<any, GatewayPolicy>({

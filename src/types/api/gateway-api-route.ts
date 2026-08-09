@@ -50,8 +50,31 @@ export interface GatewayApiPublicationChange {
 
 export type GatewayGovernancePolicyType = "RATE_LIMIT" | "TIMEOUT" | "CIRCUIT_BREAKER";
 export type GatewayPolicyType = GatewayGovernancePolicyType | "ACCESS_CONTROL";
+export type GatewayGlobalPolicyType = "SECURITY_HEADERS" | "DEFAULT_FILTERS" | "CORS";
+export type GatewayAnyPolicyType = GatewayPolicyType | GatewayGlobalPolicyType;
 export type GatewayPolicyMode = "INHERIT" | "ENABLED" | "DISABLED";
 export type GatewayPolicyScopeType = "GLOBAL" | "APPLICATION" | "API";
+
+export interface GatewayRateLimitConfig {
+  keyType: "IP" | "API";
+  replenishRate: number;
+  burstCapacity: number;
+  requestedTokens: number;
+}
+
+export interface GatewayTimeoutConfig {
+  connectTimeoutMs: number;
+  responseTimeoutMs: number;
+}
+
+export interface GatewayCircuitBreakerConfig {
+  failureRateThreshold: number;
+  slowCallRateThreshold: number;
+  slowCallDurationThresholdMs: number;
+  minimumNumberOfCalls: number;
+  waitDurationInOpenStateMs: number;
+  fallbackUri?: string;
+}
 
 export interface GatewayAccessControlEntry {
   cidr: string;
@@ -63,15 +86,66 @@ export interface GatewayAccessControlConfig {
   entries: GatewayAccessControlEntry[];
 }
 
+export interface GatewayHeaderEntry {
+  name: string;
+  value: string;
+}
+
+export interface GatewaySecurityHeadersConfig {
+  hstsEnabled: boolean;
+  hstsMaxAgeSeconds: number;
+  hstsIncludeSubDomains: boolean;
+  hstsPreload: boolean;
+  contentTypeOptions: boolean;
+  frameOptions: "DENY" | "SAMEORIGIN" | "DISABLED";
+  referrerPolicy:
+    | "NO_REFERRER"
+    | "SAME_ORIGIN"
+    | "STRICT_ORIGIN"
+    | "STRICT_ORIGIN_WHEN_CROSS_ORIGIN"
+    | "DISABLED";
+  contentSecurityPolicy?: string;
+  requestHeaders: GatewayHeaderEntry[];
+  responseHeaders: GatewayHeaderEntry[];
+  removeRequestHeaders: string[];
+  removeResponseHeaders: string[];
+}
+
+export interface GatewayDefaultFilterDraft {
+  name: string;
+  args: Record<string, string>;
+  enabled: boolean;
+}
+
+export interface GatewayDefaultFiltersConfig {
+  filters: GatewayDefaultFilterDraft[];
+}
+
+export interface GatewayCorsRule {
+  pathPattern: string;
+  allowedOrigins: string[];
+  allowedOriginPatterns: string[];
+  allowedMethods: string[];
+  allowedHeaders: string[];
+  exposedHeaders: string[];
+  allowCredentials: boolean;
+  maxAgeSeconds: number;
+}
+
+export interface GatewayCorsConfig {
+  rules: GatewayCorsRule[];
+  addToSimpleUrlHandlerMapping: boolean;
+}
+
 export interface GatewayPolicy {
-  policyType: GatewayPolicyType;
+  policyType: GatewayAnyPolicyType;
   mode: GatewayPolicyMode;
   configJson?: string;
   lockVersion?: number;
 }
 
 export interface GatewayEffectivePolicy {
-  policyType: GatewayPolicyType;
+  policyType: GatewayAnyPolicyType;
   effectiveMode: GatewayPolicyMode;
   effectiveConfig?: Record<string, any>;
   sourceScope?: "API" | "APPLICATION" | "GLOBAL";
@@ -79,10 +153,13 @@ export interface GatewayEffectivePolicy {
 
 export interface GatewayPolicyChange {
   mode: GatewayPolicyMode;
-  rateLimit?: Record<string, any>;
-  timeout?: Record<string, any>;
-  circuitBreaker?: Record<string, any>;
+  rateLimit?: GatewayRateLimitConfig;
+  timeout?: GatewayTimeoutConfig;
+  circuitBreaker?: GatewayCircuitBreakerConfig;
   accessControl?: GatewayAccessControlConfig;
+  securityHeaders?: GatewaySecurityHeadersConfig;
+  defaultFilters?: GatewayDefaultFiltersConfig;
+  cors?: GatewayCorsConfig;
   lockVersion?: number;
 }
 
@@ -133,6 +210,9 @@ export interface GatewayApiSyncResult {
 export interface GatewayRouteConfigSnapshot {
   version: string;
   routes?: GatewayRuntimeRoute[];
+  defaultFilters?: GatewayRuntimeRouteDefinition[];
+  globalCorsConfigurations?: Record<string, Record<string, any>>;
+  corsAddToSimpleUrlHandlerMapping?: boolean;
 }
 
 export interface GatewayRuntimeRouteDefinition {

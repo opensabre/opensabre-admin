@@ -40,12 +40,6 @@ export interface GatewayOauth2ClientChange {
   clients: GatewayOauth2Client[];
 }
 
-/** 以当前 Nacos 版本为前置条件的全局过滤器变更。 */
-export interface GatewayDefaultFilterChange {
-  defaultFilters: GatewayRouteDefinition[];
-  baseVersion: string;
-}
-
 /** 以当前 Nacos 配置版本为前置条件的路由变更请求。 */
 export interface GatewayRouteChange {
   route: GatewayRoute;
