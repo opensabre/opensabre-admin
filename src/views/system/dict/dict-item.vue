@@ -72,6 +72,7 @@
               link
               size="small"
               icon="edit"
+              :disabled="isEnumDictionary"
               @click.stop="handleOpenDialog(scope.row)"
             >
               编辑
