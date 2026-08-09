@@ -7,14 +7,14 @@
       </el-tabs>
     </el-card>
 
-    <GatewayRoute v-if="activeTab === 'filters'" section="policies" />
-    <GatewayPlanned v-else title="跨域规则" />
+    <DefaultFiltersPanel v-if="activeTab === 'filters'" />
+    <CorsPanel v-else />
   </div>
 </template>
 
 <script setup lang="ts">
-import GatewayPlanned from "@/views/system/gateway/planned/index.vue";
-import GatewayRoute from "@/views/system/gateway-route/index.vue";
+import CorsPanel from "./CorsPanel.vue";
+import DefaultFiltersPanel from "./DefaultFiltersPanel.vue";
 
 defineOptions({ name: "GatewayGlobalRules" });
 

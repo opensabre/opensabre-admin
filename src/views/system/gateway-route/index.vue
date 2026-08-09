@@ -101,58 +101,6 @@
       </el-form>
     </div>
 
-    <el-card
-      v-if="section === 'all' || section === 'policies'"
-      shadow="hover"
-      class="table-section"
-    >
-      <template #header>
-        <div class="table-section__toolbar">
-          <span>全局过滤器与限流</span>
-          <el-button
-            v-hasPerm="['gateway:filter:update']"
-            type="primary"
-            @click="saveDefaultFilters"
-          >
-            发布全局配置
-          </el-button>
-        </div>
-      </template>
-      <el-alert
-        :closable="false"
-        type="info"
-        title="全局过滤器对所有显式路由生效；限流使用 Redis 令牌桶，发布会立即影响网关流量。"
-        class="mb-4"
-      />
-      <el-form label-width="130px">
-        <el-form-item label="启用全局限流"><el-switch v-model="rateLimit.enabled" /></el-form-item>
-        <template v-if="rateLimit.enabled">
-          <el-form-item label="限流维度">
-            <el-radio-group v-model="rateLimit.keyResolver">
-              <el-radio value="#{@remoteAddressKeyResolver}">客户端 IP</el-radio>
-              <el-radio value="#{@apiKeyResolver}">请求路径</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item label="补充速率(请求/秒)">
-            <el-input-number v-model="rateLimit.replenishRate" :min="1" :max="100000" />
-          </el-form-item>
-          <el-form-item label="突发容量">
-            <el-input-number v-model="rateLimit.burstCapacity" :min="1" :max="100000" />
-          </el-form-item>
-        </template>
-        <el-form-item label="其他全局过滤器">
-          <el-tag
-            v-for="filter in nonRateLimitFilters"
-            :key="filter.name"
-            class="table-value-tag mr-2"
-          >
-            {{ filter.name }}
-          </el-tag>
-          <span v-if="!nonRateLimitFilters.length" class="text-gray">未配置</span>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
     <el-card v-if="section === 'all' || section === 'routes'" shadow="hover" class="table-section">
       <div class="table-section__toolbar">
         <span>显式路由（{{ filteredRoutes.length }}）</span>
@@ -386,12 +334,9 @@ import {
 } from "./route-definition";
 
 defineOptions({ name: "GatewayRoute" });
-const props = withDefaults(
-  defineProps<{ section?: "all" | "authentication" | "policies" | "routes" }>(),
-  {
-    section: "all",
-  }
-);
+const props = withDefaults(defineProps<{ section?: "all" | "authentication" | "routes" }>(), {
+  section: "all",
+});
 const section = computed(() => props.section);
 const formRef = ref<FormInstance>();
 const loading = ref(false);
@@ -416,15 +361,6 @@ const oauthForm = reactive<GatewayOauth2Client>({
   scopes: ["read", "openid", "profile"],
   enabled: true,
 });
-const rateLimit = reactive({
-  enabled: false,
-  replenishRate: 2,
-  burstCapacity: 10,
-  keyResolver: "#{@remoteAddressKeyResolver}",
-});
-const nonRateLimitFilters = computed(() =>
-  config.defaultFilters.filter((item) => item.name !== "RequestRateLimiter")
-);
 const dialog = reactive({ visible: false, isEdit: false, routeId: "" });
 const form = reactive({
   id: "",
@@ -502,14 +438,6 @@ function openEdit(route: GatewayRoute) {
   dialog.isEdit = true;
   dialog.visible = true;
 }
-function syncRateLimit(filters: GatewayRouteDefinition[]) {
-  const filter = filters.find((item) => item.name === "RequestRateLimiter");
-  rateLimit.enabled = !!filter;
-  if (!filter) return;
-  rateLimit.replenishRate = Number(filter.args["redis-rate-limiter.replenishRate"] || 2);
-  rateLimit.burstCapacity = Number(filter.args["redis-rate-limiter.burstCapacity"] || 10);
-  rateLimit.keyResolver = filter.args["key-resolver"] || "#{@remoteAddressKeyResolver}";
-}
 async function loadConfig() {
   loading.value = true;
   try {
@@ -521,7 +449,6 @@ async function loadConfig() {
       ...item,
       clientSecret: "",
     }));
-    syncRateLimit(config.defaultFilters);
   } finally {
     loading.value = false;
   }
@@ -591,39 +518,6 @@ async function publishOauthClients() {
     ElMessage.success("OAuth2 认证方式已发布");
   } finally {
     oauthPublishing.value = false;
-  }
-}
-async function saveDefaultFilters() {
-  if (rateLimit.burstCapacity < rateLimit.replenishRate)
-    return ElMessage.warning("突发容量不能小于补充速率");
-  const defaultFilters = [...nonRateLimitFilters.value];
-  if (rateLimit.enabled)
-    defaultFilters.push({
-      name: "RequestRateLimiter",
-      args: {
-        "redis-rate-limiter.replenishRate": String(rateLimit.replenishRate),
-        "redis-rate-limiter.burstCapacity": String(rateLimit.burstCapacity),
-        "rate-limiter": "#{@defaultRedisRateLimiter}",
-        "key-resolver": rateLimit.keyResolver,
-      },
-    });
-  await ElMessageBox.confirm(
-    "将全局过滤器和限流配置发布到 Nacos，配置会立即影响所有显式路由。",
-    "确认发布",
-    { type: "warning" }
-  );
-  publishing.value = true;
-  try {
-    const result = await GatewayRouteAPI.updateDefaultFilters({
-      defaultFilters,
-      baseVersion: config.version,
-    });
-    config.version = result.version;
-    config.defaultFilters = result.defaultFilters;
-    syncRateLimit(result.defaultFilters);
-    ElMessage.success("全局配置已发布");
-  } finally {
-    publishing.value = false;
   }
 }
 async function handlePublish() {

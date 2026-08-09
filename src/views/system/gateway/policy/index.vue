@@ -1,6 +1,6 @@
-<template><GatewayRoute section="policies" /></template>
+<template><GatewayGlobalRules /></template>
 
 <script setup lang="ts">
-import GatewayRoute from "@/views/system/gateway-route/index.vue";
+import GatewayGlobalRules from "@/views/system/gateway/global/index.vue";
 defineOptions({ name: "GatewayPolicy" });
 </script>
