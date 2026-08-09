@@ -308,47 +308,60 @@
       <div v-show="publicationStep === 1">
         <GovernancePolicySettings
           v-if="publicationDialog.api"
-          ref="apiPolicySettingsRef"
+          ref="apiTrafficPolicySettingsRef"
           scope-type="API"
           :scope-id="publicationDialog.api.id"
           :service-id="publicationDialog.api.serviceId"
           :api-id="publicationDialog.api.id"
+          :policy-types="['RATE_LIMIT', 'TIMEOUT', 'CIRCUIT_BREAKER']"
         />
       </div>
 
-      <el-form v-if="publicationStep === 2" label-width="120px">
-        <el-alert
-          title="跨域由应用级或全局配置统一管理，本次 API 发布无需重复填写。"
-          type="info"
-          :closable="false"
-          class="mb-4"
-        />
-        <el-form-item label="访问控制" required>
-          <el-select
-            v-model="publicationForm.authMode"
-            class="w-full"
-            @change="handleAuthModeChange"
+      <div v-show="publicationStep === 2">
+        <el-form label-width="120px">
+          <el-alert
+            title="跨域由应用级或全局配置统一管理，本次 API 发布无需重复填写。"
+            type="info"
+            :closable="false"
+            class="mb-4"
+          />
+          <el-form-item label="访问控制" required>
+            <el-select
+              v-model="publicationForm.authMode"
+              class="w-full"
+              @change="handleAuthModeChange"
+            >
+              <el-option label="登录后访问（推荐）" value="AUTHENTICATED" />
+              <el-option label="公开访问" value="PUBLIC" />
+              <el-option label="需要资源授权" value="RESOURCE_REQUIRED" />
+            </el-select>
+          </el-form-item>
+          <el-form-item
+            v-if="publicationForm.authMode === 'RESOURCE_REQUIRED'"
+            label="组织资源"
+            required
           >
-            <el-option label="登录后访问（推荐）" value="AUTHENTICATED" />
-            <el-option label="公开访问" value="PUBLIC" />
-            <el-option label="需要资源授权" value="RESOURCE_REQUIRED" />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          v-if="publicationForm.authMode === 'RESOURCE_REQUIRED'"
-          label="组织资源"
-          required
-        >
-          <el-select v-model="publicationForm.resourceId" filterable clearable class="w-full">
-            <el-option
-              v-for="option in resourceOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
+            <el-select v-model="publicationForm.resourceId" filterable clearable class="w-full">
+              <el-option
+                v-for="option in resourceOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div class="mb-3 mt-5 font-medium">IP 黑白名单</div>
+        <GovernancePolicySettings
+          v-if="publicationDialog.api"
+          ref="apiSecurityPolicySettingsRef"
+          scope-type="API"
+          :scope-id="publicationDialog.api.id"
+          :service-id="publicationDialog.api.serviceId"
+          :api-id="publicationDialog.api.id"
+          :policy-types="['ACCESS_CONTROL']"
+        />
+      </div>
 
       <div v-if="publicationStep === 3" class="space-y-4">
         <el-alert
@@ -405,6 +418,9 @@
             <el-descriptions-item label="访问控制">{{ authModeText }}</el-descriptions-item>
             <el-descriptions-item label="组织资源">{{ selectedResourceText }}</el-descriptions-item>
             <el-descriptions-item label="跨域策略">继承应用级或全局配置</el-descriptions-item>
+            <el-descriptions-item label="IP 黑白名单">
+              已按安全设置步骤中的继承或自定义配置保存
+            </el-descriptions-item>
           </el-descriptions>
         </el-card>
       </div>
@@ -478,13 +494,24 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置高级过滤器，使用自动路径转换" :image-size="60" />
-        <div class="mb-2 mt-5 font-medium">治理策略</div>
+        <div class="mb-2 mt-5 font-medium">流量治理</div>
         <GovernancePolicySettings
           :key="`api-detail-${publicationDetailDialog.data.apiId}`"
           scope-type="API"
           :scope-id="publicationDetailDialog.data.apiId"
           :service-id="publicationDetailDialog.data.serviceId"
           :api-id="publicationDetailDialog.data.apiId"
+          :policy-types="['RATE_LIMIT', 'TIMEOUT', 'CIRCUIT_BREAKER']"
+          readonly
+        />
+        <div class="mb-2 mt-5 font-medium">安全设置 · IP 黑白名单</div>
+        <GovernancePolicySettings
+          :key="`api-security-detail-${publicationDetailDialog.data.apiId}`"
+          scope-type="API"
+          :scope-id="publicationDetailDialog.data.apiId"
+          :service-id="publicationDetailDialog.data.serviceId"
+          :api-id="publicationDetailDialog.data.apiId"
+          :policy-types="['ACCESS_CONTROL']"
           readonly
         />
       </template>
@@ -563,12 +590,22 @@
           </el-table-column>
         </el-table>
         <el-empty v-else description="未配置过滤器" :image-size="60" />
-        <div class="mb-2 mt-5 font-medium">治理策略</div>
+        <div class="mb-2 mt-5 font-medium">流量治理</div>
         <GovernancePolicySettings
           :key="`application-detail-${applicationRouteDetailDialog.data.serviceId}`"
           scope-type="APPLICATION"
           :scope-id="applicationRouteDetailDialog.data.serviceId"
           :service-id="applicationRouteDetailDialog.data.serviceId"
+          :policy-types="['RATE_LIMIT', 'TIMEOUT', 'CIRCUIT_BREAKER']"
+          readonly
+        />
+        <div class="mb-2 mt-5 font-medium">安全设置 · IP 黑白名单</div>
+        <GovernancePolicySettings
+          :key="`application-security-detail-${applicationRouteDetailDialog.data.serviceId}`"
+          scope-type="APPLICATION"
+          :scope-id="applicationRouteDetailDialog.data.serviceId"
+          :service-id="applicationRouteDetailDialog.data.serviceId"
+          :policy-types="['ACCESS_CONTROL']"
           readonly
         />
       </template>
@@ -708,13 +745,23 @@
           </div>
         </el-form-item>
       </el-form>
-      <div class="mb-3 mt-5 font-medium">应用级治理策略</div>
+      <div class="mb-3 mt-5 font-medium">流量处理</div>
       <GovernancePolicySettings
         v-if="applicationRouteForm.serviceId"
-        ref="applicationPolicySettingsRef"
+        ref="applicationTrafficPolicySettingsRef"
         scope-type="APPLICATION"
         :scope-id="applicationRouteForm.serviceId"
         :service-id="applicationRouteForm.serviceId"
+        :policy-types="['RATE_LIMIT', 'TIMEOUT', 'CIRCUIT_BREAKER']"
+      />
+      <div class="mb-3 mt-5 font-medium">安全设置 · IP 黑白名单</div>
+      <GovernancePolicySettings
+        v-if="applicationRouteForm.serviceId"
+        ref="applicationSecurityPolicySettingsRef"
+        scope-type="APPLICATION"
+        :scope-id="applicationRouteForm.serviceId"
+        :service-id="applicationRouteForm.serviceId"
+        :policy-types="['ACCESS_CONTROL']"
       />
       <el-alert
         v-else
@@ -774,8 +821,10 @@ const apiPagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const publications = ref<GatewayApiPublication[]>([]);
 const applicationRoutes = ref<GatewayApplicationRoute[]>([]);
 type SettingsExpose = { load: () => Promise<void>; save: () => Promise<void> };
-const apiPolicySettingsRef = ref<SettingsExpose>();
-const applicationPolicySettingsRef = ref<SettingsExpose>();
+const apiTrafficPolicySettingsRef = ref<SettingsExpose>();
+const apiSecurityPolicySettingsRef = ref<SettingsExpose>();
+const applicationTrafficPolicySettingsRef = ref<SettingsExpose>();
+const applicationSecurityPolicySettingsRef = ref<SettingsExpose>();
 
 const publicationDialog = reactive<{
   visible: boolean;
@@ -966,7 +1015,10 @@ async function openPublicationDialog(api: GatewayApiAsset) {
   if (publicationForm.authMode === "RESOURCE_REQUIRED") void loadResourceOptions();
   publicationForm.lockVersion = current?.lockVersion;
   await nextTick();
-  await apiPolicySettingsRef.value?.load();
+  await Promise.all([
+    apiTrafficPolicySettingsRef.value?.load(),
+    apiSecurityPolicySettingsRef.value?.load(),
+  ]);
 }
 
 async function offlineApi(publication: GatewayApiPublication) {
@@ -1069,10 +1121,13 @@ async function savePublication() {
       resourceId:
         publicationForm.authMode === "RESOURCE_REQUIRED" ? publicationForm.resourceId : undefined,
     });
-    if (!apiPolicySettingsRef.value) {
-      throw new Error("API 流量治理配置尚未加载，请关闭窗口后重试");
+    if (!apiTrafficPolicySettingsRef.value || !apiSecurityPolicySettingsRef.value) {
+      throw new Error("API 治理配置尚未加载，请关闭窗口后重试");
     }
-    await apiPolicySettingsRef.value.save();
+    await Promise.all([
+      apiTrafficPolicySettingsRef.value.save(),
+      apiSecurityPolicySettingsRef.value.save(),
+    ]);
     ElMessage.success("API 发布草稿已保存");
     publicationDialog.visible = false;
     await loadAll();
@@ -1181,7 +1236,10 @@ async function saveApplicationRoute() {
     } else {
       await GatewayApiRouteAPI.createApplicationRoute(payload);
     }
-    await applicationPolicySettingsRef.value?.save();
+    await Promise.all([
+      applicationTrafficPolicySettingsRef.value?.save(),
+      applicationSecurityPolicySettingsRef.value?.save(),
+    ]);
     ElMessage.success(applicationRouteDialog.editing ? "应用路由草稿已更新" : "应用路由草稿已创建");
     applicationRouteDialog.visible = false;
     await loadAll();
