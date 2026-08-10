@@ -214,7 +214,7 @@ describe("MenuAPI route adapter", () => {
     ]);
   });
 
-  it("converts the initialized gateway management hierarchy", () => {
+  it("converts the consolidated gateway management pages without legacy child links", () => {
     const routes = toRouteItems([
       {
         id: "160",
@@ -228,17 +228,8 @@ describe("MenuAPI route adapter", () => {
             name: "流量治理",
             type: "MENU",
             href: "/gateway/traffic",
-            children: [
-              {
-                id: "217",
-                parentId: "202",
-                name: "限流规则",
-                type: "MENU",
-                href: "/gateway/traffic/rate-limits",
-                description:
-                  '{"routeName":"GatewayRateLimits","component":"system/gateway/planned/index","visible":1}',
-              },
-            ],
+            description:
+              '{"routeName":"GatewayTraffic","component":"system/gateway/traffic/index","visible":1}',
           },
         ],
       },
@@ -251,15 +242,10 @@ describe("MenuAPI route adapter", () => {
         children: [
           {
             path: "traffic",
-            component: "Layout",
-            children: [
-              {
-                path: "rate-limits",
-                name: "GatewayRateLimits",
-                component: "system/gateway/planned/index",
-                meta: { title: "限流规则", hidden: false },
-              },
-            ],
+            name: "GatewayTraffic",
+            component: "system/gateway/traffic/index",
+            meta: { title: "流量治理", hidden: false },
+            children: [],
           },
         ],
       },

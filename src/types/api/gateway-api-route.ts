@@ -183,6 +183,7 @@ export interface GatewayApplicationRoute {
   /** 直接来自当前网关运行配置的兼容路由，只读展示。 */
   runtimeOnly?: boolean;
   sourceRouteId?: string;
+  legacyRouteId?: string;
 }
 
 export interface GatewayApplicationRouteChange {
@@ -223,6 +224,8 @@ export interface GatewayRuntimeRouteDefinition {
 export interface GatewayRuntimeRoute {
   id: string;
   uri: string;
+  order?: number;
+  metadata?: Record<string, unknown>;
   predicates?: GatewayRuntimeRouteDefinition[];
   filters?: GatewayRuntimeRouteDefinition[];
 }
@@ -232,6 +235,10 @@ export interface GatewayReleaseValidationResult {
   baseVersion: string;
   apiRouteCount: number;
   applicationRouteCount: number;
+  replacedLegacyRouteIds?: string[];
+  managedRoutes?: GatewayRuntimeRoute[];
+  circuitBreakerInstances?: Record<string, Record<string, unknown>>;
+  globalRules?: Record<string, unknown>;
 }
 
 /** 网关正式发布结果。 */
@@ -242,4 +249,62 @@ export interface GatewayReleaseResult {
   apiCount: number;
   applicationRouteCount: number;
   status: "PUBLISHING" | "SUCCEEDED" | "PARTIALLY_APPLIED" | "FAILED" | "RECONCILIATION_REQUIRED";
+}
+
+export type GatewayReleaseStatus = GatewayReleaseResult["status"];
+
+export interface GatewayRelease {
+  id: string;
+  draftId?: string;
+  targetVersion?: string;
+  status: GatewayReleaseStatus;
+  failureReason?: string;
+  startedTime?: string;
+  completedTime?: string;
+}
+
+export interface GatewayReleaseItem {
+  id: string;
+  releaseId: string;
+  itemType: string;
+  itemId: string;
+  changeType: string;
+  summary?: string;
+}
+
+export interface GatewayInstanceRevision {
+  id: string;
+  instanceId: string;
+  loadedVersion?: string;
+  status: "LOADED" | "PENDING" | "UNREACHABLE";
+  errorMessage?: string;
+  reportedTime?: string;
+}
+
+export interface GatewayRouteProbe {
+  id: string;
+  instanceId: string;
+  status: "PASSED" | "MISSING" | "UNREACHABLE";
+  missingRouteIdsJson?: string;
+  errorMessage?: string;
+  probedTime?: string;
+}
+
+export interface GatewayReleaseDetail {
+  release: GatewayRelease;
+  items: GatewayReleaseItem[];
+  instances: GatewayInstanceRevision[];
+  routeProbes: GatewayRouteProbe[];
+}
+
+export interface GatewayInstanceVerification {
+  total: number;
+  loaded: number;
+  instances: GatewayInstanceRevision[];
+}
+
+export interface GatewayRouteMetricsSnapshot {
+  requestRate: string;
+  errorRate: string;
+  p95Latency: string;
 }

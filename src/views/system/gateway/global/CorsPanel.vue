@@ -76,10 +76,9 @@
       <el-button
         v-hasPerm="['gateway:global-rule:publish']"
         type="success"
-        :loading="publishing"
-        @click="publish"
+        @click="goReleaseCenter"
       >
-        预检并发布
+        查看并发布全部变更
       </el-button>
     </div>
   </el-card>
@@ -142,7 +141,7 @@ defineOptions({ name: "GatewayCorsPanel" });
 const methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"];
 const loading = ref(false);
 const saving = ref(false);
-const publishing = ref(false);
+const router = useRouter();
 const hasDraft = ref(false);
 const lockVersion = ref<number>();
 const baseVersion = ref("");
@@ -260,21 +259,7 @@ async function save() {
   }
 }
 
-async function publish() {
-  await ElMessageBox.confirm("将保存当前规则，执行预检并原子发布 globalcors。", "发布跨域规则", {
-    type: "warning",
-  });
-  publishing.value = true;
-  try {
-    if (!(await save())) return;
-    await GatewayApiRouteAPI.validateRelease(baseVersion.value);
-    const result = await GatewayApiRouteAPI.publishRelease(baseVersion.value);
-    ElMessage.success(`发布完成：${result.status}`);
-    await load();
-  } finally {
-    publishing.value = false;
-  }
-}
+async function goReleaseCenter() { await router.push("/gateway/releases"); }
 
 function validateRule(rule: GatewayCorsRule, index: number, notify = true) {
   const fail = (message: string) => (notify ? warn(message) : false);

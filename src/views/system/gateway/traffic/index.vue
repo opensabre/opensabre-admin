@@ -19,9 +19,7 @@
           </div>
           <div class="flex gap-2">
             <el-button :loading="saving" @click="savePolicy">保存</el-button>
-            <el-button type="primary" :loading="publishing" @click="publishPolicy">
-              发布到网关
-            </el-button>
+            <el-button type="primary" @click="goReleaseCenter">查看并发布全部变更</el-button>
           </div>
         </div>
       </template>
@@ -43,7 +41,6 @@
 
 <script setup lang="ts">
 import type { TabsPaneContext } from "element-plus";
-import GatewayApiRouteAPI from "@/api/gateway-admin/gateway-api-route";
 import GovernancePolicySettings from "@/views/system/gateway/components/GovernancePolicySettings.vue";
 import type { GatewayGovernancePolicyType } from "@/types/api/gateway-api-route";
 
@@ -52,12 +49,10 @@ defineOptions({ name: "GatewayTraffic" });
 type TrafficTab = "rate-limits" | "circuit-breakers" | "fallbacks";
 type SettingsExpose = { load: () => Promise<void>; save: () => Promise<void> };
 
-const route = useRoute();
 const router = useRouter();
-const activeTab = ref<TrafficTab>(resolveTab());
+const activeTab = ref<TrafficTab>("rate-limits");
 const settingsRef = ref<SettingsExpose>();
 const saving = ref(false);
-const publishing = ref(false);
 const definitions: Record<
   TrafficTab,
   { title: string; policyType: GatewayGovernancePolicyType; path: string }
@@ -76,22 +71,8 @@ const definitions: Record<
 };
 const currentDefinition = computed(() => definitions[activeTab.value]);
 
-watch(
-  () => route.path,
-  () => {
-    activeTab.value = resolveTab();
-  }
-);
-
-function resolveTab(): TrafficTab {
-  if (route.path.endsWith("/circuit-breakers")) return "circuit-breakers";
-  if (route.path.endsWith("/fallbacks")) return "fallbacks";
-  return "rate-limits";
-}
-
 async function handleTabChange(name: TabsPaneContext["paneName"]) {
-  const tab = name as TrafficTab;
-  if (route.path !== definitions[tab].path) await router.replace(definitions[tab].path);
+  activeTab.value = name as TrafficTab;
 }
 
 async function savePolicy() {
@@ -106,17 +87,7 @@ async function savePolicy() {
   }
 }
 
-async function publishPolicy() {
-  publishing.value = true;
-  try {
-    const current = await GatewayApiRouteAPI.getCurrentConfig();
-    await GatewayApiRouteAPI.validateRelease(current.version);
-    const result = await GatewayApiRouteAPI.publishRelease(current.version);
-    ElMessage.success(`发布已提交：${result.status}`);
-  } finally {
-    publishing.value = false;
-  }
-}
+async function goReleaseCenter() { await router.push("/gateway/releases"); }
 </script>
 
 <style scoped>

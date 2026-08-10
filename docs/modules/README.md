@@ -10,6 +10,8 @@
 | 内部认证 | `sysadmin/internal-token-keys/` | [双密钥状态、轮换、退役与权限](internal-token-management.md)。 |
 | 网关路由 | `system/gateway-route/` | 路由查看、编辑、校验与发布；必须与服务端权限和 Nacos 配置流程一致。 |
 | 路由管理 | `system/gateway/api-routes/` | API 资产、发布声明和应用级路由查看；见 [API 路由管理](gateway-api-routes.md)。 |
+| 发布中心 | `system/gateway/releases/` | 汇总全部待发布变更，执行预检、原子发布、实例确认、历史查看与版本回滚。 |
+| 运行监控 | `system/gateway/monitoring/` | 展示 Nacos 网关实例、最近发布加载与探测状态，以及固定 PromQL 路由指标。 |
 | 开发工具 | `development/`、`codegen/` | API 文档和开发辅助页面。 |
 | 个人中心 | `profile/` | 个人资料与消息入口。 |
 

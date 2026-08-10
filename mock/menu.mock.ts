@@ -147,7 +147,7 @@ export default defineMock([
           children: [
             {
               path: "dashboard",
-              component: "system/gateway/planned/index",
+              component: "system/gateway/dashboard/index",
               name: "GatewayDashboard",
               meta: { title: "网关总览", icon: "homepage", hidden: false },
             },
@@ -156,12 +156,6 @@ export default defineMock([
               component: "system/gateway/services/index",
               name: "GatewayServices",
               meta: { title: "服务管理", icon: "cluster", hidden: false },
-            },
-            {
-              path: "routes",
-              component: "system/gateway/route/index",
-              name: "GatewayRouteManagement",
-              meta: { title: "路由管理", icon: "api", hidden: false },
             },
             {
               path: "api-routes",
@@ -176,42 +170,10 @@ export default defineMock([
               meta: { title: "流量治理", icon: "timer", hidden: false },
             },
             {
-              path: "traffic/rate-limits",
-              component: "system/gateway/traffic/index",
-              name: "GatewayRateLimits",
-              meta: { title: "限流规则", hidden: true },
-            },
-            {
-              path: "traffic/circuit-breakers",
-              component: "system/gateway/traffic/index",
-              name: "GatewayCircuitBreakers",
-              meta: { title: "熔断规则", hidden: true },
-            },
-            {
-              path: "traffic/fallbacks",
-              component: "system/gateway/traffic/index",
-              name: "GatewayFallbacks",
-              meta: { title: "降级策略", hidden: true },
-            },
-            {
               path: "security",
-              component: "Layout",
+              component: "system/gateway/security/index",
               name: "GatewaySecurity",
-              meta: { title: "安全管理", icon: "lock", hidden: false, alwaysShow: true },
-              children: [
-                {
-                  path: "authentication",
-                  component: "system/gateway/authentication/index",
-                  name: "GatewayAuthentication",
-                  meta: { title: "认证配置", hidden: false },
-                },
-                {
-                  path: "access-lists",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayAccessLists",
-                  meta: { title: "黑白名单", hidden: false },
-                },
-              ],
+              meta: { title: "安全管理", icon: "lock", hidden: false },
             },
             {
               path: "global",
@@ -220,80 +182,16 @@ export default defineMock([
               meta: { title: "全局规则", icon: "setting", hidden: false },
             },
             {
-              path: "global/filters",
-              component: "system/gateway/global/index",
-              name: "GatewayGlobalFilters",
-              meta: { title: "全局过滤器", hidden: true },
-            },
-            {
-              path: "global/cors",
-              component: "system/gateway/global/index",
-              name: "GatewayCors",
-              meta: { title: "跨域规则", hidden: true },
-            },
-            {
               path: "releases",
-              component: "Layout",
+              component: "system/gateway/releases/index",
               name: "GatewayReleases",
-              meta: { title: "发布中心", icon: "upload", hidden: false, alwaysShow: true },
-              children: [
-                {
-                  path: "drafts",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayReleaseDrafts",
-                  meta: { title: "配置草稿", hidden: false },
-                },
-                {
-                  path: "history",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayReleaseHistory",
-                  meta: { title: "发布记录", hidden: false },
-                },
-                {
-                  path: "versions",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayReleaseVersions",
-                  meta: { title: "版本回滚", hidden: false },
-                },
-              ],
+              meta: { title: "发布中心", icon: "upload", hidden: false },
             },
             {
               path: "monitoring",
-              component: "Layout",
+              component: "system/gateway/monitoring/index",
               name: "GatewayMonitoring",
-              meta: { title: "监控中心", icon: "trend-charts", hidden: false, alwaysShow: true },
-              children: [
-                {
-                  path: "instances",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayInstances",
-                  meta: { title: "网关实例", hidden: false },
-                },
-                {
-                  path: "traffic",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayTrafficMonitoring",
-                  meta: { title: "流量监控", hidden: false },
-                },
-                {
-                  path: "routes",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayRouteMonitoring",
-                  meta: { title: "路由监控", hidden: false },
-                },
-                {
-                  path: "alerts",
-                  component: "system/gateway/planned/index",
-                  name: "GatewayAlerts",
-                  meta: { title: "告警记录", hidden: false },
-                },
-              ],
-            },
-            {
-              path: "settings",
-              component: "system/gateway/planned/index",
-              name: "GatewaySettings",
-              meta: { title: "系统设置", icon: "setting", hidden: false },
+              meta: { title: "运行监控", icon: "trend-charts", hidden: false },
             },
           ],
         },
