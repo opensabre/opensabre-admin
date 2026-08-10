@@ -139,6 +139,21 @@ export default defineMock([
           ],
         },
         {
+          path: "/development",
+          component: "Layout",
+          redirect: "/gateway/services",
+          name: "Development",
+          meta: { title: "研发管理", icon: "code", hidden: false, alwaysShow: true },
+          children: [
+            {
+              path: "/gateway/services",
+              component: "system/gateway/services/index",
+              name: "GatewayServices",
+              meta: { title: "服务管理", icon: "cluster", hidden: false },
+            },
+          ],
+        },
+        {
           path: "/gateway",
           component: "Layout",
           redirect: "dashboard",
@@ -150,12 +165,6 @@ export default defineMock([
               component: "system/gateway/dashboard/index",
               name: "GatewayDashboard",
               meta: { title: "网关总览", icon: "homepage", hidden: false },
-            },
-            {
-              path: "services",
-              component: "system/gateway/services/index",
-              name: "GatewayServices",
-              meta: { title: "服务管理", icon: "cluster", hidden: false },
             },
             {
               path: "api-routes",
