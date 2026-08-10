@@ -15,6 +15,10 @@ describe("API 发布向导流量治理步骤", () => {
     resolve(process.cwd(), "src/views/system/gateway/security/AccessListPanel.vue"),
     "utf8"
   );
+  const releaseSource = readFileSync(
+    resolve(process.cwd(), "src/views/system/gateway/releases/index.vue"),
+    "utf8"
+  );
 
   it("切换到确认步骤后仍保留策略组件，以便保存自定义参数", () => {
     expect(source).toContain('<div v-show="publicationStep === 1">');
@@ -57,5 +61,19 @@ describe("API 发布向导流量治理步骤", () => {
     expect(accessListSource).toContain('GatewayApiRouteAPI.listPolicies("GLOBAL")');
     expect(accessListSource).not.toContain('value="APPLICATION"');
     expect(accessListSource).not.toContain('value="API"');
+  });
+
+  it("API 列表区分独立发布、应用覆盖和多路由覆盖", () => {
+    expect(source).toContain("经应用路由暴露");
+    expect(source).toContain("独立+应用暴露");
+    expect(source).toContain("多路由覆盖");
+    expect(source).toContain('publication?.status === "OFFLINE"');
+  });
+
+  it("正式发布统一进入发布中心并展示编译候选", () => {
+    expect(source).toContain('router.push("/gateway/releases")');
+    expect(releaseSource).toContain("发布全部变更");
+    expect(releaseSource).toContain("candidate?.managedRoutes");
+    expect(releaseSource).toContain("回滚到此版本");
   });
 });

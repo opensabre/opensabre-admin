@@ -51,6 +51,12 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="API 操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="viewApis(row.name)">查看 API</el-button>
+            <el-button link type="success" :loading="syncingService === row.name" @click="syncApis(row.name)">同步</el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <pagination
@@ -66,6 +72,7 @@
 
 <script setup lang="ts">
 import GatewayServiceAPI from "@/api/gateway-admin/gateway-service";
+import GatewayApiRouteAPI from "@/api/gateway-admin/gateway-api-route";
 import type { GatewayServiceSummary } from "@/types/api/gateway-service";
 
 defineOptions({ name: "GatewayServices" });
@@ -74,6 +81,8 @@ const loading = ref(false);
 const total = ref(0);
 const services = ref<GatewayServiceSummary[]>([]);
 const query = reactive({ page: 1, pageSize: 20 });
+const router = useRouter();
+const syncingService = ref("");
 
 async function loadServices() {
   loading.value = true;
@@ -92,6 +101,25 @@ function metadataText(metadata: Record<string, string>) {
       .map(([key, value]) => `${key}=${value}`)
       .join(", ") || "-"
   );
+}
+
+async function viewApis(serviceId: string) {
+  await router.push({ path: "/gateway/api-routes", query: { serviceId } });
+}
+
+async function syncApis(serviceId: string) {
+  syncingService.value = serviceId;
+  try {
+    const result = await GatewayApiRouteAPI.syncApis(serviceId);
+    const type = result.missing > 0 ? "warning" : "success";
+    ElMessage({
+      type,
+      message: `同步完成：发现 ${result.discovered}，新增 ${result.created}，更新 ${result.updated}，消失 ${result.missing}`,
+      duration: 6000,
+    });
+  } finally {
+    syncingService.value = "";
+  }
 }
 
 onMounted(loadServices);

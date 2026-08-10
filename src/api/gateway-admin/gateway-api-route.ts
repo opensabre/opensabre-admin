@@ -16,6 +16,10 @@ import type {
   GatewayPolicyType,
   GatewayEffectivePolicy,
   GatewayPolicyScopeType,
+  GatewayRelease,
+  GatewayReleaseDetail,
+  GatewayInstanceVerification,
+  GatewayRouteMetricsSnapshot,
 } from "@/types/api/gateway-api-route";
 
 const BASE_URL = "/gateway-admin";
@@ -115,6 +119,34 @@ const GatewayApiRouteAPI = {
       data: { baseVersion },
     });
   },
+  listReleases() {
+    return request<any, GatewayRelease[]>({ url: `${BASE_URL}/releases`, method: "get" });
+  },
+  getRelease(id: string) {
+    return request<any, GatewayReleaseDetail>({
+      url: `${BASE_URL}/releases/${encodeURIComponent(id)}`,
+      method: "get",
+    });
+  },
+  rollbackRelease(id: string, baseVersion: string) {
+    return request<any, GatewayReleaseResult>({
+      url: `${BASE_URL}/releases/${encodeURIComponent(id)}/rollback`,
+      method: "post",
+      data: { baseVersion },
+    });
+  },
+  verifyReleaseInstances(id: string) {
+    return request<any, GatewayInstanceVerification>({
+      url: `${BASE_URL}/releases/${encodeURIComponent(id)}/verify-instances`,
+      method: "post",
+    });
+  },
+  getRouteMetrics() {
+    return request<any, GatewayRouteMetricsSnapshot>({
+      url: `${BASE_URL}/monitoring/routes`,
+      method: "get",
+    });
+  },
   savePublication(apiId: string, data: GatewayApiPublicationChange) {
     return request<any, GatewayApiPublication>({
       url: `${BASE_URL}/apis/${encodeURIComponent(apiId)}/publication`,
@@ -176,6 +208,13 @@ const GatewayApiRouteAPI = {
       url: `${BASE_URL}/application-routes`,
       method: "post",
       data,
+    });
+  },
+  adoptLegacyRoute(routeId: string, baseVersion: string) {
+    return request<any, GatewayApplicationRoute>({
+      url: `${BASE_URL}/application-routes/adopt`,
+      method: "post",
+      data: { routeId, baseVersion },
     });
   },
   updateApplicationRoute(id: string, data: GatewayApplicationRouteChange) {

@@ -98,10 +98,9 @@
       <el-button
         v-hasPerm="['gateway:global-rule:publish']"
         type="success"
-        :loading="publishing"
-        @click="publish"
+        @click="goReleaseCenter"
       >
-        预检并发布
+        查看并发布全部变更
       </el-button>
     </div>
   </el-card>
@@ -183,7 +182,7 @@ const filterDescriptions: Record<string, string> = {
 };
 const loading = ref(false);
 const saving = ref(false);
-const publishing = ref(false);
+const router = useRouter();
 const hasDraft = ref(false);
 const lockVersion = ref<number>();
 const baseVersion = ref("");
@@ -347,25 +346,7 @@ async function save() {
   }
 }
 
-async function publish() {
-  await ElMessageBox.confirm(
-    "将先执行发布预检，再以当前 Nacos 版本原子发布全部草稿。",
-    "发布全局过滤器",
-    {
-      type: "warning",
-    }
-  );
-  publishing.value = true;
-  try {
-    if (!(await save())) return;
-    await GatewayApiRouteAPI.validateRelease(baseVersion.value);
-    const result = await GatewayApiRouteAPI.publishRelease(baseVersion.value);
-    ElMessage.success(`发布完成：${result.status}`);
-    await load();
-  } finally {
-    publishing.value = false;
-  }
-}
+async function goReleaseCenter() { await router.push("/gateway/releases"); }
 
 function warn(message: string) {
   ElMessage.warning(message);

@@ -62,14 +62,7 @@
         >
           保存策略
         </el-button>
-        <el-button
-          v-hasPerm="['gateway:access-list:publish']"
-          type="success"
-          :loading="publishing"
-          @click="publishPolicy"
-        >
-          发布到网关
-        </el-button>
+        <el-button v-hasPerm="['gateway:access-list:publish']" type="success" @click="goReleaseCenter">查看并发布全部变更</el-button>
       </el-form-item>
     </el-form>
   </el-card>
@@ -87,7 +80,7 @@ defineOptions({ name: "GatewayAccessListPanel" });
 
 const loading = ref(false);
 const saving = ref(false);
-const publishing = ref(false);
+const router = useRouter();
 const form = reactive({
   mode: "DISABLED" as GatewayPolicyMode,
   accessMode: "DENYLIST" as GatewayAccessControlConfig["accessMode"],
@@ -137,17 +130,7 @@ async function savePolicy() {
   }
 }
 
-async function publishPolicy() {
-  publishing.value = true;
-  try {
-    const current = await GatewayApiRouteAPI.getCurrentConfig();
-    await GatewayApiRouteAPI.validateRelease(current.version);
-    const result = await GatewayApiRouteAPI.publishRelease(current.version);
-    ElMessage.success(`发布已提交：${result.status}`);
-  } finally {
-    publishing.value = false;
-  }
-}
+async function goReleaseCenter() { await router.push("/gateway/releases"); }
 
 function validateEntries() {
   const cidrPattern = /^[0-9a-fA-F:.]+(?:\/\d{1,3})?$/;

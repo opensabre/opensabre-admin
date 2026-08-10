@@ -8,11 +8,10 @@
             <el-button type="success" :loading="syncing" @click="syncApis">同步 OpenAPI</el-button>
             <el-button
               type="warning"
-              :loading="publishing"
               :disabled="pendingDraftCount === 0"
               @click="publishDrafts"
             >
-              发布到网关
+              查看并发布全部变更
               <span v-if="pendingDraftCount">（{{ pendingDraftCount }}）</span>
             </el-button>
             <el-button type="primary" :loading="loading" @click="loadAll">刷新</el-button>
@@ -69,6 +68,13 @@
                   code="gateway_publication_status"
                 />
                 <el-tag v-else type="info">未发布</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="实际暴露" width="160">
+              <template #default="{ row }">
+                <el-tooltip :content="apiExposure(row).description" placement="top">
+                  <el-tag :type="apiExposure(row).tagType">{{ apiExposure(row).label }}</el-tag>
+                </el-tooltip>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="110" fixed="right">
@@ -178,6 +184,7 @@
                 >
                   {{ row.runtimeOnly ? "只读" : "编辑" }}
                 </el-button>
+                <el-button v-if="row.runtimeOnly" link type="success" size="small" @click="adoptLegacyRoute(row)">纳管</el-button>
                 <el-button
                   v-if="!row.runtimeOnly && row.status === 'DRAFT'"
                   link
@@ -625,7 +632,6 @@
             applicationRouteDetailDialog.data.status === 'DRAFT'
           "
           type="success"
-          :loading="publishing"
           @click="publishApplicationRoute(applicationRouteDetailDialog.data)"
         >
           发布
@@ -808,18 +814,20 @@ import {
 defineOptions({ name: "GatewayApiRoutes" });
 
 const activeTab = ref("apis");
+const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const syncing = ref(false);
 const saving = ref(false);
-const publishing = ref(false);
 const focusedPublicationRouteName = ref("");
-const serviceId = ref("");
+const serviceId = ref(typeof route.query.serviceId === "string" ? route.query.serviceId : "");
 const services = ref<GatewayServiceSummary[]>([]);
 const resourceOptions = ref<OptionItem[]>([]);
 const apis = ref<GatewayApiAsset[]>([]);
 const apiPagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const publications = ref<GatewayApiPublication[]>([]);
 const applicationRoutes = ref<GatewayApplicationRoute[]>([]);
+const runtimeRouteIds = ref(new Set<string>());
 type SettingsExpose = { load: () => Promise<void>; save: () => Promise<void> };
 const apiTrafficPolicySettingsRef = ref<SettingsExpose>();
 const apiSecurityPolicySettingsRef = ref<SettingsExpose>();
@@ -891,6 +899,45 @@ const pendingOfflineCount = computed(
     applicationRoutes.value.filter((route) => route.status === "OFFLINE" && !route.publishedVersion)
       .length
 );
+
+type ExposureTag = "success" | "warning" | "danger" | "info";
+type ApiExposure = { label: string; description: string; tagType: ExposureTag };
+
+function apiExposure(api: GatewayApiAsset): ApiExposure {
+  const publication = publicationByApi.value.get(api.id);
+  const independentlyExposed = runtimeRouteIds.value.has(`api-${api.id}`);
+  const coveringApplications = applicationRoutes.value.filter(
+    (route) =>
+      route.serviceId === api.serviceId &&
+      (route.runtimeOnly || runtimeRouteIds.value.has(`application-${route.id}`))
+  );
+  if (coveringApplications.length > 1) {
+    return {
+      label: "多路由覆盖",
+      description: `该 API 可经 ${coveringApplications.length} 条应用路由访问，请检查通配范围和优先级`,
+      tagType: "danger",
+    };
+  }
+  if (independentlyExposed && coveringApplications.length) {
+    return {
+      label: "独立+应用暴露",
+      description: `独立 API 路由和应用路由“${coveringApplications[0].routeName}”均可暴露该接口`,
+      tagType: "warning",
+    };
+  }
+  if (independentlyExposed) {
+    return { label: "独立发布", description: "当前运行配置包含该 API 的独立路由", tagType: "success" };
+  }
+  if (coveringApplications.length) {
+    const offlineHint = publication?.status === "OFFLINE" ? "；独立路由虽已取消，但接口仍可能访问" : "";
+    return {
+      label: "经应用路由暴露",
+      description: `由应用路由“${coveringApplications[0].routeName}”覆盖${offlineHint}`,
+      tagType: publication?.status === "OFFLINE" ? "danger" : "warning",
+    };
+  }
+  return { label: "未暴露", description: "当前网关运行配置中没有可暴露该 API 的托管路由", tagType: "info" };
+}
 
 function authModeLabel(mode?: string) {
   return (
@@ -964,37 +1011,15 @@ async function syncApis() {
   }
 }
 
-/** 通过发布中心将当前草稿编译并写入 Nacos，网关刷新后才会实际对外暴露。 */
+/** 正式发布集中在发布中心，避免将全量原子发布误解成当前路由的局部操作。 */
 async function publishDrafts() {
   if (pendingDraftCount.value === 0) {
     ElMessage.warning("当前没有待发布的 API 或应用级路由草稿");
     return false;
   }
-  publishing.value = true;
-  try {
-    const currentConfig = await GatewayApiRouteAPI.getCurrentConfig();
-    const candidate = await GatewayApiRouteAPI.validateRelease(currentConfig.version);
-    try {
-      await ElMessageBox.confirm(
-        `${focusedPublicationRouteName.value ? `路由“${focusedPublicationRouteName.value}”已包含在本次候选中。` : ""}当前发布机制会统一处理全部待生效变更：${candidate.apiRouteCount} 个 API 路由、${candidate.applicationRouteCount} 个应用级路由${pendingOfflineCount.value ? `，其中 ${pendingOfflineCount.value} 个路由待取消发布` : ""}。发布后立即进入网关运行时配置。`,
-        "确认发布到网关",
-        { type: "warning", confirmButtonText: "发布", cancelButtonText: "取消" }
-      );
-    } catch {
-      return false;
-    }
-    const result = await GatewayApiRouteAPI.publishRelease(candidate.baseVersion);
-    if (result.status === "SUCCEEDED") {
-      ElMessage.success(`发布成功，配置版本：${result.targetVersion}`);
-    } else {
-      ElMessage.warning(`发布已完成但状态为 ${result.status}，请到发布中心查看实例生效情况`);
-    }
-    await loadAll();
-    return true;
-  } finally {
-    publishing.value = false;
-    focusedPublicationRouteName.value = "";
-  }
+  focusedPublicationRouteName.value = "";
+  await router.push("/gateway/releases");
+  return true;
 }
 
 async function openPublicationDialog(api: GatewayApiAsset) {
@@ -1259,9 +1284,23 @@ async function loadAll() {
     ]);
     publications.value = loadedPublications;
     applicationRoutes.value = mergeApplicationRouteViews(loadedApplicationRoutes, runtimeConfig);
+    runtimeRouteIds.value = new Set((runtimeConfig.routes || []).map((route) => route.id));
   } finally {
     loading.value = false;
   }
+}
+
+async function adoptLegacyRoute(route: GatewayApplicationRoute) {
+  if (!route.sourceRouteId) return;
+  await ElMessageBox.confirm(
+    `将运行时路由“${route.sourceRouteId}”导入为应用路由草稿。正式发布时会在同一次配置替换中移除旧 Route，是否继续？`,
+    "纳管遗留路由",
+    { type: "warning", confirmButtonText: "创建草稿" }
+  );
+  const config = await GatewayApiRouteAPI.getCurrentConfig();
+  await GatewayApiRouteAPI.adoptLegacyRoute(route.sourceRouteId, config.version);
+  ElMessage.success("纳管草稿已创建，请检查治理和安全设置后到发布中心生效");
+  await loadAll();
 }
 
 onMounted(loadAll);
