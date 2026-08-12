@@ -2,7 +2,8 @@
  * 数据格式化相关工具函数
  */
 
-const ISO_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/;
+const ISO_DATE_TIME_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:?\d{2})?$/;
 
 /**
  * 将接口日期时间统一展示为 YYYY-MM-DD HH:mm:ss。
@@ -13,17 +14,23 @@ const ISO_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})
 export function formatDateTime(value: string): string {
   if (!ISO_DATE_TIME_PATTERN.test(value)) return value;
 
+  const hasFraction = /\.\d{1,9}(?:Z|[+-]\d{2}:?\d{2})?$/.test(value);
+
   if (!/(Z|[+-]\d{2}:?\d{2})$/.test(value)) {
-    return value.slice(0, 19).replace("T", " ");
+    const base = value.slice(0, 19).replace("T", " ");
+    if (!hasFraction) return base;
+    const fraction = value.match(/\.(\d{1,9})/)?.[1] ?? "";
+    return `${base}.${fraction.padEnd(3, "0").slice(0, 3)}`;
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  const pad = (number: number) => String(number).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+  const pad = (number: number, length = 2) => String(number).padStart(length, "0");
+  const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
     date.getHours()
   )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return hasFraction ? `${formatted}.${pad(date.getMilliseconds(), 3)}` : formatted;
 }
 
 /** 递归规范 API 响应中的 ISO 日期时间字符串，供直接绑定表格/详情字段的页面复用。 */

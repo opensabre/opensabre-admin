@@ -19,6 +19,7 @@ import type {
   GatewayRelease,
   GatewayReleaseDetail,
   GatewayInstanceVerification,
+  GatewayInstanceRuntime,
   GatewayRouteMetricsSnapshot,
 } from "@/types/api/gateway-api-route";
 
@@ -144,6 +145,12 @@ const GatewayApiRouteAPI = {
   getRouteMetrics() {
     return request<any, GatewayRouteMetricsSnapshot>({
       url: `${BASE_URL}/monitoring/routes`,
+      method: "get",
+    });
+  },
+  getRuntimeSnapshots() {
+    return request<any, GatewayInstanceRuntime[]>({
+      url: `${BASE_URL}/monitoring/runtime`,
       method: "get",
     });
   },

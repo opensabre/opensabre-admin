@@ -147,6 +147,22 @@ describe("date time formatting", () => {
     expect(formatDateTime("2026-07-15T22:20:02")).toBe("2026-07-15 22:20:02");
   });
 
+  it("preserves date-time milliseconds with three digits", () => {
+    expect(formatDateTime("2026-07-15T22:20:02.1")).toBe("2026-07-15 22:20:02.100");
+    expect(formatDateTime("2026-07-15T22:20:02.123456")).toBe("2026-07-15 22:20:02.123");
+  });
+
+  it("formats zoned date-time milliseconds in the local timezone", () => {
+    const value = "2026-07-15T14:20:02.123Z";
+    const date = new Date(value);
+    const pad = (number: number, length = 2) => String(number).padStart(length, "0");
+    expect(formatDateTime(value)).toBe(
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+        date.getHours()
+      )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad(date.getMilliseconds(), 3)}`
+    );
+  });
+
   it("normalizes nested API response values", () => {
     const response = normalizeDateTimeValues({
       createdTime: "2026-07-15T22:20:02",

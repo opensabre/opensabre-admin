@@ -308,3 +308,38 @@ export interface GatewayRouteMetricsSnapshot {
   errorRate: string;
   p95Latency: string;
 }
+
+export interface GatewayRuntimeSnapshot {
+  revision: string;
+  applicationVersion: string;
+  uptimeSeconds: number;
+  availableProcessors: number;
+  routeCount: number;
+  jvm: {
+    javaVersion: string;
+    vendor: string;
+    heapUsedBytes: number;
+    heapMaxBytes: number;
+    nonHeapUsedBytes: number;
+    liveThreads: number;
+    peakThreads: number;
+  };
+  netty: { workerThreads: number; selectorThreads: number };
+  httpClient: {
+    poolType: string;
+    maxConnections: number;
+    acquireTimeoutMillis: number;
+    connectTimeoutMillis: number;
+    responseTimeoutMillis?: number;
+    maxIdleTimeMillis?: number;
+    maxLifeTimeMillis?: number;
+  };
+  sources: Record<string, "DEFAULT" | "CONFIGURED" | "SYSTEM_PROPERTY" | string>;
+}
+
+export interface GatewayInstanceRuntime {
+  instanceId: string;
+  healthy: boolean;
+  snapshot?: GatewayRuntimeSnapshot;
+  errorMessage?: string;
+}
