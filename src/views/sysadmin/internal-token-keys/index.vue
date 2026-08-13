@@ -1,6 +1,12 @@
 <template>
   <div class="app-container">
     <el-alert
+      class="mb-4"
+      type="warning"
+      :closable="false"
+      title="当前共享配置不支持热刷新：轮换后必须按接收方优先滚动重启全部内部 Token 应用，确认均加载新版本后，才能退役 previous 密钥。"
+    />
+    <el-alert
       v-if="status && !status.writeEnabled"
       class="mb-4"
       type="warning"
@@ -141,7 +147,7 @@
         class="mb-4"
         type="warning"
         :closable="false"
-        title="新密钥由服务端安全生成。提交后旧 active 会进入 previous 保护期。"
+        title="新密钥由服务端安全生成。提交后旧 active 会进入 previous 保护期；请立即按接收方优先滚动重启全部相关应用。"
       />
       <el-form ref="rotateFormRef" :model="rotateForm" :rules="rotateRules" label-width="100px">
         <el-form-item label="当前版本">
@@ -264,7 +270,7 @@ async function rotate() {
       expectedConfigVersion: status.value.configVersion,
     });
     rotateDialog.visible = false;
-    ElMessage.success("密钥轮换已发布，请等待所有应用刷新共享配置");
+    ElMessage.warning("密钥轮换已发布，请按接收方优先滚动重启全部相关应用");
     auditQuery.pageNum = 1;
     await loadAudits();
   } finally {
@@ -277,7 +283,7 @@ async function retirePrevious() {
   let reason = "";
   try {
     const result = await ElMessageBox.prompt(
-      "退役后使用 previous 密钥签发的 Token 将不再通过验证，请填写原因。",
+      "请先确认全部相关应用已滚动重启并加载当前配置版本。退役后使用 previous 密钥签发的 Token 将不再通过验证，请填写原因。",
       "退役 previous 密钥",
       {
         type: "warning",
@@ -321,9 +327,9 @@ onMounted(() => {
 
 .card-header {
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
 }
 
 .key-id {
