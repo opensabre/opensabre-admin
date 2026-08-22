@@ -221,8 +221,15 @@ function toRow(filter: GatewayDefaultFilterDraft): FilterRow {
   return {
     ...structuredClone(filter),
     args: { ...(filter.args || {}) },
-    rowId: crypto.randomUUID(),
+    rowId: createRowId(filter.name),
   };
+}
+
+function createRowId(name: string) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 function isProtected(filter: GatewayDefaultFilterDraft) {
@@ -346,7 +353,9 @@ async function save() {
   }
 }
 
-async function goReleaseCenter() { await router.push("/gateway/releases"); }
+async function goReleaseCenter() {
+  await router.push("/gateway/releases");
+}
 
 function warn(message: string) {
   ElMessage.warning(message);
