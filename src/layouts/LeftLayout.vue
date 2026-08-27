@@ -1,6 +1,6 @@
 <template>
   <BaseLayout>
-    <!-- 左侧菜单�?-->
+    <!-- 左侧菜单�?-->
     <div class="layout__sidebar" :class="{ 'layout__sidebar--collapsed': !isSidebarOpen }">
       <div :class="{ 'has-logo': showLogo }" class="layout-sidebar">
         <LayoutLogo v-if="showLogo" :collapse="!isSidebarOpen" />
@@ -14,12 +14,11 @@
     <div
       class="layout__main"
       :class="{
-        hasTagsView: showTagsView,
         'layout__main--collapsed': !isSidebarOpen,
       }"
     >
       <LayoutNavbar />
-      <LayoutTagsView v-if="showTagsView" />
+
       <LayoutMain />
     </div>
   </BaseLayout>
@@ -30,11 +29,10 @@ import { useLayout } from "./useLayout";
 import BaseLayout from "./BaseLayout.vue";
 import LayoutLogo from "./components/LayoutLogo.vue";
 import LayoutNavbar from "./components/LayoutNavbar.vue";
-import LayoutTagsView from "./components/LayoutTagsView.vue";
 import LayoutMain from "./components/LayoutMain.vue";
 import LayoutSidebar from "./components/LayoutSidebar.vue";
 
-const { showTagsView, showLogo, isSidebarOpen, routes } = useLayout();
+const { showLogo, isSidebarOpen, routes } = useLayout();
 </script>
 
 <style lang="scss" scoped>
@@ -91,7 +89,7 @@ const { showTagsView, showLogo, isSidebarOpen, routes } = useLayout();
   }
 }
 
-/* 移动端样�?*/
+/* 移动端样�?*/
 .mobile {
   .layout__sidebar {
     width: $sidebar-width !important;
@@ -114,12 +112,6 @@ const { showTagsView, showLogo, isSidebarOpen, routes } = useLayout();
 
   .layout__main {
     margin-left: 0 !important;
-  }
-}
-
-.hasTagsView {
-  :deep(.app-main) {
-    height: calc(100vh - $navbar-height - $tags-view-height) !important;
   }
 }
 </style>

@@ -35,11 +35,6 @@
         </div>
 
         <div class="config-item flex-x-between">
-          <span class="text-xs">{{ t("settings.showTagsView") }}</span>
-          <el-switch v-model="settingsStore.showTagsView" />
-        </div>
-
-        <div class="config-item flex-x-between">
           <span class="text-xs">{{ t("settings.showAppLogo") }}</span>
           <el-switch v-model="settingsStore.showAppLogo" />
         </div>

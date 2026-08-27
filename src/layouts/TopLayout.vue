@@ -9,6 +9,7 @@
         <div class="layout__header-menu">
           <LayoutSidebar :data="topMenuItems" menu-mode="horizontal" base-path="" />
         </div>
+        <Breadcrumb />
       </div>
       <div class="layout__header-right">
         <LayoutToolbar />
@@ -16,8 +17,7 @@
     </div>
 
     <!-- 主内容区 -->
-    <div :class="{ hasTagsView: showTagsView }" class="layout__main">
-      <LayoutTagsView v-if="showTagsView" />
+    <div class="layout__main">
       <LayoutMain />
     </div>
   </BaseLayout>
@@ -31,10 +31,10 @@ import BaseLayout from "./BaseLayout.vue";
 import LayoutLogo from "./components/LayoutLogo.vue";
 import LayoutSidebar from "./components/LayoutSidebar.vue";
 import LayoutToolbar from "./components/LayoutToolbar.vue";
-import LayoutTagsView from "./components/LayoutTagsView.vue";
 import LayoutMain from "./components/LayoutMain.vue";
+import Breadcrumb from "@/components/Breadcrumb/index.vue";
 
-const { showTagsView, showLogo } = useLayout();
+const { showLogo } = useLayout();
 const { width } = useWindowSize();
 
 const permissionStore = usePermissionStore();
@@ -142,12 +142,6 @@ const isLogoCollapsed = computed(() => width.value < 768);
   &__main {
     height: calc(100vh - $navbar-height);
     overflow-y: auto;
-  }
-}
-
-.hasTagsView {
-  :deep(.app-main) {
-    height: calc(100vh - $navbar-height - $tags-view-height) !important;
   }
 }
 </style>

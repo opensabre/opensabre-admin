@@ -27,6 +27,7 @@
             </el-menu-item>
           </el-menu>
         </div>
+        <Breadcrumb />
 
         <div class="layout__header-actions">
           <LayoutToolbar />
@@ -62,8 +63,7 @@
       </div>
 
       <!-- 主内容区 -->
-      <div :class="{ hasTagsView: showTagsView }" class="layout__main">
-        <LayoutTagsView v-if="showTagsView" />
+      <div class="layout__main">
         <LayoutMain />
       </div>
     </div>
@@ -82,10 +82,10 @@ import { ElIcon } from "element-plus";
 import BaseLayout from "./BaseLayout.vue";
 import LayoutLogo from "./components/LayoutLogo.vue";
 import LayoutToolbar from "./components/LayoutToolbar.vue";
-import LayoutTagsView from "./components/LayoutTagsView.vue";
 import LayoutMain from "./components/LayoutMain.vue";
 import LayoutSidebarItem from "./components/LayoutSidebarItem.vue";
 import Hamburger from "@/components/Hamburger/index.vue";
+import Breadcrumb from "@/components/Breadcrumb/index.vue";
 import variables from "@/styles/variables.module.scss";
 
 // 菜单图标渲染组件
@@ -119,8 +119,7 @@ const appStore = useAppStore();
 const permissionStore = usePermissionStore();
 const settingsStore = useSettingsStore();
 
-const { showTagsView, showLogo, isSidebarOpen, toggleSidebar, sideMenuRoutes, activeTopMenuPath } =
-  useLayout();
+const { showLogo, isSidebarOpen, toggleSidebar, sideMenuRoutes, activeTopMenuPath } = useLayout();
 
 const isLogoCollapsed = computed(() => width.value < 768);
 
@@ -356,12 +355,6 @@ watch(
       width: $sidebar-width !important;
       transform: translateX(-$sidebar-width);
     }
-  }
-}
-
-:deep(.hasTagsView) {
-  .app-main {
-    height: calc(100vh - $navbar-height - $tags-view-height) !important;
   }
 }
 </style>

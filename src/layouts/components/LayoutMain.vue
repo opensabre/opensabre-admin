@@ -62,11 +62,7 @@ const currentComponent = (component: Component, route: RouteLocationNormalized) 
 };
 
 const appMainHeight = computed(() => {
-  if (settingsStore.showTagsView) {
-    return `calc(100vh - ${variables["navbar-height"]} - ${variables["tags-view-height"]})`;
-  } else {
-    return `calc(100vh - ${variables["navbar-height"]})`;
-  }
+  return `calc(100vh - ${variables["navbar-height"]})`;
 });
 
 // 页面切换动画名称
