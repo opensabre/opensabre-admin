@@ -167,9 +167,12 @@ function logout() {
     type: "warning",
     lockScroll: false,
   }).then(() => {
-    userStore.logout().then(() => {
-      router.push(`/login?redirect=${route.fullPath}`);
-    });
+    userStore
+      .logout()
+      .catch(() => undefined)
+      .then(() => {
+        router.replace({ path: "/login", query: { redirect: route.fullPath } });
+      });
   });
 }
 

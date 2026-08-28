@@ -86,18 +86,13 @@ export const useUserStore = defineStore("user", () => {
   /**
    * 登出
    */
-  function logout() {
-    return new Promise<void>((resolve, reject) => {
-      AuthAPI.logout()
-        .then(() => {
-          // 重置所有系统状态
-          resetAllState();
-          resolve();
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  async function logout() {
+    try {
+      await AuthAPI.logout();
+    } finally {
+      // 即使网络异常也不在浏览器中继续保留敏感登录状态。
+      await resetAllState();
+    }
   }
 
   /**

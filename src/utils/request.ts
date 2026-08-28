@@ -56,6 +56,11 @@ http.interceptors.response.use(
       return response;
     }
 
+    // DELETE 等命令型接口可使用 HTTP 204 表示成功，此时没有统一 JSON 响应体。
+    if (response.status === 204) {
+      return undefined;
+    }
+
     const { code, data, msg, mesg } = response.data;
     const message = mesg || msg; // 优先使用 mesg（OpenSabre 标准），兼容 msg
 

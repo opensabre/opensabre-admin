@@ -56,10 +56,8 @@ const AuthAPI = {
 
   /** 退出登录接口 */
   logout() {
-    return request({
-      url: `${AUTH_BASE_URL}/logout`,
-      method: "delete",
-    });
+    // 注销身份和审计由认证服务负责，前端仅调用其退出接口。
+    return request({ url: `${AUTH_BASE_URL}/logout`, method: "delete" });
   },
 
   /** 获取验证码接口*/

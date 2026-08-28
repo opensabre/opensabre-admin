@@ -83,4 +83,16 @@ describe("HTTP 响应拦截器", () => {
     expect(result).toEqual({ username: "admin" });
     expect(redirectToLoginMock).not.toHaveBeenCalled();
   });
+
+  it("接受无响应体的 204 成功结果", async () => {
+    const result = await request({
+      url: "/logout",
+      baseURL: "",
+      method: "delete",
+      adapter: responseAdapter({ status: 204, statusText: "No Content", data: "" }),
+    });
+
+    expect(result).toBeUndefined();
+    expect(redirectToLoginMock).not.toHaveBeenCalled();
+  });
 });
