@@ -16,6 +16,6 @@ describe("AuthAPI", () => {
 
     await AuthAPI.logout();
 
-    expect(requestMock).toHaveBeenCalledWith({ url: "/v1/auth/logout", method: "delete" });
+    expect(requestMock).toHaveBeenCalledWith({ url: "/auth/logout", method: "delete" });
   });
 });

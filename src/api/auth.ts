@@ -2,7 +2,9 @@ import request from "@/utils/request";
 import type { LoginRequest, LoginResponse, CaptchaInfo, OAuth2Config } from "@/types/api/auth";
 import { CaptchaScenario } from "@/types/api/auth";
 
-const AUTH_BASE_URL = "/v1/auth";
+// Gateway exposes the authentication service under /api/auth and strips the
+// route prefix before forwarding to the service.
+const AUTH_BASE_URL = "/auth";
 
 /**
  * OAuth2 配置
