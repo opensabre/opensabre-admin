@@ -10,6 +10,7 @@ export interface ResourceQueryParams extends BaseQueryParams {
   code?: string;
   url?: string;
   method?: string;
+  productCode?: string;
 }
 
 /** 资源分页对象 */
@@ -21,6 +22,7 @@ export interface ResourceItem {
   url?: string;
   method?: string;
   description?: string;
+  productCode?: string;
   createdTime?: string;
   updatedTime?: string;
 }
@@ -34,4 +36,5 @@ export interface ResourceForm {
   url?: string;
   method?: string;
   description?: string;
+  productCode?: string;
 }

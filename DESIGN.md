@@ -2,7 +2,7 @@
 
 ## Source of truth
 - Status: Active
-- Last refreshed: 2026-08-01
+- Last refreshed: 2026-08-31
 - Primary product surfaces: OpenSabre 管理后台
 - Evidence reviewed: `src/styles/variables.scss`、`src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器、菜单合并迁移脚本
 
@@ -22,13 +22,14 @@
 - Key contexts of use: 桌面端管理后台
 
 ## Information architecture
-- Primary navigation: 系统管理 → 计次管理；安全认证 → 客户端管理 / 内部认证
+- Primary navigation: 仅加载归属 `opensabre-admin` 的菜单与公共菜单；系统管理 → 计次管理；安全认证 → 客户端管理 / 内部认证
 - Core routes/screens: `/sysadmin/usage-management`、`/auth/client`、`/auth/internal-token-keys`
 - Content hierarchy: 计次管理包含场景管理/使用统计 Tab；客户端管理包含客户端/Token 签发 Tab；内部认证保持独立二级菜单
 
 ## Design principles
 - Principle 1: 复用通知管理的页内 Tab 模式
 - Principle 2: 保留原页面的筛选、表格、图表和权限控制
+- Principle 3: 产品决定信息边界，角色决定授权边界；菜单必须同时满足当前产品可见和当前用户已授权
 - Tradeoffs: 旧页面组件继续保留，组合页面负责统一入口
 
 ## Visual language
@@ -41,7 +42,7 @@
 
 ## Components
 - Existing components to reuse: `ElTabs`、计次场景页、使用统计页、OAuth2 客户端页、OAuth2 授权记录页、内部 Token 密钥页
-- New/changed components: 计次管理组合页、客户端管理组合页、全局表格当前行状态、表格中性值标签
+- New/changed components: 计次管理组合页、客户端管理组合页、全局表格当前行状态、表格中性值标签、登录后加载的产品品牌信息
 - Variants and states: 场景管理/使用统计；客户端/Token 签发；类型值与状态值使用不同的标签层级
 - Token/component ownership: 继续由现有管理端主题和组件维护
 
@@ -75,6 +76,7 @@
 - Design-token constraints: 不新增设计 Token
 - Performance constraints: Tab 延迟挂载，避免首次进入并发加载两组数据
 - Compatibility constraints: 保留旧页面组件供已有代码引用
+- Product constraints: 前端固定声明产品编码 `opensabre-admin`，从产品配置接口加载名称、描述、Logo 和主题；不得从全量菜单中自行猜测产品子树
 - Test/screenshot expectations: TypeScript 检查与生产构建通过
 
 ## Open questions

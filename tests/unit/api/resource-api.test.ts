@@ -38,6 +38,7 @@ describe("ResourceAPI", () => {
         code: undefined,
         url: undefined,
         method: "POST",
+        productCode: "opensabre-admin",
       },
     });
     expect(page.page).toEqual({ pageNum: 1, pageSize: 10, total: 1 });

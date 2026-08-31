@@ -149,6 +149,7 @@
 <script setup lang="ts">
 import ResourceAPI from "@/api/system/resource";
 import type { ResourceForm, ResourceItem, ResourceQueryParams } from "@/types/api";
+import { PRODUCT_CODE } from "@/api/product";
 
 defineOptions({
   name: "Resource",
@@ -165,6 +166,7 @@ const resourceList = ref<ResourceItem[]>([]);
 const queryParams = reactive<ResourceQueryParams>({
   pageNum: 1,
   pageSize: 10,
+  productCode: PRODUCT_CODE,
 });
 
 const dialog = reactive({
@@ -218,6 +220,7 @@ function resetFormData() {
     url: undefined,
     method: undefined,
     description: undefined,
+    productCode: PRODUCT_CODE,
   });
 }
 

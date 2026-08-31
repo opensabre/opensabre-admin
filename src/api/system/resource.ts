@@ -1,6 +1,8 @@
 import request from "@/utils/request";
 import type { OptionItem, ResourceForm, ResourceItem, ResourceQueryParams } from "@/types/api";
 
+const PRODUCT_CODE = import.meta.env.VITE_PRODUCT_CODE || "opensabre-admin";
+
 const ORG_RESOURCE_BASE_URL = "/org/resource";
 
 interface OrgPage<T> {
@@ -18,6 +20,7 @@ function toOrgResourceQuery(queryParams?: ResourceQueryParams) {
     code: queryParams?.code || undefined,
     url: queryParams?.url || undefined,
     method: queryParams?.method || undefined,
+    productCode: queryParams?.productCode || PRODUCT_CODE,
   };
 }
 
@@ -30,6 +33,7 @@ function toResourceForm(resource: ResourceItem): ResourceForm {
     url: resource.url,
     method: resource.method,
     description: resource.description,
+    productCode: resource.productCode,
   };
 }
 
@@ -55,6 +59,7 @@ const ResourceAPI = {
     return request<any, ResourceItem[]>({
       url: `${ORG_RESOURCE_BASE_URL}/all`,
       method: "get",
+      params: { productCode: PRODUCT_CODE },
     }).then((resources) =>
       resources.map<OptionItem>((resource) => ({
         value: resource.id || "",
@@ -73,11 +78,19 @@ const ResourceAPI = {
   },
   /** 新增资源 */
   create(data: ResourceForm) {
-    return request({ url: `${ORG_RESOURCE_BASE_URL}`, method: "post", data });
+    return request({
+      url: `${ORG_RESOURCE_BASE_URL}`,
+      method: "post",
+      data: { ...data, productCode: data.productCode || PRODUCT_CODE },
+    });
   },
   /** 更新资源 */
   update(id: string, data: ResourceForm) {
-    return request({ url: `${ORG_RESOURCE_BASE_URL}/${id}`, method: "put", data });
+    return request({
+      url: `${ORG_RESOURCE_BASE_URL}/${id}`,
+      method: "put",
+      data: { ...data, productCode: data.productCode || PRODUCT_CODE },
+    });
   },
   /** 批量删除资源，多个以英文逗号(,)分割 */
   deleteByIds(ids: string) {

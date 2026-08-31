@@ -5,6 +5,9 @@ const requestMock = vi.fn();
 vi.mock("@/utils/request", () => ({
   default: requestMock,
 }));
+vi.mock("@/store/modules/management-tree", () => ({
+  useManagementTreeStoreHook: () => ({ load: (_key: string, loader: () => unknown) => loader() }),
+}));
 
 describe("MenuAPI", () => {
   beforeEach(() => {
@@ -27,12 +30,13 @@ describe("MenuAPI", () => {
 
     const { default: MenuAPI } = await import("@/api/system/menu");
 
-    const authorized = await MenuAPI.getRoutes("101");
+    const authorized = await MenuAPI.getRoutes();
 
     expect(requestMock).toHaveBeenCalledTimes(1);
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/org/menu/user/101",
+      url: "/org/menu/current",
       method: "get",
+      params: { productCode: "opensabre-admin" },
     });
     expect(authorized.routes[0]).toMatchObject({
       path: "/admin",
@@ -119,7 +123,14 @@ describe("MenuAPI", () => {
         type: "CATALOG",
         href: "/admin",
         children: [
-          { id: "2", parentId: "1", name: "用户管理", type: "MENU", href: "/admin/users", children: [] },
+          {
+            id: "2",
+            parentId: "1",
+            name: "用户管理",
+            type: "MENU",
+            href: "/admin/users",
+            children: [],
+          },
         ],
       },
     ]);

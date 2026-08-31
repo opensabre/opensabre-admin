@@ -13,4 +13,5 @@ export * from "./modules/tags-view";
 export * from "./modules/user";
 export * from "./modules/dict";
 export * from "./modules/tenant";
+export * from "./modules/product";
 export { store };

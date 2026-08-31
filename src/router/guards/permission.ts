@@ -1,7 +1,7 @@
 import type { RouteRecordRaw } from "vue-router";
 import NProgress from "@/plugins/nprogress";
 import router from "@/router";
-import { usePermissionStore, useUserStore } from "@/store";
+import { usePermissionStore, useProductStore, useUserStore } from "@/store";
 import { useTenantStoreHook } from "@/store/modules/tenant";
 import { appConfig } from "@/settings";
 
@@ -57,12 +57,15 @@ export function setupPermissionGuard() {
         // 加载用户租户列表（VITE_APP_TENANT_ENABLED=true 时生效）
         await initTenantContext();
 
+        // 品牌和产品菜单必须来自同一产品编码，加载失败时禁止退回全量菜单。
+        await useProductStore().load();
+
         const userId = userStore.userInfo.userId;
         if (!userId) {
           throw new Error("Current user id is missing");
         }
 
-        const generated = await permissionStore.generateRoutes(userId);
+        const generated = await permissionStore.generateRoutes();
         userStore.setPermissions(generated.permissions);
         generated.routes.forEach((route: RouteRecordRaw) => {
           router.addRoute(route);

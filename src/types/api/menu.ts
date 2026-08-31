@@ -42,6 +42,8 @@ export interface MenuItem {
 
 /** 菜单表单对象 */
 export interface MenuForm {
+  /** 归属产品编码 */
+  productCode?: string;
   /** 菜单ID */
   id?: string;
   /** 父菜单ID */

@@ -3,6 +3,8 @@ import type { MenuQueryParams, MenuItem, MenuForm, OptionItem } from "@/types/ap
 import { toAuthorizedRoutes, type OrgMenuItem } from "./menu-adapter";
 import { useManagementTreeStoreHook } from "@/store/modules/management-tree";
 
+const PRODUCT_CODE = import.meta.env.VITE_PRODUCT_CODE || "opensabre-admin";
+
 const ORG_MENU_BASE_URL = "/org/menu";
 const ROOT_PARENT_ID = "-1";
 const FRONT_ROOT_PARENT_ID = "0";
@@ -58,6 +60,7 @@ function toMenuItem(menu: OrgMenuItem): MenuItem {
   const type = normalizeMenuType(menu.type);
 
   return {
+    productCode: (menu as OrgMenuItem & { productCode?: string }).productCode,
     id: menu.id,
     parentId: normalizeParentId(menu.parentId),
     name: menu.name,
@@ -86,6 +89,7 @@ function toOrgMenuForm(data: MenuForm) {
       ? ""
       : normalizeHref(data.routePath || data.path || data.name);
   return {
+    productCode: data.productCode || PRODUCT_CODE,
     parentId: toOrgParentId(data.parentId),
     name: data.name,
     type: data.type,
@@ -138,10 +142,11 @@ function toOptions(menus: MenuItem[], onlyParent?: boolean): OptionItem[] {
 
 const MenuAPI = {
   /** 获取当前用户的路由列表 */
-  async getRoutes(userId: string) {
+  async getRoutes() {
     const menus = await request<any, OrgMenuItem[]>({
-      url: `${ORG_MENU_BASE_URL}/user/${userId}`,
+      url: `${ORG_MENU_BASE_URL}/current`,
       method: "get",
+      params: { productCode: PRODUCT_CODE },
     });
     return toAuthorizedRoutes(menus);
   },
