@@ -10,6 +10,8 @@ export interface MenuQueryParams {
 
 /** 菜单视图对象 */
 export interface MenuItem {
+  /** 归属产品编码 */
+  productCode?: string;
   /** 子菜单 */
   children?: MenuItem[];
   /** 组件路径 */

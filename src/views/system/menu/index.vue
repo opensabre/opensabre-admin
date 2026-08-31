@@ -72,6 +72,13 @@
             <el-tag v-if="scope.row.type === MenuTypeEnum.BUTTON" type="danger">按钮</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="所属产品" align="left" min-width="180">
+          <template #default="scope">
+            <el-tag :type="scope.row.productCode === 'COMMON' ? 'info' : 'primary'">
+              {{ productLabel(scope.row.productCode) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="路由名称" align="left" width="150" prop="routeName" />
         <el-table-column label="路由路径" align="left" width="150" prop="routePath" />
         <el-table-column label="组件路径" align="left" width="250" prop="component" />
@@ -92,7 +99,7 @@
               link
               size="small"
               icon="plus"
-              @click.stop="handleOpenDialog(scope.row.id)"
+              @click.stop="handleOpenDialog(scope.row.id, undefined, scope.row.productCode)"
             >
               新增
             </el-button>
@@ -129,6 +136,17 @@
       @close="handleCloseDialog"
     >
       <el-form ref="menuFormRef" :model="formData" :rules="rules" label-width="100px">
+        <el-form-item label="所属产品" prop="productCode">
+          <el-select v-model="formData.productCode" placeholder="请选择所属产品" filterable>
+            <el-option
+              v-for="product in products"
+              :key="product.code"
+              :label="`${product.name} (${product.code})`"
+              :value="product.code"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="父级菜单" prop="parentId">
           <el-tree-select
             v-model="formData.parentId"
@@ -152,7 +170,10 @@
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage" prop="routeName">
+        <el-form-item
+          v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage"
+          prop="routeName"
+        >
           <template #label>
             <div class="flex-y-center">
               路由名称
@@ -169,8 +190,14 @@
           <el-input v-model="formData.routeName" placeholder="User" />
         </el-form-item>
 
-        <el-form-item v-if="formData.type === MenuTypeEnum.MENU && !isExternalLink" label="页面类型">
-          <el-radio-group :model-value="isIframePage ? 'iframe' : 'component'" @change="handlePageTypeChange">
+        <el-form-item
+          v-if="formData.type === MenuTypeEnum.MENU && !isExternalLink"
+          label="页面类型"
+        >
+          <el-radio-group
+            :model-value="isIframePage ? 'iframe' : 'component'"
+            @change="handlePageTypeChange"
+          >
             <el-radio value="component">组件页面</el-radio>
             <el-radio value="iframe">内嵌网页</el-radio>
           </el-radio-group>
@@ -202,7 +229,10 @@
           <el-input v-else v-model="formData.routePath" placeholder="user 或 https://example.com" />
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage" prop="component">
+        <el-form-item
+          v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && !isIframePage"
+          prop="component"
+        >
           <template #label>
             <div class="flex-y-center">
               组件路径
@@ -223,7 +253,11 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && isIframePage" prop="iframeUrl" label="内嵌地址">
+        <el-form-item
+          v-if="formData.type == MenuTypeEnum.MENU && !isExternalLink && isIframePage"
+          prop="iframeUrl"
+          label="内嵌地址"
+        >
           <el-input v-model="formData.iframeUrl" placeholder="https://example.com 或 /doc.html" />
         </el-form-item>
 
@@ -358,6 +392,7 @@ import { useAppStore } from "@/store/modules/app";
 import { DeviceEnum } from "@/enums/settings";
 
 import MenuAPI from "@/api/system/menu";
+import { listProducts, PRODUCT_CODE, type ProductProfile } from "@/api/product";
 import type { MenuQueryParams, MenuForm, MenuItem } from "@/types/api";
 import { MenuTypeEnum } from "@/enums/business";
 
@@ -382,11 +417,13 @@ const drawerSize = computed(() => (appStore.device === DeviceEnum.DESKTOP ? "600
 const queryParams = reactive<MenuQueryParams>({});
 // 菜单表格数据
 const menuTableData = ref<MenuItem[]>([]);
+const products = ref<ProductProfile[]>([]);
 // 顶级菜单下拉选项
 const menuOptions = ref<OptionItem[]>([]);
 // 初始菜单表单数据
 const initialMenuFormData = ref<MenuForm>({
   id: undefined,
+  productCode: PRODUCT_CODE,
   parentId: "0",
   visible: 1,
   sort: 1,
@@ -409,14 +446,24 @@ const isIframePage = computed(
   () => formData.value.type === MenuTypeEnum.MENU && iframePageEnabled.value
 );
 const validateRouteName = (_: unknown, value: string, callback: (error?: Error) => void) => {
-  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !isIframePage.value && !value) {
+  if (
+    formData.value.type === MenuTypeEnum.MENU &&
+    !isExternalLink.value &&
+    !isIframePage.value &&
+    !value
+  ) {
     callback(new Error("请输入路由名称"));
     return;
   }
   callback();
 };
 const validateComponent = (_: unknown, value: string, callback: (error?: Error) => void) => {
-  if (formData.value.type === MenuTypeEnum.MENU && !isExternalLink.value && !isIframePage.value && !value) {
+  if (
+    formData.value.type === MenuTypeEnum.MENU &&
+    !isExternalLink.value &&
+    !isIframePage.value &&
+    !value
+  ) {
     callback(new Error("请输入组件路径"));
     return;
   }
@@ -435,6 +482,7 @@ const validateIframeUrl = (_: unknown, value: string, callback: (error?: Error) 
 };
 // 表单验证规则
 const rules = reactive({
+  productCode: [{ required: true, message: "请选择所属产品", trigger: "change" }],
   parentId: [{ required: true, message: "请选择父级菜单", trigger: "blur" }],
   name: [{ required: true, message: "请输入菜单名称", trigger: "blur" }],
   type: [{ required: true, message: "请选择菜单类型", trigger: "blur" }],
@@ -487,7 +535,7 @@ function handleRowClick(row: MenuItem) {
  * @param parentId 父菜单ID
  * @param menuId 菜单ID
  */
-async function handleOpenDialog(parentId?: string, menuId?: string) {
+async function handleOpenDialog(parentId?: string, menuId?: string, parentProductCode?: string) {
   const requestId = ++dialogRequestId;
 
   try {
@@ -510,6 +558,7 @@ async function handleOpenDialog(parentId?: string, menuId?: string) {
     } else {
       dialog.title = "新增菜单";
       formData.value.parentId = parentId?.toString();
+      formData.value.productCode = parentProductCode || PRODUCT_CODE;
       iframePageEnabled.value = false;
     }
     dialog.visible = true;
@@ -614,6 +663,7 @@ function resetForm() {
   menuFormRef.value.clearValidate();
   formData.value = {
     id: undefined,
+    productCode: PRODUCT_CODE,
     parentId: "0",
     visible: 1,
     sort: 1,
@@ -625,13 +675,22 @@ function resetForm() {
   iframePageEnabled.value = false;
 }
 
+function productLabel(productCode?: string) {
+  const product = products.value.find((item) => item.code === productCode);
+  return product ? `${product.name} (${product.code})` : productCode || "未设置";
+}
+
 // 关闭弹窗
 function handleCloseDialog() {
   dialog.visible = false;
   resetForm();
 }
 
-onMounted(() => {
+onMounted(async () => {
+  const results = await Promise.allSettled([listProducts()]);
+  if (results[0].status === "fulfilled") {
+    products.value = results[0].value;
+  }
   handleQuery();
 });
 </script>

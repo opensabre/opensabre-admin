@@ -49,6 +49,7 @@ describe("MenuAPI", () => {
     requestMock.mockResolvedValueOnce([
       {
         id: "1",
+        productCode: "iqc",
         parentId: "-1",
         name: "系统管理",
         type: "CATALOG",
@@ -70,6 +71,7 @@ describe("MenuAPI", () => {
     expect(menus).toEqual([
       expect.objectContaining({
         id: "1",
+        productCode: "iqc",
         parentId: "0",
         name: "系统管理",
         routePath: "admin",
