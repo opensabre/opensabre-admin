@@ -6,11 +6,7 @@
           <span class="font-medium">API 资产与发布状态</span>
           <div class="flex items-center gap-2">
             <el-button type="success" :loading="syncing" @click="syncApis">同步 OpenAPI</el-button>
-            <el-button
-              type="warning"
-              :disabled="pendingDraftCount === 0"
-              @click="publishDrafts"
-            >
+            <el-button type="warning" :disabled="pendingDraftCount === 0" @click="publishDrafts">
               查看并发布全部变更
               <span v-if="pendingDraftCount">（{{ pendingDraftCount }}）</span>
             </el-button>
@@ -46,6 +42,7 @@
           </el-form>
 
           <el-table v-loading="loading" :data="apis" border row-key="id">
+            <el-table-column prop="productCode" label="所属产品" min-width="120" />
             <el-table-column prop="serviceId" label="服务名" min-width="160" />
             <el-table-column prop="httpMethod" label="方法" width="100" />
             <el-table-column prop="upstreamPath" label="接口路径" min-width="250" />
@@ -184,7 +181,15 @@
                 >
                   {{ row.runtimeOnly ? "只读" : "编辑" }}
                 </el-button>
-                <el-button v-if="row.runtimeOnly" link type="success" size="small" @click="adoptLegacyRoute(row)">纳管</el-button>
+                <el-button
+                  v-if="row.runtimeOnly"
+                  link
+                  type="success"
+                  size="small"
+                  @click="adoptLegacyRoute(row)"
+                >
+                  纳管
+                </el-button>
                 <el-button
                   v-if="!row.runtimeOnly && row.status === 'DRAFT'"
                   link
@@ -891,15 +896,6 @@ const pendingDraftCount = computed(
       (route) => route.status === "DRAFT" || (route.status === "OFFLINE" && !route.publishedVersion)
     ).length
 );
-const pendingOfflineCount = computed(
-  () =>
-    publications.value.filter(
-      (publication) => publication.status === "OFFLINE" && !publication.publishedVersion
-    ).length +
-    applicationRoutes.value.filter((route) => route.status === "OFFLINE" && !route.publishedVersion)
-      .length
-);
-
 type ExposureTag = "success" | "warning" | "danger" | "info";
 type ApiExposure = { label: string; description: string; tagType: ExposureTag };
 
@@ -926,17 +922,26 @@ function apiExposure(api: GatewayApiAsset): ApiExposure {
     };
   }
   if (independentlyExposed) {
-    return { label: "独立发布", description: "当前运行配置包含该 API 的独立路由", tagType: "success" };
+    return {
+      label: "独立发布",
+      description: "当前运行配置包含该 API 的独立路由",
+      tagType: "success",
+    };
   }
   if (coveringApplications.length) {
-    const offlineHint = publication?.status === "OFFLINE" ? "；独立路由虽已取消，但接口仍可能访问" : "";
+    const offlineHint =
+      publication?.status === "OFFLINE" ? "；独立路由虽已取消，但接口仍可能访问" : "";
     return {
       label: "经应用路由暴露",
       description: `由应用路由“${coveringApplications[0].routeName}”覆盖${offlineHint}`,
       tagType: publication?.status === "OFFLINE" ? "danger" : "warning",
     };
   }
-  return { label: "未暴露", description: "当前网关运行配置中没有可暴露该 API 的托管路由", tagType: "info" };
+  return {
+    label: "未暴露",
+    description: "当前网关运行配置中没有可暴露该 API 的托管路由",
+    tagType: "info",
+  };
 }
 
 function authModeLabel(mode?: string) {

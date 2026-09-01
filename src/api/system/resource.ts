@@ -20,7 +20,7 @@ function toOrgResourceQuery(queryParams?: ResourceQueryParams) {
     code: queryParams?.code || undefined,
     url: queryParams?.url || undefined,
     method: queryParams?.method || undefined,
-    productCode: queryParams?.productCode || PRODUCT_CODE,
+    productCode: queryParams?.productCode || undefined,
   };
 }
 
@@ -59,7 +59,6 @@ const ResourceAPI = {
     return request<any, ResourceItem[]>({
       url: `${ORG_RESOURCE_BASE_URL}/all`,
       method: "get",
-      params: { productCode: PRODUCT_CODE },
     }).then((resources) =>
       resources.map<OptionItem>((resource) => ({
         value: resource.id || "",

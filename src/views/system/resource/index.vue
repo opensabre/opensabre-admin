@@ -26,6 +26,16 @@
             <el-option label="DELETE" value="DELETE" />
           </el-select>
         </el-form-item>
+        <el-form-item label="所属产品" prop="productCode">
+          <el-select v-model="queryParams.productCode" placeholder="全部产品" clearable filterable>
+            <el-option
+              v-for="product in products"
+              :key="product.code"
+              :label="`${product.name} (${product.code})`"
+              :value="product.code"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item class="search-buttons">
           <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
           <el-button icon="refresh" @click="handleResetQuery">重置</el-button>
@@ -59,6 +69,9 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="资源名称" prop="name" min-width="130" />
         <el-table-column label="资源编码" prop="code" min-width="180" />
+        <el-table-column label="所属产品" min-width="150">
+          <template #default="scope">{{ productLabel(scope.row.productCode) }}</template>
+        </el-table-column>
         <el-table-column label="类型" prop="type" width="100" />
         <el-table-column label="请求方式" prop="method" width="100" align="center">
           <template #default="scope">
@@ -127,6 +140,16 @@
             <el-option label="DELETE" value="DELETE" />
           </el-select>
         </el-form-item>
+        <el-form-item label="所属产品" prop="productCode">
+          <el-select v-model="formData.productCode" placeholder="请选择所属产品" filterable>
+            <el-option
+              v-for="product in products"
+              :key="product.code"
+              :label="`${product.name} (${product.code})`"
+              :value="product.code"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
             v-model="formData.description"
@@ -149,7 +172,7 @@
 <script setup lang="ts">
 import ResourceAPI from "@/api/system/resource";
 import type { ResourceForm, ResourceItem, ResourceQueryParams } from "@/types/api";
-import { PRODUCT_CODE } from "@/api/product";
+import { listProducts, PRODUCT_CODE, type ProductProfile } from "@/api/product";
 
 defineOptions({
   name: "Resource",
@@ -162,11 +185,12 @@ const loading = ref(false);
 const ids = ref<string[]>([]);
 const total = ref(0);
 const resourceList = ref<ResourceItem[]>([]);
+const products = ref<ProductProfile[]>([]);
 
 const queryParams = reactive<ResourceQueryParams>({
   pageNum: 1,
   pageSize: 10,
-  productCode: PRODUCT_CODE,
+  productCode: undefined,
 });
 
 const dialog = reactive({
@@ -182,6 +206,7 @@ const rules = reactive({
   type: [{ required: true, message: "请输入资源类型", trigger: "blur" }],
   url: [{ required: true, message: "请输入资源路径", trigger: "blur" }],
   method: [{ required: true, message: "请选择请求方式", trigger: "change" }],
+  productCode: [{ required: true, message: "请选择所属产品", trigger: "change" }],
 });
 
 function fetchData() {
@@ -291,7 +316,17 @@ function handleDelete(id?: string) {
   );
 }
 
-onMounted(() => {
+function productLabel(productCode?: string) {
+  const product = products.value.find((item) => item.code === productCode);
+  return product ? `${product.name} (${product.code})` : productCode || "未设置";
+}
+
+onMounted(async () => {
+  try {
+    products.value = await listProducts();
+  } catch {
+    // 资源列表仍可使用原始产品编码展示。
+  }
   handleQuery();
 });
 </script>

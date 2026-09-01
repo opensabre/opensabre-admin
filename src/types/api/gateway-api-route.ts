@@ -2,6 +2,7 @@
 export interface GatewayApiAsset {
   id: string;
   serviceId: string;
+  productCode?: string;
   operationId?: string;
   httpMethod: string;
   upstreamPath: string;

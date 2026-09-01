@@ -38,12 +38,24 @@ describe("ResourceAPI", () => {
         code: undefined,
         url: undefined,
         method: "POST",
-        productCode: "opensabre-admin",
+        productCode: undefined,
       },
     });
     expect(page.page).toEqual({ pageNum: 1, pageSize: 10, total: 1 });
     expect(page.data).toEqual([
       expect.objectContaining({ id: "313", code: "resource_manager:add", method: "POST" }),
     ]);
+  });
+
+  it("loads global resource options without a product filter", async () => {
+    requestMock.mockResolvedValueOnce([]);
+
+    const { default: ResourceAPI } = await import("@/api/system/resource");
+    await ResourceAPI.getOptions();
+
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/org/resource/all",
+      method: "get",
+    });
   });
 });
