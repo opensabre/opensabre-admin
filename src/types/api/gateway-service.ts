@@ -24,3 +24,30 @@ export interface GatewayServicePage {
   pageSize: number;
   services: GatewayServiceSummary[];
 }
+
+/** Fixed Prometheus vectors for basic application instance monitoring. */
+export interface ApplicationMetricsSnapshot {
+  requestRate: string;
+  errorRate: string;
+  p95Latency: string;
+  cpuUsage: string;
+  heapUsed: string;
+  heapMax: string;
+}
+
+/** Instantaneous values obtained directly from one application's Actuator endpoint. */
+export interface ApplicationActuatorSnapshot {
+  processCpuUsage: number;
+  heapUsedBytes: number;
+  heapMaxBytes: number;
+  uptimeSeconds: number;
+  liveThreads: number;
+}
+
+export interface ApplicationInstanceActuator {
+  serviceName: string;
+  instanceId: string;
+  healthy: boolean;
+  snapshot?: ApplicationActuatorSnapshot;
+  errorMessage?: string;
+}
