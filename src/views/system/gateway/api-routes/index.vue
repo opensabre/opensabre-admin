@@ -144,7 +144,6 @@
             <el-table-column prop="routeName" label="路由名称" min-width="170" />
             <el-table-column prop="externalPath" label="外部路径" min-width="230" />
             <el-table-column prop="targetUri" label="目标 URI" min-width="230" />
-            <el-table-column prop="httpMethod" label="方法" width="100" />
             <el-table-column label="风险等级" width="110">
               <template #default="{ row }">
                 <DictTag v-model="row.riskLevel" code="gateway_risk_level" />

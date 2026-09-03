@@ -174,6 +174,7 @@
 
 <script setup lang="ts">
 import OAuthAuthorizationAPI from "@/api/auth/authorization";
+import { createLoadingRunner } from "@/views/auth/authorization/loading";
 import type {
   OAuthAuthorizationItem,
   OAuthAuthorizationQueryParams,
@@ -194,6 +195,7 @@ const records = ref<OAuthAuthorizationItem[]>([]);
 const selectedIds = ref<string[]>([]);
 const detail = ref<OAuthAuthorizationItem>();
 const drawerVisible = ref(false);
+const runWithLoading = createLoadingRunner(loading);
 
 const queryParams = reactive<OAuthAuthorizationQueryParams>({
   pageNum: 1,
@@ -204,21 +206,22 @@ const queryParams = reactive<OAuthAuthorizationQueryParams>({
   status: "",
 });
 
-function fetchData() {
-  loading.value = true;
-  OAuthAuthorizationAPI.getPage(queryParams)
-    .then((res) => {
+async function fetchData() {
+  return runWithLoading(async () => {
+    try {
+      const res = await OAuthAuthorizationAPI.getPage(queryParams);
       records.value = res.data;
       total.value = res.page.total;
-    })
-    .finally(() => {
-      loading.value = false;
-    });
+    } catch (error) {
+      ElMessage.error("授权列表加载失败，请稍后重试");
+      throw error;
+    }
+  });
 }
 
 function handleQuery() {
   queryParams.pageNum = 1;
-  fetchData();
+  void fetchData().catch(() => undefined);
 }
 
 function handleResetQuery() {
@@ -256,28 +259,29 @@ async function confirmRevoke(ids: string[], target: string) {
     return;
   }
 
-  loading.value = true;
-  let succeeded = 0;
-  let failed = 0;
-  for (const id of ids) {
-    try {
-      await OAuthAuthorizationAPI.revoke(id);
-      succeeded += 1;
-    } catch {
-      failed += 1;
-    }
-  }
-
-  if (failed === 0) {
-    ElMessage.success(`已终止 ${succeeded} 条服务端授权`);
-  } else {
-    ElMessage.warning(`已终止 ${succeeded} 条，失败 ${failed} 条，请刷新后重试`);
-  }
-  selectedIds.value = [];
   try {
-    await fetchData();
-  } finally {
-    loading.value = false;
+    await runWithLoading(async () => {
+      let succeeded = 0;
+      let failed = 0;
+      for (const id of ids) {
+        try {
+          await OAuthAuthorizationAPI.revoke(id);
+          succeeded += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+
+      selectedIds.value = [];
+      await fetchData();
+      if (failed === 0) {
+        ElMessage.success(`已终止 ${succeeded} 条服务端授权`);
+      } else {
+        ElMessage.warning(`已终止 ${succeeded} 条，失败 ${failed} 条，请重试失败记录`);
+      }
+    });
+  } catch {
+    // fetchData has already shown the refresh failure to the user.
   }
 }
 
@@ -292,14 +296,22 @@ async function handleCleanupExpired() {
     return;
   }
 
-  loading.value = true;
   try {
-    const count = await OAuthAuthorizationAPI.cleanupExpired();
-    ElMessage.success(`已清理 ${count} 条失效授权记录`);
-    selectedIds.value = [];
-    await fetchData();
-  } finally {
-    loading.value = false;
+    await runWithLoading(async () => {
+      let count: number;
+      try {
+        count = await OAuthAuthorizationAPI.cleanupExpired();
+      } catch {
+        ElMessage.error("清理失效授权失败，请稍后重试");
+        return;
+      }
+
+      selectedIds.value = [];
+      await fetchData();
+      ElMessage.success(`已清理 ${count} 条失效授权记录`);
+    });
+  } catch {
+    // fetchData has already shown the refresh failure to the user.
   }
 }
 
@@ -330,5 +342,5 @@ function formatDateTime(value?: string) {
   )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-onMounted(fetchData);
+onMounted(() => void fetchData().catch(() => undefined));
 </script>
