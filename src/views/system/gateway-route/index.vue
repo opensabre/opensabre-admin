@@ -329,6 +329,7 @@ import {
   emptyDefinition,
   filterOptions,
   parseArgs,
+  pathPatterns,
   predicateOptions,
   type EditableDefinition,
 } from "./route-definition";
@@ -385,8 +386,7 @@ function pathSummary(route: GatewayRoute) {
   return (
     route.predicates
       .filter((item) => item.name === "Path")
-      .map((item) => item.args.pattern || item.args.value)
-      .filter(Boolean)
+      .flatMap((item) => pathPatterns(item.args))
       .join("，") || "-"
   );
 }
