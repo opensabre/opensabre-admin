@@ -33,6 +33,18 @@ function definitionArg(
 ) {
   const args = route[collection]?.find((item) => item.name === name)?.args;
   if (!args) return undefined;
+  if (name === "Path") {
+    const patterns = Object.entries(args)
+      .map(([key, value]) => {
+        const match = /^patterns\.(\d+)$/.exec(key);
+        return match ? { index: Number(match[1]), value } : undefined;
+      })
+      .filter((item): item is { index: number; value: string } => Boolean(item))
+      .sort((left, right) => left.index - right.index)
+      .map((item) => item.value)
+      .filter(Boolean);
+    if (patterns.length) return patterns.join(",");
+  }
   return keys.map((key) => args[key]).find(Boolean) || Object.values(args)[0];
 }
 
