@@ -77,58 +77,109 @@
           {{ monitoringDialog.service.instanceCount }}
         </el-descriptions-item>
       </el-descriptions>
-      <el-table
-        v-if="monitoringDialog.service"
-        :data="monitoringDialog.service.instances"
-        :row-key="instanceKey"
-        border
-        max-height="520"
-      >
-        <el-table-column label="实例地址" min-width="170" fixed="left">
-          <template #default="{ row }">{{ instanceKey(row) }}</template>
-        </el-table-column>
-        <el-table-column prop="cluster" label="集群" min-width="120" />
-        <el-table-column label="状态" width="90">
-          <template #default="{ row }">
-            <el-tag :type="row.healthy ? 'success' : 'danger'">
-              {{ row.healthy ? "健康" : "异常" }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="请求/秒" width="105">
-          <template #default="{ row }">{{ formatNumber(metricOf(row)?.requestRate) }}</template>
-        </el-table-column>
-        <el-table-column label="5xx/秒" width="100">
-          <template #default="{ row }">{{ formatNumber(metricOf(row)?.errorRate) }}</template>
-        </el-table-column>
-        <el-table-column label="P95" width="100">
-          <template #default="{ row }">{{ formatLatency(metricOf(row)?.p95Latency) }}</template>
-        </el-table-column>
-        <el-table-column label="CPU" width="90">
-          <template #default="{ row }">{{ formatPercent(metricOf(row)?.cpuUsage) }}</template>
-        </el-table-column>
-        <el-table-column label="堆内存" width="170">
-          <template #default="{ row }">
-            {{ formatHeap(metricOf(row)?.heapUsed, metricOf(row)?.heapMax) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="运行时长" width="115">
-          <template #default="{ row }">
-            {{ formatUptime(actuatorOf(row)?.snapshot?.uptimeSeconds) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="线程" width="80">
-          <template #default="{ row }">
-            {{ actuatorOf(row)?.snapshot?.liveThreads ?? "无数据" }}
-          </template>
-        </el-table-column>
-        <el-table-column label="指标状态" min-width="170" show-overflow-tooltip>
-          <template #default="{ row }">{{ actuatorStatus(row) }}</template>
-        </el-table-column>
-        <el-table-column label="元数据" min-width="240" show-overflow-tooltip>
-          <template #default="{ row }">{{ metadataText(row.metadata) }}</template>
-        </el-table-column>
-      </el-table>
+      <template v-if="monitoringDialog.service">
+        <el-empty
+          v-if="!monitoringDialog.service.instances.length"
+          description="当前服务没有可用实例"
+        />
+        <el-tabs v-else v-model="monitoringDialog.activeInstance" class="monitoring-instance-tabs">
+          <el-tab-pane
+            v-for="instance in monitoringDialog.service.instances"
+            :key="instanceKey(instance)"
+            :name="instanceKey(instance)"
+          >
+            <template #label>
+              <span class="instance-tab-label">
+                <span
+                  class="instance-health-dot"
+                  :class="instance.healthy ? 'is-healthy' : 'is-unhealthy'"
+                />
+                {{ instanceKey(instance) }}
+              </span>
+            </template>
+
+            <div class="monitoring-node-header">
+              <div class="monitoring-node-status">
+                <el-tag :type="instance.healthy ? 'success' : 'danger'">
+                  {{ instance.healthy ? "实例健康" : "实例异常" }}
+                </el-tag>
+                <el-tag :type="instance.enabled ? 'primary' : 'info'">
+                  {{ instance.enabled ? "已启用" : "已停用" }}
+                </el-tag>
+                <el-tag :type="actuatorOf(instance)?.snapshot ? 'success' : 'warning'">
+                  指标{{ actuatorStatus(instance) }}
+                </el-tag>
+              </div>
+            </div>
+
+            <section class="monitoring-section">
+              <div class="monitoring-section-title">基础信息</div>
+              <el-descriptions :column="4" border>
+                <el-descriptions-item label="IP 地址">
+                  {{ instance.ip }}
+                </el-descriptions-item>
+                <el-descriptions-item label="端口">
+                  {{ instance.port }}
+                </el-descriptions-item>
+                <el-descriptions-item label="所属集群">
+                  {{ instance.cluster || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="权重">
+                  {{ instance.weight }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </section>
+
+            <section class="monitoring-section">
+              <div class="monitoring-section-title">流量表现</div>
+              <el-descriptions :column="3" border>
+                <el-descriptions-item label="请求/秒">
+                  {{ formatNumber(metricOf(instance)?.requestRate) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="5xx/秒">
+                  {{ formatNumber(metricOf(instance)?.errorRate) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="P95 延迟">
+                  {{ formatLatency(metricOf(instance)?.p95Latency) }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </section>
+
+            <section class="monitoring-section">
+              <div class="monitoring-section-title">资源运行</div>
+              <el-descriptions :column="2" border>
+                <el-descriptions-item label="CPU 使用率">
+                  {{ formatPercent(metricOf(instance)?.cpuUsage) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="堆内存">
+                  {{ formatHeap(metricOf(instance)?.heapUsed, metricOf(instance)?.heapMax) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="运行时长">
+                  {{ formatUptime(actuatorOf(instance)?.snapshot?.uptimeSeconds) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="活动线程">
+                  {{ actuatorOf(instance)?.snapshot?.liveThreads ?? "无数据" }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </section>
+
+            <section class="monitoring-section">
+              <div class="monitoring-section-title">注册元数据</div>
+              <div v-if="metadataEntries(instance.metadata).length" class="metadata-grid">
+                <div
+                  v-for="item in metadataEntries(instance.metadata)"
+                  :key="item.key"
+                  class="metadata-item"
+                >
+                  <div class="metadata-key">{{ item.key }}</div>
+                  <div class="metadata-value">{{ item.value }}</div>
+                </div>
+              </div>
+              <el-empty v-else description="暂无注册元数据" :image-size="64" />
+            </section>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
       <template #footer>
         <el-button @click="monitoringDialog.visible = false">关闭</el-button>
       </template>
@@ -165,7 +216,8 @@ const syncingService = ref("");
 const monitoringDialog = reactive<{
   visible: boolean;
   service?: GatewayServiceSummary;
-}>({ visible: false });
+  activeInstance: string;
+}>({ visible: false, activeInstance: "" });
 
 async function loadServices() {
   loading.value = true;
@@ -248,12 +300,8 @@ function formatUptime(seconds?: number) {
   return days ? `${days} 天 ${hours} 小时` : `${hours} 小时`;
 }
 
-function metadataText(metadata: Record<string, string>) {
-  return (
-    Object.entries(metadata || {})
-      .map(([key, value]) => `${key}=${value}`)
-      .join(", ") || "-"
-  );
+function metadataEntries(metadata: Record<string, string>) {
+  return Object.entries(metadata || {}).map(([key, value]) => ({ key, value }));
 }
 
 function instanceKey(instance: GatewayServiceInstance) {
@@ -262,6 +310,7 @@ function instanceKey(instance: GatewayServiceInstance) {
 
 function openMonitoringDetail(service: GatewayServiceSummary) {
   monitoringDialog.service = service;
+  monitoringDialog.activeInstance = service.instances[0] ? instanceKey(service.instances[0]) : "";
   monitoringDialog.visible = true;
 }
 
@@ -286,3 +335,93 @@ async function syncApis(serviceId: string) {
 
 onMounted(loadServices);
 </script>
+
+<style scoped>
+.monitoring-instance-tabs {
+  min-height: 420px;
+}
+
+.instance-tab-label,
+.monitoring-node-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.instance-health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.instance-health-dot.is-healthy {
+  background: var(--el-color-success);
+}
+
+.instance-health-dot.is-unhealthy {
+  background: var(--el-color-danger);
+}
+
+.monitoring-node-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0 16px;
+}
+
+.monitoring-section + .monitoring-section {
+  margin-top: 18px;
+}
+
+.monitoring-section-title {
+  padding-left: 9px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  line-height: 1;
+  border-left: 3px solid var(--el-color-primary);
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metadata-item {
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 4px;
+}
+
+.metadata-key {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.metadata-value {
+  color: var(--el-text-color-primary);
+  overflow-wrap: anywhere;
+}
+
+@media (width <= 992px) {
+  .metadata-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 768px) {
+  .monitoring-node-header {
+    justify-content: flex-start;
+  }
+
+  .monitoring-node-status {
+    flex-wrap: wrap;
+  }
+
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
