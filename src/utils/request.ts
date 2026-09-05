@@ -13,7 +13,10 @@ import { normalizeDateTimeValues } from "@/utils/format";
 const http = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
   timeout: 50000,
-  headers: { "Content-Type": "application/json;charset=utf-8" },
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json;charset=utf-8",
+  },
   paramsSerializer: (params) => qs.stringify(params),
 });
 
