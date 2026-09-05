@@ -20,6 +20,14 @@
         class="mb-4"
         show-icon
       />
+      <el-alert
+        v-if="loadWarnings.length"
+        :title="loadWarnings.join('；')"
+        type="warning"
+        :closable="false"
+        class="mb-4"
+        show-icon
+      />
       <el-descriptions :column="3" border class="mb-5">
         <el-descriptions-item label="网关实例">{{ gatewayInstances.length }}</el-descriptions-item>
         <el-descriptions-item label="健康实例">
@@ -66,6 +74,14 @@
           </div>
         </div>
       </template>
+      <el-alert
+        v-if="runtimeSnapshots.some((item) => !item.snapshot)"
+        title="部分网关实例运行参数不可用，请检查实例管理端点配置。"
+        type="warning"
+        :closable="false"
+        class="mb-4"
+        show-icon
+      />
       <el-table
         v-loading="loading"
         :data="runtimeSnapshots"
@@ -172,6 +188,14 @@
           </div>
         </div>
       </template>
+      <el-alert
+        v-if="!routeMetrics.length"
+        title="暂无路由流量指标。若网关已有流量，请检查 Prometheus 数据源配置。"
+        type="info"
+        :closable="false"
+        class="mb-4"
+        show-icon
+      />
       <el-table
         v-loading="loading"
         :data="routeMetrics"
@@ -213,6 +237,7 @@ const gatewayInstances = ref<GatewayServiceInstance[]>([]);
 const releaseDetail = ref<GatewayReleaseDetail>();
 const metrics = ref<GatewayRouteMetricsSnapshot>();
 const runtimeSnapshots = ref<GatewayInstanceRuntime[]>([]);
+const loadWarnings = ref<string[]>([]);
 const routeMetrics = computed(() => {
   const merged = new Map<
     string,
@@ -248,19 +273,52 @@ function routeProbe(instance: GatewayServiceInstance): GatewayRouteProbe | undef
 
 async function load() {
   loading.value = true;
+  loadWarnings.value = [];
   try {
-    const [catalog, releases, routeMetricSnapshot, runtimes] = await Promise.all([
+    const [catalogResult, releasesResult, metricResult, runtimeResult] = await Promise.allSettled([
       GatewayServiceAPI.list({ page: 1, pageSize: 500 }),
       GatewayApiRouteAPI.listReleases(),
-      GatewayApiRouteAPI.getRouteMetrics().catch(() => undefined),
-      GatewayApiRouteAPI.getRuntimeSnapshots().catch(() => []),
+      GatewayApiRouteAPI.getRouteMetrics(),
+      GatewayApiRouteAPI.getRuntimeSnapshots(),
     ]);
-    gatewayInstances.value = selectGatewayInstances(catalog.services || []);
-    releaseDetail.value = releases[0]
-      ? await GatewayApiRouteAPI.getRelease(releases[0].id)
-      : undefined;
-    metrics.value = routeMetricSnapshot;
-    runtimeSnapshots.value = runtimes;
+
+    if (catalogResult.status === "fulfilled") {
+      gatewayInstances.value = selectGatewayInstances(catalogResult.value.services || []);
+    } else {
+      gatewayInstances.value = [];
+      loadWarnings.value.push("网关实例目录加载失败");
+    }
+
+    if (releasesResult.status === "fulfilled") {
+      const latestRelease = releasesResult.value[0];
+      if (latestRelease) {
+        try {
+          releaseDetail.value = await GatewayApiRouteAPI.getRelease(latestRelease.id);
+        } catch {
+          releaseDetail.value = undefined;
+          loadWarnings.value.push("最近发布详情加载失败");
+        }
+      } else {
+        releaseDetail.value = undefined;
+      }
+    } else {
+      releaseDetail.value = undefined;
+      loadWarnings.value.push("发布记录加载失败");
+    }
+
+    if (metricResult.status === "fulfilled") {
+      metrics.value = metricResult.value;
+    } else {
+      metrics.value = undefined;
+      loadWarnings.value.push("路由指标加载失败");
+    }
+
+    if (runtimeResult.status === "fulfilled") {
+      runtimeSnapshots.value = runtimeResult.value;
+    } else {
+      runtimeSnapshots.value = [];
+      loadWarnings.value.push("实例运行参数加载失败");
+    }
   } finally {
     loading.value = false;
   }

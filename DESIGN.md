@@ -2,9 +2,9 @@
 
 ## Source of truth
 - Status: Active
-- Last refreshed: 2026-08-31
-- Primary product surfaces: OpenSabre 管理后台
-- Evidence reviewed: `src/styles/variables.scss`、`src/views/sysadmin/notification/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器、菜单合并迁移脚本
+- Last refreshed: 2026-09-05
+- Primary product surfaces: OpenSabre 管理后台、在线用户、网关监控、服务目录
+- Evidence reviewed: `src/styles/variables.scss`、`src/views/sysadmin/notification/index.vue`、`src/views/security/online-user/index.vue`、`src/views/system/gateway/monitoring/index.vue`、`src/views/system/gateway/services/index.vue`、计次场景与使用统计页面、OAuth2 客户端与授权记录页面、动态菜单适配器、菜单合并迁移脚本
 
 ## Brand
 - Personality: 稳定、清晰、面向系统管理员
@@ -12,24 +12,26 @@
 - Avoid: 为单个功能引入新的视觉体系或交互模式
 
 ## Product goals
-- Goals: 相关管理能力集中呈现，减少菜单数量；安全认证能力保持清晰层级
+- Goals: 相关管理能力集中呈现，减少菜单数量；安全认证能力保持清晰层级；运维列表优先展示可判断状态的信息，详细监控数据按需查看
 - Non-goals: 重做现有数据表格、统计图表或权限模型
 - Success signals: 计次管理和客户端管理分别通过页内 Tab 聚合相关能力；内部认证位于安全认证下
 
 ## Personas and jobs
 - Primary personas: 平台管理员、运维人员
-- User jobs: 配置计次场景；查看计次使用统计；维护 OAuth2 客户端与服务端授权；轮换内部 Token 密钥
+- User jobs: 配置计次场景；查看计次使用统计；维护 OAuth2 客户端与服务端授权；轮换内部 Token 密钥；识别在线会话活跃度；查看网关与服务实例健康和资源指标
 - Key contexts of use: 桌面端管理后台
 
 ## Information architecture
 - Primary navigation: 仅加载归属 `opensabre-admin` 的菜单与公共菜单；系统管理 → 计次管理；安全认证 → 客户端管理 / 内部认证
-- Core routes/screens: `/sysadmin/usage-management`、`/auth/client`、`/auth/internal-token-keys`
+- Core routes/screens: `/sysadmin/usage-management`、`/auth/client`、`/auth/internal-token-keys`、`/auth/online-user`、`/gateway/monitoring`、`/gateway/services`
 - Content hierarchy: 计次管理包含场景管理/使用统计 Tab；客户端管理包含客户端/Token 签发 Tab；内部认证保持独立二级菜单
 
 ## Design principles
 - Principle 1: 复用通知管理的页内 Tab 模式
 - Principle 2: 保留原页面的筛选、表格、图表和权限控制
 - Principle 3: 产品决定信息边界，角色决定授权边界；菜单必须同时满足当前产品可见和当前用户已授权
+- Principle 4: 概览列表保留高频判断信息，实例级监控详情使用对话框承载，避免依赖展开行浏览宽表格
+- Principle 5: 监控数据源独立加载；部分接口失败时保留其他可用数据，并明确区分“无数据”和“加载失败”
 - Tradeoffs: 旧页面组件继续保留，组合页面负责统一入口
 
 ## Visual language
@@ -42,8 +44,8 @@
 
 ## Components
 - Existing components to reuse: `ElTabs`、计次场景页、使用统计页、OAuth2 客户端页、OAuth2 授权记录页、内部 Token 密钥页
-- New/changed components: 计次管理组合页、客户端管理组合页、全局表格当前行状态、表格中性值标签、登录后加载的产品品牌信息
-- Variants and states: 场景管理/使用统计；客户端/Token 签发；类型值与状态值使用不同的标签层级
+- New/changed components: 计次管理组合页、客户端管理组合页、全局表格当前行状态、表格中性值标签、登录后加载的产品品牌信息、在线用户活跃信息列、服务监控详情对话框、网关监控数据源提示
+- Variants and states: 场景管理/使用统计；客户端/Token 签发；在线用户活跃/空闲/不活跃/未知；监控正常/部分不可用/无数据；类型值与状态值使用不同的标签层级
 - Token/component ownership: 继续由现有管理端主题和组件维护
 
 ## Accessibility
@@ -59,9 +61,9 @@
 - Touch/hover differences: 沿用 Element Plus 默认行为
 
 ## Interaction states
-- Loading: 各 Tab 保留原有加载状态
-- Empty: 各子页面保留原有空状态
-- Error: 沿用全局 API 错误反馈
+- Loading: 各 Tab 和监控页面保留原有加载状态
+- Empty: 监控空状态说明数据源配置与“暂无流量”的区别
+- Error: 沿用全局 API 错误反馈；网关监控并行数据源部分失败时保留成功区域并显示汇总警告
 - Success: 沿用原有操作成功反馈
 - Disabled: 沿用权限指令和表单状态
 - Offline/slow network, if applicable: 显示原有加载状态
