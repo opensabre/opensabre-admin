@@ -42,6 +42,10 @@ describe("HTTP 响应拦截器", () => {
     vi.clearAllMocks();
   });
 
+  it("API 请求只声明接受 JSON，避免未认证请求被识别为页面导航", () => {
+    expect(request.defaults.headers.Accept).toBe("application/json");
+  });
+
   it("API 被重定向到登录页并返回 HTML 时跳转登录", async () => {
     const promise = request({
       url: "/api/org/user/current",
