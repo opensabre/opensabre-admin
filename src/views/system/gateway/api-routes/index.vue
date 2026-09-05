@@ -142,7 +142,15 @@
           <el-table v-loading="loading" :data="applicationRoutes" border row-key="id">
             <el-table-column prop="serviceId" label="服务名" min-width="160" />
             <el-table-column prop="routeName" label="路由名称" min-width="170" />
-            <el-table-column prop="externalPath" label="外部路径" min-width="230" />
+            <el-table-column label="外部路径" min-width="230">
+              <template #default="{ row }">
+                <div class="route-path-list">
+                  <div v-for="path in splitRoutePaths(row.externalPath)" :key="path">
+                    {{ path }}
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column prop="targetUri" label="目标 URI" min-width="230" />
             <el-table-column label="风险等级" width="110">
               <template #default="{ row }">
@@ -953,6 +961,13 @@ function authModeLabel(mode?: string) {
   );
 }
 
+function splitRoutePaths(path: string | undefined) {
+  return (path || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function openPublicationDetail(publication: GatewayApiPublication) {
   publicationDetailDialog.data = publication;
   publicationDetailDialog.visible = true;
@@ -1338,5 +1353,11 @@ onMounted(loadServices);
 .policy-field :deep(.el-select),
 .policy-field :deep(.el-input-number) {
   width: 100%;
+}
+
+.route-path-list {
+  font-family: var(--el-font-family-monospace);
+  line-height: 1.7;
+  word-break: break-all;
 }
 </style>
