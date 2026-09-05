@@ -26,6 +26,7 @@
         border
         class="table-section__content"
       >
+        <el-table-column type="index" label="#" width="56" />
         <el-table-column label="用户名" prop="username" width="140" />
         <el-table-column label="显示名称" prop="displayName" width="140" />
         <el-table-column label="客户端IP" prop="ip" width="150" />
@@ -35,18 +36,33 @@
           width="180"
           show-overflow-tooltip
         />
+        <el-table-column label="活跃状态" width="110">
+          <template #default="{ row }">
+            <el-tag :type="activityTagType(row.lastAccessTime)" effect="light">
+              {{ activityStatusLabel(row.lastAccessTime) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="登录时间" width="180">
           <template #default="{ row }">
             {{ formatDateTime(row.loginTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="最后访问" width="180">
+        <el-table-column label="在线时长" width="140">
+          <template #default="{ row }">{{ onlineDuration(row.loginTime) }}</template>
+        </el-table-column>
+        <el-table-column label="最近活跃" width="180">
           <template #default="{ row }">
-            {{ formatDateTime(row.lastAccessTime) }}
+            <div>{{ lastActiveText(row.lastAccessTime) }}</div>
+            <div class="text-xs text-gray-400">{{ formatDateTime(row.lastAccessTime) }}</div>
           </template>
         </el-table-column>
         <el-table-column label="会话ID" prop="sessionId" min-width="220" show-overflow-tooltip />
-        <el-table-column label="User-Agent" prop="userAgent" min-width="260" show-overflow-tooltip />
+        <el-table-column label="客户端" min-width="210">
+          <template #default="{ row }">
+            <span :title="row.userAgent">{{ clientSummary(row.userAgent) }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" fixed="right" width="100">
           <template #default="{ row }">
             <el-button
@@ -67,6 +83,7 @@
 <script setup lang="ts">
 import OnlineUserAPI from "@/api/auth/online-user";
 import type { OnlineUserItem, OnlineUserQueryParams } from "@/types/api";
+import { activityStatus, clientSummary, lastActiveText, onlineDuration } from "./presentation";
 
 defineOptions({
   name: "OnlineUser",
@@ -116,6 +133,18 @@ function handleKickout(row: OnlineUserItem) {
       fetchData();
     });
   });
+}
+
+function activityStatusLabel(value?: string | number) {
+  return { active: "活跃", idle: "空闲", inactive: "不活跃", unknown: "未知" }[
+    activityStatus(value)
+  ];
+}
+
+function activityTagType(value?: string | number) {
+  return { active: "success", idle: "warning", inactive: "info", unknown: "info" }[
+    activityStatus(value)
+  ] as "success" | "warning" | "info";
 }
 
 function formatDateTime(value?: string | number) {

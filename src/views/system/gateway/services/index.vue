@@ -14,72 +14,6 @@
       </template>
 
       <el-table v-loading="loading" :data="services" row-key="name">
-        <el-table-column type="expand">
-          <template #default="scope">
-            <el-table :data="scope.row.instances" size="small" class="mx-4 mb-3 w-auto">
-              <el-table-column label="实例地址" min-width="180">
-                <template #default="instance">
-                  {{ instance.row.ip }}:{{ instance.row.port }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="cluster" label="集群" min-width="120" />
-              <el-table-column label="健康" width="90">
-                <template #default="instance">
-                  <el-tag :type="instance.row.healthy ? 'success' : 'danger'">
-                    {{ instance.row.healthy ? "健康" : "异常" }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="启用" width="80">
-                <template #default="instance">{{ instance.row.enabled ? "是" : "否" }}</template>
-              </el-table-column>
-              <el-table-column prop="weight" label="权重" width="80" />
-              <el-table-column label="请求/秒" width="110">
-                <template #default="instance">
-                  {{ formatNumber(metricOf(instance.row)?.requestRate) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="5xx/秒" width="100">
-                <template #default="instance">
-                  {{ formatNumber(metricOf(instance.row)?.errorRate) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="P95" width="100">
-                <template #default="instance">
-                  {{ formatLatency(metricOf(instance.row)?.p95Latency) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="CPU" width="90">
-                <template #default="instance">
-                  {{ formatPercent(metricOf(instance.row)?.cpuUsage) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="堆内存" width="160">
-                <template #default="instance">
-                  {{ formatHeap(metricOf(instance.row)?.heapUsed, metricOf(instance.row)?.heapMax) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="运行时长" width="110">
-                <template #default="instance">
-                  {{ formatUptime(actuatorOf(instance.row)?.snapshot?.uptimeSeconds) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="线程" width="80">
-                <template #default="instance">
-                  {{ actuatorOf(instance.row)?.snapshot?.liveThreads ?? "无数据" }}
-                </template>
-              </el-table-column>
-              <el-table-column label="指标状态" min-width="150" show-overflow-tooltip>
-                <template #default="instance">
-                  {{ actuatorStatus(instance.row) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="元数据" min-width="220" show-overflow-tooltip>
-                <template #default="instance">{{ metadataText(instance.row.metadata) }}</template>
-              </el-table-column>
-            </el-table>
-          </template>
-        </el-table-column>
         <el-table-column prop="name" label="服务名称" min-width="220" />
         <el-table-column prop="instanceCount" label="实例数" width="100" />
         <el-table-column label="请求/秒" width="110">
@@ -99,10 +33,18 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="API 操作" width="180" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
+            <el-button link type="primary" @click="openMonitoringDetail(row)">监控详情</el-button>
             <el-button link type="primary" @click="viewApis(row.name)">查看 API</el-button>
-            <el-button link type="success" :loading="syncingService === row.name" @click="syncApis(row.name)">同步</el-button>
+            <el-button
+              link
+              type="success"
+              :loading="syncingService === row.name"
+              @click="syncApis(row.name)"
+            >
+              同步
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -115,6 +57,82 @@
         @pagination="loadServices"
       />
     </el-card>
+
+    <el-dialog
+      v-model="monitoringDialog.visible"
+      :title="`${monitoringDialog.service?.name || ''} 监控详情`"
+      width="min(1200px, 92vw)"
+      destroy-on-close
+      append-to-body
+    >
+      <el-descriptions v-if="monitoringDialog.service" :column="3" border class="mb-4">
+        <el-descriptions-item label="服务名称">
+          {{ monitoringDialog.service.name }}
+        </el-descriptions-item>
+        <el-descriptions-item label="实例数">
+          {{ monitoringDialog.service.instanceCount }}
+        </el-descriptions-item>
+        <el-descriptions-item label="健康实例">
+          {{ monitoringDialog.service.healthyInstanceCount }} /
+          {{ monitoringDialog.service.instanceCount }}
+        </el-descriptions-item>
+      </el-descriptions>
+      <el-table
+        v-if="monitoringDialog.service"
+        :data="monitoringDialog.service.instances"
+        :row-key="instanceKey"
+        border
+        max-height="520"
+      >
+        <el-table-column label="实例地址" min-width="170" fixed="left">
+          <template #default="{ row }">{{ instanceKey(row) }}</template>
+        </el-table-column>
+        <el-table-column prop="cluster" label="集群" min-width="120" />
+        <el-table-column label="状态" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.healthy ? 'success' : 'danger'">
+              {{ row.healthy ? "健康" : "异常" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="请求/秒" width="105">
+          <template #default="{ row }">{{ formatNumber(metricOf(row)?.requestRate) }}</template>
+        </el-table-column>
+        <el-table-column label="5xx/秒" width="100">
+          <template #default="{ row }">{{ formatNumber(metricOf(row)?.errorRate) }}</template>
+        </el-table-column>
+        <el-table-column label="P95" width="100">
+          <template #default="{ row }">{{ formatLatency(metricOf(row)?.p95Latency) }}</template>
+        </el-table-column>
+        <el-table-column label="CPU" width="90">
+          <template #default="{ row }">{{ formatPercent(metricOf(row)?.cpuUsage) }}</template>
+        </el-table-column>
+        <el-table-column label="堆内存" width="170">
+          <template #default="{ row }">
+            {{ formatHeap(metricOf(row)?.heapUsed, metricOf(row)?.heapMax) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="运行时长" width="115">
+          <template #default="{ row }">
+            {{ formatUptime(actuatorOf(row)?.snapshot?.uptimeSeconds) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="线程" width="80">
+          <template #default="{ row }">
+            {{ actuatorOf(row)?.snapshot?.liveThreads ?? "无数据" }}
+          </template>
+        </el-table-column>
+        <el-table-column label="指标状态" min-width="170" show-overflow-tooltip>
+          <template #default="{ row }">{{ actuatorStatus(row) }}</template>
+        </el-table-column>
+        <el-table-column label="元数据" min-width="240" show-overflow-tooltip>
+          <template #default="{ row }">{{ metadataText(row.metadata) }}</template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="monitoringDialog.visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -144,6 +162,10 @@ const actuatorMetrics = ref(new Map<string, ApplicationInstanceActuator>());
 const query = reactive({ page: 1, pageSize: 20 });
 const router = useRouter();
 const syncingService = ref("");
+const monitoringDialog = reactive<{
+  visible: boolean;
+  service?: GatewayServiceSummary;
+}>({ visible: false });
 
 async function loadServices() {
   loading.value = true;
@@ -192,7 +214,9 @@ function serviceErrorRate(service: GatewayServiceSummary) {
 }
 
 function sumMetric(service: GatewayServiceSummary, field: "requestRate" | "errorRate") {
-  const values = service.instances.map((item) => metricOf(item)?.[field]).filter((value) => value != null);
+  const values = service.instances
+    .map((item) => metricOf(item)?.[field])
+    .filter((value) => value != null);
   return values.length ? values.reduce((sum, value) => sum + value, 0) : undefined;
 }
 
@@ -230,6 +254,15 @@ function metadataText(metadata: Record<string, string>) {
       .map(([key, value]) => `${key}=${value}`)
       .join(", ") || "-"
   );
+}
+
+function instanceKey(instance: GatewayServiceInstance) {
+  return `${instance.ip}:${instance.port}`;
+}
+
+function openMonitoringDetail(service: GatewayServiceSummary) {
+  monitoringDialog.service = service;
+  monitoringDialog.visible = true;
 }
 
 async function viewApis(serviceId: string) {
