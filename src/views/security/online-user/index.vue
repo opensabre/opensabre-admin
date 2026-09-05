@@ -25,17 +25,33 @@
         highlight-current-row
         border
         class="table-section__content"
+        row-key="sessionId"
+        empty-text="暂无在线用户"
       >
+        <el-table-column type="expand">
+          <template #default="{ row }">
+            <div class="online-user-detail">
+              <el-descriptions :column="3" border>
+                <el-descriptions-item label="认证类型">
+                  {{ row.authenticationType || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="客户端">
+                  {{ clientSummary(row.userAgent) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="会话 ID">
+                  {{ row.sessionId || "-" }}
+                </el-descriptions-item>
+                <el-descriptions-item label="完整客户端信息" :span="3">
+                  <span class="user-agent">{{ row.userAgent || "-" }}</span>
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column type="index" label="#" width="56" />
         <el-table-column label="用户名" prop="username" width="140" />
         <el-table-column label="显示名称" prop="displayName" width="140" />
         <el-table-column label="客户端IP" prop="ip" width="150" />
-        <el-table-column
-          label="认证类型"
-          prop="authenticationType"
-          width="180"
-          show-overflow-tooltip
-        />
         <el-table-column label="活跃状态" width="110">
           <template #default="{ row }">
             <el-tag :type="activityTagType(row.lastAccessTime)" effect="light">
@@ -55,12 +71,6 @@
           <template #default="{ row }">
             <div>{{ lastActiveText(row.lastAccessTime) }}</div>
             <div class="text-xs text-gray-400">{{ formatDateTime(row.lastAccessTime) }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="会话ID" prop="sessionId" min-width="220" show-overflow-tooltip />
-        <el-table-column label="客户端" min-width="210">
-          <template #default="{ row }">
-            <span :title="row.userAgent">{{ clientSummary(row.userAgent) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="100">
@@ -167,3 +177,13 @@ onMounted(() => {
   fetchData();
 });
 </script>
+
+<style scoped>
+.online-user-detail {
+  padding: 12px 40px;
+}
+
+.user-agent {
+  overflow-wrap: anywhere;
+}
+</style>
