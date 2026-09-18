@@ -25,6 +25,13 @@ const GatewayServiceAPI = {
       params,
     });
   },
+  getApplicationHistory(params: { range: string; application?: string; instance?: string }) {
+    return request<any, import("@/types/api/gateway-api-route").MonitoringHistory>({
+      url: "/gateway-admin/monitoring/applications/history",
+      method: "get",
+      params,
+    });
+  },
 };
 
 export default GatewayServiceAPI;
