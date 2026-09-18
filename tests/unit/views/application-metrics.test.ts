@@ -6,8 +6,10 @@ import {
   instanceMetrics,
 } from "@/views/system/gateway/services/application-metrics";
 
-function vector(instance: string, value: string) {
-  return JSON.stringify({ data: { result: [{ metric: { instance }, value: [1, value] }] } });
+function vector(instance: string, value: string, application?: string) {
+  return JSON.stringify({
+    data: { result: [{ metric: { instance, application }, value: [1, value] }] },
+  });
 }
 
 describe("application metrics", () => {
@@ -29,6 +31,33 @@ describe("application metrics", () => {
       heapUsed: 100,
       heapMax: 200,
     });
+  });
+
+  it("falls back to the application label when the scrape port differs from the service port", () => {
+    const metrics = applicationMetricsByInstance({
+      requestRate: vector("base-sysadmin:18080", "7", "base-sysadmin"),
+      errorRate: "{}",
+      p95Latency: "{}",
+      cpuUsage: "{}",
+      heapUsed: "{}",
+      heapMax: "{}",
+    });
+
+    expect(
+      instanceMetrics(
+        metrics,
+        {
+          ip: "172.18.0.9",
+          port: 8020,
+          cluster: "DEFAULT",
+          healthy: true,
+          enabled: true,
+          weight: 1,
+          metadata: {},
+        },
+        "base-sysadmin"
+      )?.requestRate
+    ).toBe(7);
   });
 
   it("matches prefixed Prometheus instance labels and tolerates invalid responses", () => {

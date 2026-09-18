@@ -38,6 +38,19 @@ export function applicationMetricsByInstance(snapshot?: ApplicationMetricsSnapsh
       const current = metrics.get(instance) || {};
       current[field] = value;
       metrics.set(instance, current);
+      const application = item.metric.application;
+      if (application) {
+        const applicationKey = `application:${application}`;
+        const aggregate = metrics.get(applicationKey) || {};
+        const previous = aggregate[field];
+        aggregate[field] =
+          field === "requestRate" || field === "errorRate" || field.startsWith("heap")
+            ? (previous || 0) + value
+            : previous == null
+              ? value
+              : Math.max(previous, value);
+        metrics.set(applicationKey, aggregate);
+      }
     }
   }
   return metrics;
@@ -45,10 +58,15 @@ export function applicationMetricsByInstance(snapshot?: ApplicationMetricsSnapsh
 
 export function instanceMetrics(
   metrics: Map<string, ApplicationInstanceMetrics>,
-  instance: GatewayServiceInstance
+  instance: GatewayServiceInstance,
+  serviceName?: string
 ) {
   const key = `${instance.ip}:${instance.port}`;
-  return metrics.get(key) || [...metrics].find(([id]) => id.endsWith(key))?.[1];
+  return (
+    metrics.get(key) ||
+    [...metrics].find(([id]) => id.endsWith(key))?.[1] ||
+    (serviceName ? metrics.get(`application:${serviceName}`) : undefined)
+  );
 }
 
 /** Index Actuator results separately so their availability never affects Prometheus values. */

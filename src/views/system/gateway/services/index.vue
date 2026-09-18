@@ -77,6 +77,24 @@
           {{ monitoringDialog.service.instanceCount }}
         </el-descriptions-item>
       </el-descriptions>
+      <section v-if="monitoringDialog.service" class="monitoring-section">
+        <div class="flex items-center justify-between mb-2">
+          <div class="monitoring-section-title">历史趋势</div>
+          <el-segmented v-model="selectedRange" :options="rangeOptions" @change="loadHistory" />
+        </div>
+        <el-row :gutter="12">
+          <el-col :xs="24" :lg="12">
+            <ECharts :options="trafficChartOptions" height="260px" />
+          </el-col>
+          <el-col :xs="24" :lg="12">
+            <ECharts :options="latencyChartOptions" height="260px" />
+          </el-col>
+          <el-col :xs="24" :lg="12">
+            <ECharts :options="resourceChartOptions" height="260px" />
+          </el-col>
+          <el-col :xs="24" :lg="12"><ECharts :options="heapChartOptions" height="260px" /></el-col>
+        </el-row>
+      </section>
       <template v-if="monitoringDialog.service">
         <el-empty
           v-if="!monitoringDialog.service.instances.length"
@@ -134,13 +152,17 @@
               <div class="monitoring-section-title">流量表现</div>
               <el-descriptions :column="3" border>
                 <el-descriptions-item label="请求/秒">
-                  {{ formatNumber(metricOf(instance)?.requestRate) }}
+                  {{
+                    formatNumber(metricOf(instance, monitoringDialog.service?.name)?.requestRate)
+                  }}
                 </el-descriptions-item>
                 <el-descriptions-item label="5xx/秒">
-                  {{ formatNumber(metricOf(instance)?.errorRate) }}
+                  {{ formatNumber(metricOf(instance, monitoringDialog.service?.name)?.errorRate) }}
                 </el-descriptions-item>
                 <el-descriptions-item label="P95 延迟">
-                  {{ formatLatency(metricOf(instance)?.p95Latency) }}
+                  {{
+                    formatLatency(metricOf(instance, monitoringDialog.service?.name)?.p95Latency)
+                  }}
                 </el-descriptions-item>
               </el-descriptions>
             </section>
@@ -149,10 +171,15 @@
               <div class="monitoring-section-title">资源运行</div>
               <el-descriptions :column="2" border>
                 <el-descriptions-item label="CPU 使用率">
-                  {{ formatPercent(metricOf(instance)?.cpuUsage) }}
+                  {{ formatPercent(metricOf(instance, monitoringDialog.service?.name)?.cpuUsage) }}
                 </el-descriptions-item>
                 <el-descriptions-item label="堆内存">
-                  {{ formatHeap(metricOf(instance)?.heapUsed, metricOf(instance)?.heapMax) }}
+                  {{
+                    formatHeap(
+                      metricOf(instance, monitoringDialog.service?.name)?.heapUsed,
+                      metricOf(instance, monitoringDialog.service?.name)?.heapMax
+                    )
+                  }}
                 </el-descriptions-item>
                 <el-descriptions-item label="运行时长">
                   {{ formatUptime(actuatorOf(instance)?.snapshot?.uptimeSeconds) }}
@@ -202,6 +229,8 @@ import {
   instanceMetrics,
   type ApplicationInstanceMetrics,
 } from "./application-metrics";
+import type { MonitoringHistory, MonitoringRange } from "@/types/api/gateway-api-route";
+import { historyChartOptions } from "../monitoring/history-chart";
 
 defineOptions({ name: "GatewayServices" });
 
@@ -218,6 +247,38 @@ const monitoringDialog = reactive<{
   service?: GatewayServiceSummary;
   activeInstance: string;
 }>({ visible: false, activeInstance: "" });
+const selectedRange = ref<MonitoringRange>("1h");
+const rangeOptions = ["15m", "1h", "6h", "24h", "7d", "30d"];
+const history = ref<MonitoringHistory>();
+const trafficChartOptions = computed(() =>
+  historyChartOptions(history.value, [
+    { key: "tps", label: "TPS" },
+    { key: "errorTps", label: "5xx / 秒" },
+  ])
+);
+const latencyChartOptions = computed(() =>
+  historyChartOptions(
+    history.value,
+    [
+      { key: "p95", label: "P95" },
+      { key: "p99", label: "P99" },
+    ],
+    (value) => value * 1000
+  )
+);
+const resourceChartOptions = computed(() =>
+  historyChartOptions(history.value, [{ key: "cpu", label: "CPU" }], (value) => value * 100)
+);
+const heapChartOptions = computed(() =>
+  historyChartOptions(
+    history.value,
+    [
+      { key: "heapUsed", label: "堆已用 MB" },
+      { key: "heapMax", label: "堆上限 MB" },
+    ],
+    (value) => value / 1024 / 1024
+  )
+);
 
 async function loadServices() {
   loading.value = true;
@@ -237,8 +298,8 @@ async function loadServices() {
   }
 }
 
-function metricOf(instance: GatewayServiceInstance) {
-  const prometheus = instanceMetrics(metrics.value, instance);
+function metricOf(instance: GatewayServiceInstance, serviceName?: string) {
+  const prometheus = instanceMetrics(metrics.value, instance, serviceName);
   const actuator = actuatorOf(instance)?.snapshot;
   return {
     ...prometheus,
@@ -266,6 +327,8 @@ function serviceErrorRate(service: GatewayServiceSummary) {
 }
 
 function sumMetric(service: GatewayServiceSummary, field: "requestRate" | "errorRate") {
+  const aggregate = metrics.value.get(`application:${service.name}`)?.[field];
+  if (aggregate != null) return aggregate;
   const values = service.instances
     .map((item) => metricOf(item)?.[field])
     .filter((value) => value != null);
@@ -312,6 +375,15 @@ function openMonitoringDetail(service: GatewayServiceSummary) {
   monitoringDialog.service = service;
   monitoringDialog.activeInstance = service.instances[0] ? instanceKey(service.instances[0]) : "";
   monitoringDialog.visible = true;
+  loadHistory();
+}
+
+async function loadHistory() {
+  if (!monitoringDialog.service) return;
+  history.value = await GatewayServiceAPI.getApplicationHistory({
+    range: selectedRange.value,
+    application: monitoringDialog.service.name,
+  }).catch(() => undefined);
 }
 
 async function viewApis(serviceId: string) {

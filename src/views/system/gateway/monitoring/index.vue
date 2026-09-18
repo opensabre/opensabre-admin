@@ -67,6 +67,49 @@
     </el-card>
     <el-card shadow="never" class="mt-4">
       <template #header>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-medium">网关流量趋势</div>
+            <div class="mt-1 text-xs text-gray-500">TPS、错误流量及 P50/P95/P99 延迟。</div>
+          </div>
+          <el-segmented v-model="selectedRange" :options="rangeOptions" @change="loadHistory" />
+        </div>
+      </template>
+      <el-alert
+        v-if="monitoringStatus && !monitoringStatus.available"
+        :title="monitoringStatus.message"
+        type="error"
+        :closable="false"
+        class="mb-4"
+        show-icon
+      />
+      <el-row :gutter="16" class="mb-4">
+        <el-col :xs="12" :sm="6">
+          <el-statistic title="当前 TPS" :value="currentTps" :precision="3" />
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <el-statistic title="5xx / 秒" :value="currentErrorTps" :precision="3" />
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <el-statistic title="错误率" :value="currentErrorRate" suffix="%" :precision="2" />
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <el-statistic title="当前 P95" :value="currentP95" suffix=" ms" :precision="0" />
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :lg="12">
+          <div class="chart-title">请求趋势</div>
+          <ECharts :options="trafficChartOptions" height="320px" />
+        </el-col>
+        <el-col :xs="24" :lg="12">
+          <div class="chart-title">延迟趋势（ms）</div>
+          <ECharts :options="latencyChartOptions" height="320px" />
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card shadow="never" class="mt-4">
+      <template #header>
         <div>
           <div class="font-medium">实例运行参数</div>
           <div class="mt-1 text-xs text-gray-500">
@@ -227,9 +270,13 @@ import type {
   GatewayInstanceRuntime,
   GatewayReleaseDetail,
   GatewayRouteMetricsSnapshot,
+  MonitoringDataSourceStatus,
+  MonitoringHistory,
+  MonitoringRange,
   GatewayRouteProbe,
 } from "@/types/api/gateway-api-route";
 import { selectGatewayInstances } from "./service-selection";
+import { historyChartOptions } from "./history-chart";
 
 defineOptions({ name: "GatewayMonitoring" });
 const loading = ref(false);
@@ -238,6 +285,10 @@ const releaseDetail = ref<GatewayReleaseDetail>();
 const metrics = ref<GatewayRouteMetricsSnapshot>();
 const runtimeSnapshots = ref<GatewayInstanceRuntime[]>([]);
 const loadWarnings = ref<string[]>([]);
+const selectedRange = ref<MonitoringRange>("1h");
+const history = ref<MonitoringHistory>();
+const monitoringStatus = ref<MonitoringDataSourceStatus>();
+const rangeOptions = ["15m", "1h", "6h", "24h", "7d", "30d"];
 const routeMetrics = computed(() => {
   const merged = new Map<
     string,
@@ -257,6 +308,35 @@ const routeMetrics = computed(() => {
   }
   return [...merged.values()].sort((a, b) => (b.requestRate || 0) - (a.requestRate || 0));
 });
+const currentTps = computed(() =>
+  routeMetrics.value.reduce((sum, item) => sum + (item.requestRate || 0), 0)
+);
+const currentErrorTps = computed(() =>
+  routeMetrics.value.reduce((sum, item) => sum + (item.errorRate || 0), 0)
+);
+const currentErrorRate = computed(() =>
+  currentTps.value ? (currentErrorTps.value / currentTps.value) * 100 : 0
+);
+const currentP95 = computed(() =>
+  Math.max(0, ...routeMetrics.value.map((item) => (item.p95Latency || 0) * 1000))
+);
+const trafficChartOptions = computed(() =>
+  historyChartOptions(history.value, [
+    { key: "tps", label: "TPS" },
+    { key: "errorTps", label: "5xx / 秒" },
+  ])
+);
+const latencyChartOptions = computed(() =>
+  historyChartOptions(
+    history.value,
+    [
+      { key: "p50", label: "P50" },
+      { key: "p95", label: "P95" },
+      { key: "p99", label: "P99" },
+    ],
+    (value) => value * 1000
+  )
+);
 
 function instanceKey(instance: GatewayServiceInstance) {
   return `${instance.ip}:${instance.port}`;
@@ -319,9 +399,21 @@ async function load() {
       runtimeSnapshots.value = [];
       loadWarnings.value.push("实例运行参数加载失败");
     }
+    await loadHistory();
   } finally {
     loading.value = false;
   }
+}
+async function loadHistory() {
+  const [historyResult, statusResult] = await Promise.allSettled([
+    GatewayApiRouteAPI.getRouteHistory({ range: selectedRange.value }),
+    GatewayApiRouteAPI.getMonitoringStatus(),
+  ]);
+  history.value = historyResult.status === "fulfilled" ? historyResult.value : undefined;
+  monitoringStatus.value =
+    statusResult.status === "fulfilled"
+      ? statusResult.value
+      : { available: false, message: "Prometheus 数据源状态查询失败" };
 }
 function prometheusVector(
   raw?: string
@@ -371,5 +463,12 @@ onMounted(load);
 <style scoped>
 .runtime-detail {
   padding: 12px 40px;
+}
+
+.chart-title {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
 }
 </style>

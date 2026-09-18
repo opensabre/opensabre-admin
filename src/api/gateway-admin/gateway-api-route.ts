@@ -160,6 +160,19 @@ const GatewayApiRouteAPI = {
       method: "get",
     });
   },
+  getRouteHistory(params: { range: string; routeId?: string }) {
+    return request<any, import("@/types/api/gateway-api-route").MonitoringHistory>({
+      url: `${BASE_URL}/monitoring/routes/history`,
+      method: "get",
+      params,
+    });
+  },
+  getMonitoringStatus() {
+    return request<any, import("@/types/api/gateway-api-route").MonitoringDataSourceStatus>({
+      url: `${BASE_URL}/monitoring/status`,
+      method: "get",
+    });
+  },
   getRuntimeSnapshots() {
     return request<any, GatewayInstanceRuntime[]>({
       url: `${BASE_URL}/monitoring/runtime`,
