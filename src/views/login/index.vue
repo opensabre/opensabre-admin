@@ -156,6 +156,9 @@ const modules = [
 ];
 
 function handleOAuthLogin() {
+  // OAuth 登录使用网关同源会话；清理历史 token，避免请求拦截器携带
+  // 已过期/属于另一登录模式的 Bearer 覆盖刚建立的会话。
+  AuthStorage.clearAuth();
   window.location.href = OAuth2_CONFIG.authorizeUrl;
 }
 
