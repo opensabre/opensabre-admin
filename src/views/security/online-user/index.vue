@@ -87,6 +87,13 @@
         </el-table-column>
       </el-table>
     </el-card>
+    <pagination
+      v-if="total > 0"
+      v-model:total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="fetchData"
+    />
   </div>
 </template>
 
@@ -103,8 +110,11 @@ defineOptions({
 const queryFormRef = ref();
 const loading = ref(false);
 const onlineUsers = ref<OnlineUserItem[]>([]);
+const total = ref(0);
 
 const queryParams = reactive<OnlineUserQueryParams>({
+  pageNum: 1,
+  pageSize: 10,
   username: "",
 });
 
@@ -112,7 +122,8 @@ function fetchData() {
   loading.value = true;
   OnlineUserAPI.list(queryParams)
     .then((data) => {
-      onlineUsers.value = data ?? [];
+      onlineUsers.value = data.data ?? [];
+      total.value = data.page?.total ?? 0;
     })
     .finally(() => {
       loading.value = false;
@@ -120,11 +131,13 @@ function fetchData() {
 }
 
 function handleQuery() {
+  queryParams.pageNum = 1;
   fetchData();
 }
 
 function handleResetQuery() {
   queryFormRef.value?.resetFields();
+  queryParams.pageNum = 1;
   fetchData();
 }
 

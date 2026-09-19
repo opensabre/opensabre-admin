@@ -3,6 +3,8 @@
  */
 
 export interface OnlineUserQueryParams {
+  pageNum: number;
+  pageSize: number;
   username?: string;
 }
 
