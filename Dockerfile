@@ -36,5 +36,5 @@ RUN sed -i "s/__GW_HOST__/${GW_HOST}/g" /etc/nginx/conf.d/default.conf
 # 暴露端口
 EXPOSE 80
 
-# 启动 Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# 直接启动 Nginx，避免官方 entrypoint 的 Alpine 包清单检测阻塞容器启动
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
