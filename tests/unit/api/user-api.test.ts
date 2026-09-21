@@ -50,8 +50,8 @@ describe("UserAPI", () => {
         size: 20,
         username: "admin",
         groupId: "101",
-        createdTimeStart: "2026-06-01",
-        createdTimeEnd: "2026-06-27",
+        createdTimeStart: "2026-06-01 00:00:00",
+        createdTimeEnd: "2026-06-27 23:59:59",
       },
     });
     expect(page).toEqual({
