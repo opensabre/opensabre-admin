@@ -120,8 +120,8 @@ const filters = reactive<{
 });
 const trendOptions = computed(() => ({
   tooltip: { trigger: "axis" },
-  legend: { data: ["发起", "成功", "失败"] },
-  grid: { left: 48, right: 20, bottom: 36 },
+  legend: { top: 0, data: ["发起", "成功", "失败"] },
+  grid: { top: 48, left: 48, right: 20, bottom: 36 },
   xAxis: { type: "category", data: trend.value.map((item) => item.bucketStart) },
   yAxis: { type: "value", minInterval: 1 },
   series: [

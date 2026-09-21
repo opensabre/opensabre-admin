@@ -103,8 +103,8 @@ function toOrgUserQuery(queryParams: UserQueryParams) {
     size: queryParams.pageSize,
     username: queryParams.keywords || undefined,
     groupId: queryParams.deptId || undefined,
-    createdTimeStart,
-    createdTimeEnd,
+    createdTimeStart: createdTimeStart ? `${createdTimeStart} 00:00:00` : undefined,
+    createdTimeEnd: createdTimeEnd ? `${createdTimeEnd} 23:59:59` : undefined,
   };
 }
 

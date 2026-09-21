@@ -10,6 +10,11 @@ interface OrgPage<T> {
   total?: number;
 }
 
+function normalizeRangeBoundary(value: string | undefined, endOfDay = false) {
+  if (!value || value.length !== 10) return value || undefined;
+  return `${value} ${endOfDay ? "23:59:59" : "00:00:00"}`;
+}
+
 function toQuery(queryParams?: AuditLogQueryParams) {
   return {
     current: queryParams?.pageNum ?? 1,
@@ -19,8 +24,8 @@ function toQuery(queryParams?: AuditLogQueryParams) {
     module: queryParams?.module || undefined,
     clientIp: queryParams?.clientIp || undefined,
     targetKey: queryParams?.targetKey || undefined,
-    operationStartTime: queryParams?.operationTimeRange?.[0] || undefined,
-    operationEndTime: queryParams?.operationTimeRange?.[1] || undefined,
+    operationStartTime: normalizeRangeBoundary(queryParams?.operationTimeRange?.[0]),
+    operationEndTime: normalizeRangeBoundary(queryParams?.operationTimeRange?.[1], true),
   };
 }
 

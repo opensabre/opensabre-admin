@@ -39,8 +39,8 @@ describe("AuditLogAPI", () => {
         module: "user",
         clientIp: undefined,
         targetKey: undefined,
-        operationStartTime: "2026-01-01",
-        operationEndTime: "2026-01-31",
+        operationStartTime: "2026-01-01 00:00:00",
+        operationEndTime: "2026-01-31 23:59:59",
       },
     });
     expect(page.page).toEqual({ pageNum: 1, pageSize: 10, total: 1 });
