@@ -65,6 +65,18 @@
       destroy-on-close
       append-to-body
     >
+      <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+        <span class="text-sm">自动刷新</span>
+        <el-select v-model="refreshInterval" aria-label="自动刷新频率" class="!w-28">
+          <el-option
+            v-for="option in refreshOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+        <el-button :loading="refreshing" @click="refresh">刷新</el-button>
+      </div>
       <el-descriptions v-if="monitoringDialog.service" :column="3" border class="mb-4">
         <el-descriptions-item label="服务名称">
           {{ monitoringDialog.service.name }}
@@ -78,7 +90,7 @@
         </el-descriptions-item>
       </el-descriptions>
       <section v-if="monitoringDialog.service" class="monitoring-section">
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div class="monitoring-section-title">历史趋势</div>
           <el-segmented v-model="selectedRange" :options="rangeOptions" @change="loadHistory" />
         </div>
@@ -231,6 +243,7 @@ import {
 } from "./application-metrics";
 import type { MonitoringHistory, MonitoringRange } from "@/types/api/gateway-api-route";
 import { historyChartOptions } from "../monitoring/history-chart";
+import { rangeOptions, refreshOptions, useMonitoringRefresh } from "../monitoring/refresh";
 
 defineOptions({ name: "GatewayServices" });
 
@@ -248,7 +261,11 @@ const monitoringDialog = reactive<{
   activeInstance: string;
 }>({ visible: false, activeInstance: "" });
 const selectedRange = ref<MonitoringRange>("1h");
-const rangeOptions = ["15m", "1h", "6h", "24h", "7d", "30d"];
+const { refreshInterval, refreshing, refresh } = useMonitoringRefresh(
+  refreshMonitoring,
+  computed(() => monitoringDialog.visible)
+);
+let historyRequest = 0;
 const history = ref<MonitoringHistory>();
 const trafficChartOptions = computed(() =>
   historyChartOptions(history.value, [
@@ -286,7 +303,19 @@ async function loadServices() {
     const result = await GatewayServiceAPI.list(query);
     services.value = result.services || [];
     total.value = result.total || 0;
-    loading.value = false;
+    if (monitoringDialog.visible && monitoringDialog.service) {
+      const current = services.value.find((item) => item.name === monitoringDialog.service?.name);
+      if (current) {
+        monitoringDialog.service = current;
+        if (
+          !current.instances.some((item) => instanceKey(item) === monitoringDialog.activeInstance)
+        ) {
+          monitoringDialog.activeInstance = current.instances[0]
+            ? instanceKey(current.instances[0])
+            : "";
+        }
+      }
+    }
     const [metricSnapshot, actuatorSnapshots] = await Promise.all([
       GatewayServiceAPI.getApplicationMetrics().catch(() => undefined),
       GatewayServiceAPI.getActuatorMetrics(query).catch(() => []),
@@ -372,18 +401,33 @@ function instanceKey(instance: GatewayServiceInstance) {
 }
 
 function openMonitoringDetail(service: GatewayServiceSummary) {
+  history.value = undefined;
   monitoringDialog.service = service;
   monitoringDialog.activeInstance = service.instances[0] ? instanceKey(service.instances[0]) : "";
   monitoringDialog.visible = true;
   loadHistory();
 }
 
+async function refreshMonitoring() {
+  if (!monitoringDialog.visible) return;
+  await Promise.allSettled([loadServices(), loadHistory()]);
+}
+
 async function loadHistory() {
   if (!monitoringDialog.service) return;
-  history.value = await GatewayServiceAPI.getApplicationHistory({
+  const request = ++historyRequest;
+  const application = monitoringDialog.service.name;
+  const result = await GatewayServiceAPI.getApplicationHistory({
     range: selectedRange.value,
-    application: monitoringDialog.service.name,
+    application,
   }).catch(() => undefined);
+  if (
+    request === historyRequest &&
+    monitoringDialog.visible &&
+    monitoringDialog.service?.name === application
+  ) {
+    history.value = result;
+  }
 }
 
 async function viewApis(serviceId: string) {
