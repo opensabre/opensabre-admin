@@ -2,14 +2,25 @@
   <div class="app-container">
     <el-card shadow="never">
       <template #header>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div class="font-medium">网关运行状态</div>
             <div class="mt-1 text-xs text-gray-500">
               实例来自 Nacos，配置加载和路由探测来自最近一次发布确认。
             </div>
           </div>
-          <el-button :loading="loading" @click="load">刷新</el-button>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm">自动刷新</span>
+            <el-select v-model="refreshInterval" aria-label="自动刷新频率" class="!w-28">
+              <el-option
+                v-for="option in refreshOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+            <el-button :loading="refreshing" @click="refresh">刷新</el-button>
+          </div>
         </div>
       </template>
       <el-alert
@@ -67,7 +78,7 @@
     </el-card>
     <el-card shadow="never" class="mt-4">
       <template #header>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div class="font-medium">网关流量趋势</div>
             <div class="mt-1 text-xs text-gray-500">TPS、错误流量及 P50/P95/P99 延迟。</div>
@@ -277,6 +288,7 @@ import type {
 } from "@/types/api/gateway-api-route";
 import { selectGatewayInstances } from "./service-selection";
 import { historyChartOptions } from "./history-chart";
+import { rangeOptions, refreshOptions, useMonitoringRefresh } from "./refresh";
 
 defineOptions({ name: "GatewayMonitoring" });
 const loading = ref(false);
@@ -288,7 +300,8 @@ const loadWarnings = ref<string[]>([]);
 const selectedRange = ref<MonitoringRange>("1h");
 const history = ref<MonitoringHistory>();
 const monitoringStatus = ref<MonitoringDataSourceStatus>();
-const rangeOptions = ["15m", "1h", "6h", "24h", "7d", "30d"];
+const { refreshInterval, refreshing, refresh } = useMonitoringRefresh(load);
+let historyRequest = 0;
 const routeMetrics = computed(() => {
   const merged = new Map<
     string,
@@ -405,10 +418,12 @@ async function load() {
   }
 }
 async function loadHistory() {
+  const request = ++historyRequest;
   const [historyResult, statusResult] = await Promise.allSettled([
     GatewayApiRouteAPI.getRouteHistory({ range: selectedRange.value }),
     GatewayApiRouteAPI.getMonitoringStatus(),
   ]);
+  if (request !== historyRequest) return;
   history.value = historyResult.status === "fulfilled" ? historyResult.value : undefined;
   monitoringStatus.value =
     statusResult.status === "fulfilled"
@@ -457,7 +472,7 @@ function sourceLabel(row: GatewayInstanceRuntime, key: string) {
     )[row.snapshot?.sources?.[key] || ""] || "未知"
   );
 }
-onMounted(load);
+onMounted(refresh);
 </script>
 
 <style scoped>

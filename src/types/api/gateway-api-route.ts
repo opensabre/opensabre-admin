@@ -310,7 +310,7 @@ export interface GatewayRouteMetricsSnapshot {
   p95Latency: string;
 }
 
-export type MonitoringRange = "15m" | "1h" | "6h" | "24h" | "7d" | "30d";
+export type MonitoringRange = "15m" | "30m" | "1h" | "2h" | "6h" | "24h" | "7d" | "30d";
 
 export interface MonitoringHistory {
   range: MonitoringRange;

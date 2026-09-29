@@ -52,6 +52,10 @@ jobs:
           tests/unit/api/oauth-authorization-api.test.ts
           tests/unit/api/notification-api.test.ts
           tests/unit/api/captcha-scene-api.test.ts
+          tests/unit/views/monitoring-refresh.test.ts
+          tests/unit/views/gateway-monitoring.test.ts
+          tests/unit/views/monitoring-detail-layout.test.ts
+          tests/unit/views/monitoring-history-chart.test.ts
 
       - name: Build production assets
         run: pnpm build
