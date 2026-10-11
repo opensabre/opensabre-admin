@@ -260,7 +260,7 @@ const monitoringDialog = reactive<{
   service?: GatewayServiceSummary;
   activeInstance: string;
 }>({ visible: false, activeInstance: "" });
-const selectedRange = ref<MonitoringRange>("1h");
+const selectedRange = ref<MonitoringRange>("30m");
 const { refreshInterval, refreshing, refresh } = useMonitoringRefresh(
   refreshMonitoring,
   computed(() => monitoringDialog.visible)

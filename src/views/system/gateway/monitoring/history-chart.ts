@@ -24,11 +24,11 @@ export function historyChartOptions(
   );
   return {
     animation: false,
-    tooltip: { trigger: "axis" },
+    tooltip: { trigger: "axis", valueFormatter: formatChartValue },
     legend: { type: "scroll", top: 0 },
     grid: { left: 56, right: 24, top: 48, bottom: 30 },
     xAxis: { type: "time" },
-    yAxis: { type: "value", scale: true },
+    yAxis: { type: "value", scale: true, axisLabel: { formatter: formatChartValue } },
     series,
   };
 }
@@ -45,4 +45,8 @@ export function matrix(raw?: string): MatrixItem[] {
 function seriesName(prefix: string, metric: Record<string, string>) {
   const dimension = metric.routeId || metric.application || metric.instance;
   return dimension ? `${prefix} · ${dimension}` : prefix;
+}
+
+function formatChartValue(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "-";
 }

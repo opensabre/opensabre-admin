@@ -32,5 +32,9 @@ describe("monitoring history charts", () => {
       [2000, 3.5],
     ]);
     expect(matrix(raw)).toHaveLength(1);
+    expect(options.tooltip.valueFormatter(2.56789)).toBe("2.57");
+    expect(options.tooltip.valueFormatter(0)).toBe("0.00");
+    expect(options.tooltip.valueFormatter(NaN)).toBe("-");
+    expect(options.yAxis.axisLabel.formatter(2.56789)).toBe("2.57");
   });
 });
