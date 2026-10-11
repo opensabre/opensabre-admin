@@ -96,16 +96,16 @@
       />
       <el-row :gutter="16" class="mb-4">
         <el-col :xs="12" :sm="6">
-          <el-statistic title="当前 TPS" :value="currentTps" :precision="3" />
+          <el-statistic title="当前 TPS" :value="currentTps" :precision="2" />
         </el-col>
         <el-col :xs="12" :sm="6">
-          <el-statistic title="5xx / 秒" :value="currentErrorTps" :precision="3" />
+          <el-statistic title="5xx / 秒" :value="currentErrorTps" :precision="2" />
         </el-col>
         <el-col :xs="12" :sm="6">
           <el-statistic title="错误率" :value="currentErrorRate" suffix="%" :precision="2" />
         </el-col>
         <el-col :xs="12" :sm="6">
-          <el-statistic title="当前 P95" :value="currentP95" suffix=" ms" :precision="0" />
+          <el-statistic title="当前 P95" :value="currentP95" suffix=" ms" :precision="2" />
         </el-col>
       </el-row>
       <el-row :gutter="16">
@@ -297,7 +297,7 @@ const releaseDetail = ref<GatewayReleaseDetail>();
 const metrics = ref<GatewayRouteMetricsSnapshot>();
 const runtimeSnapshots = ref<GatewayInstanceRuntime[]>([]);
 const loadWarnings = ref<string[]>([]);
-const selectedRange = ref<MonitoringRange>("1h");
+const selectedRange = ref<MonitoringRange>("30m");
 const history = ref<MonitoringHistory>();
 const monitoringStatus = ref<MonitoringDataSourceStatus>();
 const { refreshInterval, refreshing, refresh } = useMonitoringRefresh(load);
@@ -441,10 +441,10 @@ function prometheusVector(
   }
 }
 function formatNumber(value?: number) {
-  return value == null ? "-" : value.toFixed(3);
+  return value == null ? "-" : value.toFixed(2);
 }
 function formatLatency(value?: number) {
-  return value == null ? "-" : `${(value * 1000).toFixed(0)} ms`;
+  return value == null ? "-" : `${(value * 1000).toFixed(2)} ms`;
 }
 function formatBytes(value?: number) {
   if (value == null || value < 0) return "-";
